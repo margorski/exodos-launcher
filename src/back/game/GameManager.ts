@@ -26,33 +26,25 @@ export namespace GameManager {
       for (let libraryName of libraryNames) {
         // Check each library for platforms
         try {
-          const libraryPath = path.join(state.platformsPath, libraryName);
-          if ((await stat(libraryPath)).isDirectory()) {
-            // Library file was a directory, read files inside
-            const platformFiles = await readdir(libraryPath);
-            for (let platformFile of platformFiles) {
-              // Find each platform file
-              const platformPath = path.join(libraryPath, platformFile);
-              const platformFileExt = path.extname(platformFile);
-              if (platformFileExt.toLowerCase().endsWith('.xml') && (await stat(platformPath)).isFile()) {
-                platforms.push({
-                  name: path.basename(platformFile, platformFileExt),
-                  filePath: platformPath,
-                  library: libraryName,
-                  data: {
-                    LaunchBox: {
-                      Game: [],
-                      AdditionalApplication: [],
-                    },
-                  },
-                  collection: {
-                    games: [],
-                    additionalApplications: [],
-                  },
-                });
-              }
-            }
-          }
+          const platformFile = path.join(state.platformsPath, libraryName);          
+          const platformFileExt = path.extname(platformFile);
+          if (platformFileExt.toLowerCase().endsWith('.xml') && (await stat(platformFile)).isFile()) {
+            platforms.push({
+              name: path.basename(platformFile, platformFileExt),
+              filePath: platformFile,
+              library: libraryName,
+              data: {
+                LaunchBox: {
+                  Game: [],
+                  AdditionalApplication: [],
+                },
+              },
+              collection: {
+                games: [],
+                additionalApplications: [],
+              },
+            });
+          }          
         } catch (e) { console.error(e); }
       }
     } catch (e) { console.error(e); }
