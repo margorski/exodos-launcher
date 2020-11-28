@@ -568,21 +568,6 @@ export class App extends React.Component<AppProps, AppState> {
       .catch((error) => { log(`Error Fetching Update Info - ${error.message}`); });
       console.log('Checking for updates...');
     }
-
-    // Check for Wine and PHP on Linux/Mac
-    if (process.platform !== 'win32') {
-      which('php', function(err: Error | null) {
-        if (err) {
-          log('Warning: PHP not found in path, may cause unexpected behaviour.');
-          remote.dialog.showMessageBox({
-            type: 'error',
-            title: strings.dialog.programNotFound,
-            message: strings.dialog.phpNotFound,
-            buttons: ['Ok']
-          } );
-        }
-      });
-    }
   }
 
   componentDidUpdate(prevProps: AppProps, prevState: AppState) {

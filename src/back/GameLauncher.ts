@@ -105,57 +105,19 @@ export namespace GameLauncher {
     }
     // Launch game
     let proc: ChildProcess;
-    switch (opts.game.applicationPath) {
-      case ':flash:': {
-        const env = getEnvironment(opts.fpPath);
-        if ('ELECTRON_RUN_AS_NODE' in env) {
-          delete env['ELECTRON_RUN_AS_NODE']; // If this flag is present, it will disable electron features from the process
-        }
-        proc = execFile(
-          process.execPath, // path.join(__dirname, '../main/index.js'),
-          [path.join(__dirname, '../main/index.js'), 'flash=true', opts.game.launchCommand],
-          { env, cwd: process.cwd() }
-        );
-        logProcessOutput(proc, opts.log);
-        opts.log({
-          source: logSource,
-          content: `Launch Game "${opts.game.title}" (PID: ${proc.pid}) [\n`+
-                  `    applicationPath: "${opts.game.applicationPath}",\n`+
-                  `    launchCommand:   "${opts.game.launchCommand}" ]`
-        });
-      } break;
-      default: {
-        const gamePath: string = fixSlashes(path.join(opts.fpPath, getApplicationPath(opts.game.applicationPath, opts.execMappings, opts.native)));
-        const gameArgs: string = opts.game.launchCommand;
-        const command: string = createCommand(gamePath, gameArgs);
-        proc = exec(command, { env: getEnvironment(opts.fpPath) });
-        logProcessOutput(proc, opts.log);
-        opts.log({
-          source: logSource,
-          content: `Launch Game "${opts.game.title}" (PID: ${proc.pid}) [\n`+
-                  `    applicationPath: "${opts.game.applicationPath}",\n`+
-                  `    launchCommand:   "${opts.game.launchCommand}",\n`+
-                  `    command:         "${command}" ]`
-        });
-      } break;
-    }
-    // Show popups for Unity games
-    // (This is written specifically for the "startUnity.bat" batch file)
-    if (opts.game.platform === 'Unity' && proc.stdout) {
-      let textBuffer: string = ''; // (Buffer of text, if its multi-line)
-      proc.stdout.on('data', function(text: string): void {
-        // Add text to buffer
-        textBuffer += text;
-        // Check for exact messages and show the appropriate popup
-        for (let response of unityOutputResponses) {
-          if (textBuffer.endsWith(response.text)) {
-            response.fn(proc, opts.openDialog);
-            textBuffer = '';
-            break;
-          }
-        }
-      });
-    }
+    const gamePath: string = fixSlashes(path.join(opts.fpPath, getApplicationPath(opts.game.applicationPath, opts.execMappings, opts.native)));
+    const gameArgs: string = opts.game.launchCommand;
+    const command: string = createCommand(gamePath, gameArgs);
+
+    proc = exec(command, { env: getEnvironment(opts.fpPath) });
+    logProcessOutput(proc, opts.log);
+    opts.log({
+      source: logSource,
+      content: `Launch Game "${opts.game.title}" (PID: ${proc.pid}) [\n`+
+              `    applicationPath: "${opts.game.applicationPath}",\n`+
+              `    launchCommand:   "${opts.game.launchCommand}",\n`+
+              `    command:         "${command}" ]`
+    });   
   }
 
   /**
