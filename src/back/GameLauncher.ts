@@ -176,7 +176,8 @@ export namespace GameLauncher {
         escArgs = escapeWin(args);
         break;
       case 'linux':
-        escFilename = filename;
+        const defaultTerminalEmulatorCommand = `x-terminal-emulator -e`
+        escFilename = `${defaultTerminalEmulatorCommand} ${filename}`;
         escArgs = escapeLinuxArgs(args);
         break;
     }
