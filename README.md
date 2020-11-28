@@ -1,25 +1,13 @@
-# Flashpoint Launcher
-The launcher for BlueMaxima's Flashpoint (the web preservation project).
-
-![Screenshot](https://user-images.githubusercontent.com/10117720/55276674-a24e8c80-52f6-11e9-8b59-4fb396c36026.png)
+# eXoDOS Launcher
+The launcher for eXoDOS.
 
 ### Status
 
-[![Flashpoint Launcher](https://github.com/FlashpointProject/launcher/workflows/Build%20and%20Release%20Status/badge.svg)](https://github.com/FlashpointProject/launcher)
-
-[![Flashpoint Launcher](https://github.com/FlashpointProject/launcher/workflows/Build%20Status/badge.svg)](https://github.com/FlashpointProject/launcher)
-
-[![Coverage Status](https://coveralls.io/repos/github/FlashpointProject/launcher/badge.svg?branch=master)](https://coveralls.io/github/FlashpointProject/launcher?branch=master)
-
-[![Crowdin](https://badges.crowdin.net/flashpoint-launcher/localized.svg)](https://crowdin.com/project/flashpoint-launcher)
-
 ### Links
-* [BlueMaxima's Flashpoint](http://bluemaxima.org/flashpoint) - Download Flashpoint here (the launcher is bundled with it)
-* [Trello](https://trello.com/b/Tu9E5GLk/launcher) - Upcoming features, known bugs etc.
-* [Launcher Releases](https://github.com/FlashpointProject/launcher/releases) - Download release builds of the launcher here
+* [eXoDOS](https://exodos.the-eye.us) - eXoDOS project
 
 ## About
-The Flashpoint Launcher (FPL) is a desktop application made for browsing, storing and launching other applications (games, animations, web apps etc.). It is specifically made for BlueMaxima's Flashpoint, which is a web preservation project.
+The eXoDOS Launcher is a desktop application made for browsing, storing and launching other applications (games, manuals etc.). It is specifically made for eXoDOS v5 project. Application is based on Flashpoint Launcher application. [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) is generally very cool project so do not forget to check their website. eXoDOS launcher loads Launchbox configuration files format.
 
 ## Setup
 How to setup a development environment:
@@ -27,15 +15,9 @@ How to setup a development environment:
 2. Open a command prompt and navigate it to the projects root folder
 3. Run ``npm install``
 
-## Linux Dependencies
-* `libgtk-3-0`
-* `libnss3`
-
-Install by running ``sudo apt install libgtk-3-0 libnss3``
-
 ## Development
 Recommended setup for development:
-1. Clone the repository with ``git clone --recurse-submodules https://github.com/FlashpointProject/launcher.git launcher``
+1. Clone the repository with ``git clone --recurse-submodules https://github.com/margorski/exodos-launcher launcher``
 2. In the new 'launcher' folder run ``npm run watch`` and let the prompt stay open
 3. Open a second command prompt and run ``npm run start``
 
