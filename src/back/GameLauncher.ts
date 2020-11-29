@@ -167,26 +167,17 @@ export namespace GameLauncher {
   }
 
   function createCommand(filename: string, args: string): string {
+    const linuxTerminalEmulatorCommand = `x-terminal-emulator -e`;
+    let isLinux: boolean = process.platform == 'linux';
     // Escape filename and args
     let escFilename: string = filename;
-    let escArgs: string = args;
-    switch (process.platform) {
-      case 'win32':
-        escFilename = filename;
-        escArgs = escapeWin(args);
-        break;
-      case 'linux':
-        const defaultTerminalEmulatorCommand = `x-terminal-emulator -e`
-        escFilename = `${defaultTerminalEmulatorCommand} ${filename}`;
-        escArgs = escapeLinuxArgs(args);
-        break;
+    let escArgs: string =  isLinux ? escapeLinuxArgs(args) : escapeWin(args);
+  
+      return `${isLinux ? linuxTerminalEmulatorCommand : ''}  "${escFilename}" ${escArgs}`;
     }
-    // Return
-    return `"${escFilename}" ${escArgs}`;
-  }
 
-  function logProcessOutput(proc: ChildProcess, log: LogFunc): void {
-    // Log for debugging purposes
+    function logProcessOutput(proc: ChildProcess, log: LogFunc): void {
+      // Log for debugging purposes
     // (might be a bad idea to fill the console with junk?)
     const logStuff = (event: string, args: any[]): void => {
       log({
