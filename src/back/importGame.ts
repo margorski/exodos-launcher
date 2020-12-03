@@ -219,6 +219,8 @@ function createGameFromCurationMeta(gameId: string, meta: EditCurationMeta, date
     library:             meta.library || '',
     orderTitle: '', // This will be set when saved
     placeholder: false,
+    musicPath:           '',
+    manualPath:          '',
   };
 }
 

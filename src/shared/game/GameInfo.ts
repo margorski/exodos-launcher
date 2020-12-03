@@ -28,6 +28,8 @@ export class GameInfo {
       library: '',
       orderTitle: '',
       placeholder: false,
+      manualPath: '',
+      musicPath: ''
     };
   }
 

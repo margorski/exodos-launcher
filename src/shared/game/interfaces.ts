@@ -66,6 +66,10 @@ export interface IGameInfo extends IPureGameInfo {
   orderTitle: string;
   /** If the game is a placeholder (and can therefore not be saved) */
   placeholder: boolean;
+  /** Path to manual */
+  manualPath: string;
+  /** Path to music played in menu */
+  musicPath: string;
 }
 
 /** Represents the meta data for a single additional application */

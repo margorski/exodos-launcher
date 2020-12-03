@@ -1,3 +1,4 @@
+import { uuid } from '@back/util/uuid';
 import { IRawAdditionalApplicationInfo, IRawGameInfo, IRawPlatformFile } from '../platform/interfaces';
 import { IAdditionalApplicationInfo, IGameCollection, IGameInfo } from './interfaces';
 
@@ -7,18 +8,29 @@ export class GameParser {
       games: [],
       additionalApplications: [],
     };
-    let games = data.LaunchBox.Game;
-    if (games) {
-      if (!Array.isArray(games)) { games = [ games ]; }
-      for (let i = games.length - 1; i >= 0; i--) {
-        collection.games[i] = GameParser.parseRawGame(games[i], filename);
-      }
-    }
     let apps = data.LaunchBox.AdditionalApplication;
     if (apps) {
       if (!Array.isArray(apps)) { apps = [ apps ]; }
       for (let i = apps.length - 1; i >= 0; i--) {
         collection.additionalApplications[i] = GameParser.parseRawAdditionalApplication(apps[i]);
+      }
+    }
+    let games = data.LaunchBox.Game;
+    if (games) {
+      if (!Array.isArray(games)) { games = [ games ]; }
+      for (let i = games.length - 1; i >= 0; i--) {
+        collection.games[i] = GameParser.parseRawGame(games[i], filename); 
+        if (games[i].ManualPath) {
+          console.log("JOU");
+          collection.additionalApplications.push({
+          id: uuid(),
+          applicationPath: games[i].ManualPath || '',
+          autoRunBefore: false,
+          gameId: games[i].ID,
+          launchCommand: '',
+          name: 'Manual',
+          waitForExit: false,
+        });
       }
     }
     return collection;
@@ -51,7 +63,9 @@ export class GameParser {
       language: unescapeHTML(data.Language),
       library: library,
       orderTitle: generateGameOrderTitle(title),
-      placeholder: false, // (No loaded game is a placeholder)
+      placeholder: false, // (No loaded game is a placeholder),
+      manualPath: unescapeHTML(data.ManualPath),
+      musicPath: unescapeHTML(data.MusicPath)
     };
   }
 
@@ -90,6 +104,8 @@ export class GameParser {
       Version: escapeHTML(game.version),
       OriginalDescription: escapeHTML(game.originalDescription),
       Language: escapeHTML(game.language),
+      ManualPath: escapeHTML(game.manualPath),
+      MusicPath: escapeHTML(game.musicPath)
     };
   }
 

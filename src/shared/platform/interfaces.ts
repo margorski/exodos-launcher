@@ -52,6 +52,9 @@ export type IRawGameInfo = {
   Version?: string;             // (String)
   OriginalDescription?: string; // (String)
   Language?: string;            // (String)
+  ManualPath?: string;          // (String)
+  MusicPath?: string;           // (String)
+
 }
 
 /**
