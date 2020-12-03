@@ -167,7 +167,7 @@ export namespace GameLauncher {
   }
 
   function createCommand(filename: string, args: string): string {
-    const linuxTerminalEmulatorCommand = `x-terminal-emulator -e`;
+    const linuxTerminalEmulatorCommand = filename.toLocaleLowerCase().endsWith('.sh') ? `x-terminal-emulator -e` : `xdg-open`;
     let isLinux: boolean = process.platform == 'linux';
     // Escape filename and args
     let escFilename: string = filename;
