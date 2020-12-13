@@ -11,7 +11,7 @@ type IConfigDataDefaults = {
 
 /** Default config values used as a "base" for the different platform defaults. */
 const configDataDefaultBase: Readonly<IAppConfigData> = Object.freeze({
-  flashpointPath: '',
+  exodosPath: '',
   imageFolderPath: 'Images',
   logoFolderPath: 'Data/Logos',
   playlistFolderPath: 'Data/Playlists',
@@ -72,7 +72,7 @@ export function overwriteConfigData(
     input: data,
     onError: onError && (e => onError(`Error while parsing Config: ${e.toString()}`)),
   });
-  parser.prop('flashpointPath',      v => source.flashpointPath      = parseVarStr(str(v)));
+  parser.prop('exodosPath',          v => source.exodosPath      = parseVarStr(str(v)));
   parser.prop('imageFolderPath',     v => source.imageFolderPath     = parseVarStr(str(v)));
   parser.prop('logoFolderPath',      v => source.logoFolderPath      = parseVarStr(str(v)));
   parser.prop('playlistFolderPath',  v => source.playlistFolderPath  = parseVarStr(str(v)));
@@ -91,7 +91,7 @@ export function overwriteConfigData(
   parser.prop('imagesPortMin',       v => source.imagesPortMin       = num(v));
   parser.prop('imagesPortMax',       v => source.imagesPortMax       = num(v));
   // Do some alterations
-  source.flashpointPath = fixSlashes(source.flashpointPath); // (Clean path)
+  source.exodosPath = fixSlashes(source.exodosPath); // (Clean path)
   // Return
   return source;
 }

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-export type ConfigFlashpointPathInputProps = {
+export type ConfigExodosPathInputProps = {
   /** Initial value of the input field. */
   input?: string;
   /** If the current input is valid. */
@@ -11,17 +11,17 @@ export type ConfigFlashpointPathInputProps = {
   onInputChange?: (input: string) => void;
 };
 
-/** Text input element made specifically for setting the Flashpoint path at the config page. */
-export class ConfigFlashpointPathInput extends React.Component<ConfigFlashpointPathInputProps> {
+/** Text input element made specifically for setting the eXoDOS path at the config page. */
+export class ConfigExodosPathInput extends React.Component<ConfigExodosPathInputProps> {
   componentDidMount() {
     if (this.props.onInputChange) { this.props.onInputChange(this.props.input || ''); }
   }
 
   render() {
     const { input, isValid } = this.props;
-    let className: string = 'flashpoint-path__input';
+    let className: string = 'exodos-path__input';
     if (isValid !== undefined) {
-      className += isValid ? ' flashpoint-path__input--valid' : ' flashpoint-path__input--invalid';
+      className += isValid ? ' exodos-path__input--valid' : ' exodos-path__input--invalid';
     }
     return (
       <>
@@ -47,7 +47,7 @@ export class ConfigFlashpointPathInput extends React.Component<ConfigFlashpointP
   onBrowseClick = (): void => {
     // Synchronously show a "open dialog" (this makes the main window "frozen" while this is open)
     const filePaths = window.External.showOpenDialogSync({
-      title: 'Select the FlashPoint root directory',
+      title: 'Select the eXoDOS root directory',
       properties: ['openDirectory'],
     });
     if (filePaths) { this.setInput(filePaths[0]); }

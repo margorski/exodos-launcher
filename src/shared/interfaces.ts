@@ -23,7 +23,7 @@ export interface IMainWindowExternal {
 
   /** The type of OS this is running on. */
   platform: NodeJS.Platform;
-
+  
   /** Minimize the window */
   minimize(): void;
 
@@ -52,8 +52,8 @@ export interface IMainWindowExternal {
   /** Renderers interface for the Config data */
   config: {
     data: IAppConfigData;
-    /** Full path of the Flashpoint folder. */
-    fullFlashpointPath: string;
+    /** Full path of the Exodos folder. */
+    fullExodosPath: string;
     /** Full path of the JSON folder. */
     fullJsonFolderPath: string;
   };
@@ -135,7 +135,7 @@ export enum WindowIPC {
 /** IPC channels used to relay game manager events from  */
 
 export type IBackProcessInfo = {
-  /** Path of the file (relative to the Flashpoint root) */
+  /** Path of the file (relative to the Exodos root) */
   path: string;
   /** Name of the file to execute */
   filename: string;

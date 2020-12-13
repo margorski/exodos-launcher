@@ -66,7 +66,7 @@ export function CuratePage(props: CuratePageProps) {
 
   // Callback for removed dir (watcher)
   const removeCurationDir = useCallback(async (fullPath) => {
-    const curationsPath = path.join(window.External.config.fullFlashpointPath, 'Curations');
+    const curationsPath = path.join(window.External.config.fullExodosPath, 'Curations');
     const relativePath = path.relative(curationsPath, fullPath);
     const splitPath = relativePath.split(path.sep);
     const dirName = path.basename(fullPath);
@@ -99,7 +99,7 @@ export function CuratePage(props: CuratePageProps) {
 
   // Callback for removed file (watcher)
   const removeCurationFile = useCallback(async (fullPath) => {
-    const curationsPath = path.join(window.External.config.fullFlashpointPath, 'Curations');
+    const curationsPath = path.join(window.External.config.fullExodosPath, 'Curations');
     const relativePath = path.relative(curationsPath, fullPath);
     const splitPath = relativePath.split(path.sep);
     // Only read files inside curation folders
@@ -130,7 +130,7 @@ export function CuratePage(props: CuratePageProps) {
 
   // Callback for added/changed file (watcher)
   const updateCurationFile = useCallback(async (fullPath: string) => {
-    const curationsPath = path.join(window.External.config.fullFlashpointPath, 'Curations');
+    const curationsPath = path.join(window.External.config.fullExodosPath, 'Curations');
     const relativePath = path.relative(curationsPath, fullPath);
     const splitPath = relativePath.split(path.sep);
     // Files inside curation folders
@@ -213,7 +213,7 @@ export function CuratePage(props: CuratePageProps) {
   }, [dispatch, localState, defaultGameMetaValues]);
 
   const updateCurationDir = useCallback(async (fullPath) => {
-    const curationsPath = path.join(window.External.config.fullFlashpointPath, 'Curations');
+    const curationsPath = path.join(window.External.config.fullExodosPath, 'Curations');
     const relativePath = path.relative(curationsPath, fullPath);
     const splitPath = relativePath.split(path.sep);
     const dirName = path.basename(fullPath);
@@ -241,7 +241,7 @@ export function CuratePage(props: CuratePageProps) {
 
   // Start a watcher for the 'Curations' folder to montior curations (meta + images)
   const watcher = useMemo(() => {
-    const curationsPath = path.join(window.External.config.fullFlashpointPath, 'Curations');
+    const curationsPath = path.join(window.External.config.fullExodosPath, 'Curations');
     fs.ensureDirSync(curationsPath);
     return chokidar.watch(curationsPath, {
       awaitWriteFinish: {
@@ -452,7 +452,7 @@ export function CuratePage(props: CuratePageProps) {
         curationLog(logStr);
         if (remote.Notification.isSupported()) {
           const notification = new remote.Notification({
-            title: 'Flashpoint',
+            title: 'eXoDOS',
             body: logStr
           });
           notification.show();
@@ -478,7 +478,7 @@ export function CuratePage(props: CuratePageProps) {
 
   // Make a new curation (folder watcher does most of the work)
   const onNewCurationClick = useCallback(async () => {
-    const newCurationFolder = path.join(window.External.config.fullFlashpointPath, 'Curations', uuid());
+    const newCurationFolder = path.join(window.External.config.fullExodosPath, 'Curations', uuid());
     try {
       // Create content folder and empty meta.yaml
       await fs.ensureDir(path.join(newCurationFolder, 'content'));
@@ -590,21 +590,21 @@ export function CuratePage(props: CuratePageProps) {
 
   // Open Curations Folder
   const onOpenCurationsFolder = useCallback(async () => {
-    const curationsFolderPath = path.join(window.External.config.fullFlashpointPath, 'Curations');
+    const curationsFolderPath = path.join(window.External.config.fullExodosPath, 'Curations');
     await fs.ensureDir(curationsFolderPath);
     remote.shell.openItem(curationsFolderPath);
   }, []);
 
   // Open Exported Curations Folder
   const onOpenExportsFolder = useCallback(async () => {
-    const exportsFolderPath = path.join(window.External.config.fullFlashpointPath, 'Curations', '_Exports');
+    const exportsFolderPath = path.join(window.External.config.fullExodosPath, 'Curations', '_Exports');
     await fs.ensureDir(exportsFolderPath);
     remote.shell.openItem(exportsFolderPath);
   }, []);
 
   // Open Imported Curations Folder
   const onOpenImportedFolder = useCallback(async () => {
-    const importedFolder = path.join(window.External.config.fullFlashpointPath, 'Curations', '_Imported');
+    const importedFolder = path.join(window.External.config.fullExodosPath, 'Curations', '_Imported');
     await fs.ensureDir(importedFolder);
     remote.shell.openItem(importedFolder);
   }, []);
@@ -858,9 +858,9 @@ function getDivWidth(ref: React.RefObject<HTMLDivElement>) {
 }
 
 function getContentFolderByKey2(key: string) {
-  return getContentFolderByKey(key, window.External.config.fullFlashpointPath);
+  return getContentFolderByKey(key, window.External.config.fullExodosPath);
 }
 
 function getCurationFolder2(curation: EditCuration | CurationIndex) {
-  return getCurationFolder(curation, window.External.config.fullFlashpointPath);
+  return getCurationFolder(curation, window.External.config.fullExodosPath);
 }

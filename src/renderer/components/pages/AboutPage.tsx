@@ -22,7 +22,7 @@ export interface AboutPage {
   context: LangContainer;
 }
 
-/** Page displaying information about this launcher, the "BlueMaxima's Flashpoint" project and its contributors. */
+/** Page displaying information about this launcher, eXoDOS project and its contributors. */
 export class AboutPage extends React.Component<AboutPageProps, AboutPageState> {
   constructor(props: AboutPageProps) {
     super(props);
@@ -42,30 +42,30 @@ export class AboutPage extends React.Component<AboutPageProps, AboutPageState> {
             <div className='about-page__columns simple-columns'>
               {/* Left Column */}
               <div className='about-page__columns__left simple-columns__column'>
-                {/* About Flashpoint */}
+                {/* About eXoDOS */}
                 <div className='about-page__section'>
-                  <p className='about-page__section__title'>{strings.flashpoint}</p>
+                  <p className='about-page__section__title'>{strings.exodos}</p>
                   <div className='about-page__section__content'>
                     <p className='about-page__section__content__description'>
-                      {strings.flashpointDesc}
+                      {strings.exodos}
                     </p>
                     <div className='about-page__section__links'>
-                      {link(strings.website, 'http://bluemaxima.org/flashpoint/')}
-                      {link('Discord', 'https://discord.gg/Nc3DScn')}
+                      {link(strings.website, 'https://exodos.the-eye.us/')}
+                      {link('Discord', 'https://discord.gg/SaMKayf')}
                     </div>
                   </div>
                 </div>
-                {/* About Flashpoint Launcher */}
+                {/* About eXoDOS Launcher */}
                 <div className='about-page__section'>
-                  <p className='about-page__section__title'>{strings.flashpointLauncher}</p>
+                  <p className='about-page__section__title'>{strings.exodosLauncher}</p>
                   <div className='about-page__section__content'>
                     <p className='about-page__section__content__description'>
-                      {strings.flashpointLauncherDesc}
+                      {strings.exodosLauncherDesc}
                     </p>
                     <p><b>{strings.version}:</b> {versionNumberToText(window.External.version)} ({window.External.version})</p>
                     <p><b>{strings.license}:</b> {strings.licenseInfo}</p>
                     <div className='about-page__section__links'>
-                      {link('Github', 'https://github.com/FlashpointProject/launcher')}
+                      {link('Github', 'https://github.com/margorski/exodos-launcher')}
                     </div>
                   </div>
                 </div>

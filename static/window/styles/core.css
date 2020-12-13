@@ -1816,11 +1816,11 @@ body {
   height: fit-content;
   margin-left: 0.5rem;
 }
-.setting__row__content--filepath-path .flashpoint-path__input {
+.setting__row__content--filepath-path .exodos-path__input {
   flex: 1;
   border: 1px solid;
 }
-.setting__row__content--filepath-path .flashpoint-path__input input[type="text"] {
+.setting__row__content--filepath-path .exodos-path__input input[type="text"] {
   width: 100%;
   font-size: 1em;
   background: none;

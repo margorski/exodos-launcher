@@ -35,7 +35,7 @@ export const isDev: boolean = (function() {
  */
 export function getMainFolderPath(installed: boolean | undefined): string {
   return installed
-    ? path.join(app.getPath('appData'), 'flashpoint-launcher') // Installed
+    ? path.join(app.getPath('appData'), 'exodos-launcher') // Installed
     : isDev
       ? process.cwd() // Dev
       : path.dirname(app.getPath('exe')); // Portable

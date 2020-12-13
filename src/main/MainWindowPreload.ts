@@ -113,8 +113,8 @@ const onInit = (async () => {
       window.External.config = {
         data: response.data.config,
         // @FIXTHIS This should take if this is installed into account
-        fullFlashpointPath: path.resolve(response.data.config.flashpointPath),
-        fullJsonFolderPath: path.resolve(response.data.config.flashpointPath, response.data.config.jsonFolderPath),
+        fullExodosPath: path.resolve(response.data.config.exodosPath),
+        fullJsonFolderPath: path.resolve(response.data.config.exodosPath, response.data.config.jsonFolderPath),
       };
       window.External.fileServerPort = response.data.fileServerPort;
       window.External.log.entries = response.data.log;

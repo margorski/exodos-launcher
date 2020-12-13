@@ -4,7 +4,7 @@ export type UpgradeStage = {
   id: string;
   title: string;
   description: string;
-  /** Paths of files that should exist if the stage is "installed" (paths are relative to the flashpoint root) */
+  /** Paths of files that should exist if the stage is "installed" (paths are relative to the Exodos root) */
   verify_files: string[];
   /** SHA256 sums of the verifiable files */
   verify_sha256: string[];

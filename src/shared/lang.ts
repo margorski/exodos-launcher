@@ -19,9 +19,9 @@ const langTemplate = {
     'fallbackLanguageDesc',
     'auto',
     'none',
-    'flashpointHeader',
-    'flashpointPath',
-    'flashpointPathDesc',
+    'exodosHeader',
+    'exodosPath',
+    'exodosPathDesc',
     'redirector',
     'redirectorFiddler',
     'redirectorDesc',
@@ -151,11 +151,11 @@ const langTemplate = {
   ] as const,
   about: [
     'aboutHeader',
-    'flashpoint',
-    'flashpointDesc',
+    'exodos',
+    'exodosDesc',
     'website',
-    'flashpointLauncher',
-    'flashpointLauncherDesc',
+    'exodosLauncher',
+    'exodosLauncherDesc',
     'version',
     'license',
     'licenseInfo',
@@ -228,8 +228,8 @@ const langTemplate = {
     'noGamesFound',
     'dropGameOnLeft',
     'leftSidebar',
-    'setFlashpointPathQuestion',
-    'flashpointPath',
+    'setExodosPathQuestion',
+    'exodosPath',
     'config',
     'noteSaveAndRestart',
     'saveAndRestart',
@@ -338,9 +338,9 @@ const langTemplate = {
     'programNotFound',
     'phpNotFound',
     'wineNotFound',
-    'flashpointPathNotFound',
+    'exodosPathNotFound',
     'fileNotFound',
-    'flashpointPathInvalid',
+    'exodosPathInvalid',
     'pathNotFound',
     'selectFileToExportMeta',
     'selectFolderToExportMetaAndImages',
@@ -454,7 +454,7 @@ export function getDefaultLocalization(): LangContainer {
   lang.home.helpInfo += ' {0}';
   lang.home.linuxSupport += ' {0}';
   lang.browse.dropGameOnLeft += ' {0}';
-  lang.browse.setFlashpointPathQuestion += ' {0} {1}';
+  lang.browse.setExodosPathQuestion += ' {0} {1}';
   lang.browse.noteSaveAndRestart += ' {0}';
   lang.misc.noBlankFound = '{0} ' + lang.misc.noBlankFound;
   lang.misc.addBlank += ' {0}';

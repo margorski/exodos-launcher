@@ -42,7 +42,7 @@ describe('Config File', () => {
 });
 
 const staticConfig: IAppConfigData = {
-  flashpointPath: 'TestSuccess',
+  exodosPath: 'TestSuccess',
   imageFolderPath: 'TestSuccess',
   logoFolderPath: 'TestSuccess',
   playlistFolderPath: 'TestSuccess',

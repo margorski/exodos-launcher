@@ -334,7 +334,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
           click: () => {
             window.External.back.send<GetGameResponseData, GetGameData>(BackIn.GET_GAME, { id: gameId }, res => {
               if (res.data && res.data.game) {
-                const gamePath = getGamePath(res.data.game, window.External.config.fullFlashpointPath);
+                const gamePath = getGamePath(res.data.game, window.External.config.fullExodosPath);
                 if (gamePath) {
                   fs.stat(gamePath, error => {
                     if (!error) { remote.shell.showItemInFolder(gamePath); }
@@ -344,20 +344,12 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
                         message: '',
                         buttons: ['Ok'],
                       };
-                      if (error.code === 'ENOENT') {
-                        opts.title = this.context.dialog.fileNotFound;
-                        opts.message = (
-                          'Failed to find the game file.\n'+
-                          'If you are using Flashpoint Infinity, make sure you download the game first.\n'
-                        );
-                      } else {
-                        opts.title = 'Unexpected error';
-                        opts.message = (
-                          'Failed to check the game file.\n'+
-                          'If you see this, please report it back to us (a screenshot would be great)!\n\n'+
-                          `Error: ${error}\n`
-                        );
-                      }
+                      opts.title = 'Unexpected error';
+                      opts.message = (
+                        'Failed to check the game file.\n'+
+                        'If you see this, please report it back to us (a screenshot would be great)!\n\n'+
+                        `Error: ${error}\n`
+                      );
                       opts.message += `Path: "${gamePath}"\n\nNote: If the path is too long, some portion will be replaced with three dots ("...").`;
                       remote.dialog.showMessageBox(opts);
                     }
@@ -746,7 +738,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
     if (this.state.currentPlaylist) {
       // Synchronously show a "open dialog" (this makes the main window "frozen" while this is open)
       const filePaths = window.External.showOpenDialogSync({
-        title: 'Select the FlashPoint root directory',
+        title: 'Select the eXoDOS root directory',
         properties: ['openFile'],
       });
       if (filePaths && filePaths.length > 0) {

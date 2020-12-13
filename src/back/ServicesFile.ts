@@ -7,7 +7,7 @@ import { IObjectParserProp, ObjectParser } from '@shared/utils/ObjectParser';
 const { str } = Coerce;
 
 export namespace ServicesFile {
-  /** Path to the background services file (relative to the flashpoint root folder) */
+  /** Path to the background services file (relative to the exodos root folder) */
   const filePath: string = './services.json';
   /** Encoding used by background services file */
   const fileEncoding: string = 'utf8';

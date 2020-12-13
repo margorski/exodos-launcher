@@ -34,7 +34,7 @@ import { AppRouter, AppRouterProps } from './router';
 import { SearchQuery } from './store/search';
 import { UpgradeStage } from './upgrade/types';
 import { UpgradeFile } from './upgrade/UpgradeFile';
-import { isFlashpointValidCheck, joinLibraryRoute, openConfirmDialog } from './Util';
+import { isExodosValidCheck, joinLibraryRoute, openConfirmDialog } from './Util';
 import { LangContext } from './util/lang';
 import { checkUpgradeStateInstalled, checkUpgradeStateUpdated, downloadAndInstallUpgrade } from './util/upgrade';
 import { debounce } from '@shared/utils/debounce';
@@ -180,7 +180,7 @@ export class App extends React.Component<AppProps, AppState> {
 
   init() {
     const strings = this.state.lang;
-    const fullFlashpointPath = window.External.config.fullFlashpointPath;
+    const fullExodosPath = window.External.config.fullExodosPath;
     const fullJsonFolderPath = window.External.config.fullJsonFolderPath;
     // Warn the user when closing the launcher WHILE downloading or installing an upgrade
     (() => {
@@ -502,7 +502,7 @@ export class App extends React.Component<AppProps, AppState> {
         upgrades: allData,
         upgradesDoneLoading: true,
       });
-      const isValid = await isFlashpointValidCheck(window.External.config.data.flashpointPath);
+      const isValid = await isExodosValidCheck(window.External.config.data.exodosPath);
       // Notify of downloading initial data (if available)
       if (!isValid && allData.length > 0) {
         remote.dialog.showMessageBox({
@@ -519,7 +519,7 @@ export class App extends React.Component<AppProps, AppState> {
       }
       // Do existance checks on all upgrades
       await Promise.all(allData.map(async upgrade => {
-        const baseFolder = fullFlashpointPath;
+        const baseFolder = fullExodosPath;
         // Perform install checks
         const installed = await checkUpgradeStateInstalled(upgrade, baseFolder);
         this.setUpgradeStageState(upgrade.id, {
@@ -1079,14 +1079,14 @@ export class App extends React.Component<AppProps, AppState> {
 
 async function downloadAndInstallStage(stage: UpgradeStage, setStageState: (id: string, stage: Partial<UpgradeStageState>) => void, strings: LangContainer) {
   // Check data folder is set
-  let flashpointPath = window.External.config.data.flashpointPath;
-  const isValid = await isFlashpointValidCheck(flashpointPath);
+  let exodosPath = window.External.config.data.exodosPath;
+  const isValid = await isExodosValidCheck(exodosPath);
   if (!isValid) {
     let verifiedPath = false;
     let chosenPath: (string | undefined);
     while (verifiedPath !== true) {
       // If folder isn't set, ask to set now
-      const res = await openConfirmDialog(strings.dialog.flashpointPathInvalid, strings.dialog.flashpointPathNotFound);
+      const res = await openConfirmDialog(strings.dialog.exodosPathInvalid, strings.dialog.exodosPathNotFound);
       if (!res) { return; }
       // Set folder now
       const chosenPaths = window.External.showOpenDialogSync({
@@ -1119,11 +1119,11 @@ async function downloadAndInstallStage(stage: UpgradeStage, setStageState: (id: 
     }
     // Make sure folder given exists
     if (chosenPath) {
-      flashpointPath = chosenPath;
-      fs.ensureDirSync(flashpointPath);
+      exodosPath = chosenPath;
+      fs.ensureDirSync(exodosPath);
       // Save picked folder to config
       window.External.back.send<any, UpdateConfigData>(BackIn.UPDATE_CONFIG, {
-        flashpointPath: flashpointPath,
+        exodosPath: exodosPath,
       }, () => { /* window.External.restart(); */ });
     }
   }
@@ -1140,7 +1140,7 @@ async function downloadAndInstallStage(stage: UpgradeStage, setStageState: (id: 
     // Start download and installation
     let prevProgressUpdate = Date.now();
     const state = downloadAndInstallUpgrade(stage, {
-      installPath: path.join(flashpointPath),
+      installPath: path.join(exodosPath),
       downloadFilename: filename
     })
     .on('progress', () => {

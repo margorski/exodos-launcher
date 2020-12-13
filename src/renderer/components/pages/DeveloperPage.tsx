@@ -38,7 +38,7 @@ export interface DeveloperPage {
 
 /**
  * Page made for developers or advanced users only.
- * It has various "tools" that the user can run to gather information about the current Flashpoint folders data (games, playlists, images etc.), or edit that data on mass.
+ * It has various "tools" that the user can run to gather information about the current Exodos folders data (games, playlists, images etc.), or edit that data on mass.
  * New tools are added as needed.
  */
 export class DeveloperPage extends React.Component<DeveloperPageProps, DeveloperPageState> {
@@ -453,7 +453,7 @@ function checkFileLocation(games: IGameInfo[]): string {
     if (game.broken) { skippedCount += 1; }
     else {
       try {
-        const gamePath = getGamePath(game, window.External.config.fullFlashpointPath);
+        const gamePath = getGamePath(game, window.External.config.fullExodosPath);
         if (gamePath === undefined) { pathFailed.push(game); }
       } catch (error) {
         pathError.push([ game, error ]);
@@ -493,13 +493,13 @@ type AllowedNames<Base, Condition> = FilterFlags<Base, Condition>[keyof Base];
 type FolderStructure = { [key: string]: FolderStructure | string[] } | string[];
 async function createMissingFolders(): Promise<string> {
   let str = '';
-  const fullFlashpointPath = window.External.config.fullFlashpointPath;
+  const fullExodosPath = window.External.config.fullExodosPath;
   // Create "static" folder structure (folders that should always exist)
   str += 'Creating "static" folders:\n';
-  str += '(Folders that should be in every Flashpoint folder)\n\n';
-  str += `${fullFlashpointPath}\n`;
+  str += '(Folders that should be in every Exodos folder)\n\n';
+  str += `${fullExodosPath}\n`;
   await createFolderStructure(
-    fullFlashpointPath, {
+    fullExodosPath, {
       'Data': {
         'Images': [
           LOGOS,

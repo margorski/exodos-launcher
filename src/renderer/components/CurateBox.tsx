@@ -304,7 +304,7 @@ export function CurateBox(props: CurateBoxProps) {
         }
       }
       // Choose where to save the file
-      const defaultPath = path.join(window.External.config.fullFlashpointPath, 'Curations', '_Exports');
+      const defaultPath = path.join(window.External.config.fullExodosPath, 'Curations', '_Exports');
       await fs.ensureDir(defaultPath);
       const filePath = remote.dialog.showSaveDialogSync({
         title: strings.dialog.selectFileToExportMeta,
@@ -1078,11 +1078,11 @@ export function getCurationWarnings(curation: EditCuration, suggestions: Partial
 }
 
 function getContentFolderByKey2(key: string) {
-  return getContentFolderByKey(key, window.External.config.fullFlashpointPath);
+  return getContentFolderByKey(key, window.External.config.fullExodosPath);
 }
 
 function getCurationFolder2(curation: EditCuration | CurationIndex) {
-  return getCurationFolder(curation, window.External.config.fullFlashpointPath);
+  return getCurationFolder(curation, window.External.config.fullExodosPath);
 }
 
 function isPlatformNativeLocked(platform: string) {
@@ -1093,7 +1093,7 @@ function getPathOfHtdocsUrl(url: string): string | undefined {
   const urlObj = toForcedURL(url);
   if (urlObj) {
     return path.join(
-      window.External.config.fullFlashpointPath,
+      window.External.config.fullExodosPath,
       htdocsPath,
       decodeURIComponent(path.join(urlObj.hostname, urlObj.pathname))
     );

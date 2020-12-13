@@ -1,15 +1,9 @@
 import { Coerce } from '@shared/utils/Coerce';
-import { flash } from './Flash';
 import { main } from './Main';
 import { Init } from './types';
 
 const init = getArgs();
-
-if (init.args['flash']) {
-  flash(init);
-} else {
-  main(init);
-}
+main(init);
 
 function getArgs(): Init {
   const init: Init = {

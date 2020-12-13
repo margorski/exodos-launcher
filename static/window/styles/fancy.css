@@ -774,16 +774,16 @@ body {
   border-top-color: var(--layout__tertiary-background);
 }
 /* Setting Row Content - FilePoint Path */
-.setting__row__content--filepath-path .flashpoint-path__input {
+.setting__row__content--filepath-path .exodos-path__input {
   border-color: var(--layout__primary-outline-color);
 }
-.setting__row__content--filepath-path .flashpoint-path__input--valid {
+.setting__row__content--filepath-path .exodos-path__input--valid {
   background-color: var(--layout__valid-color);
 }
-.setting__row__content--filepath-path .flashpoint-path__input--invalid {
+.setting__row__content--filepath-path .exodos-path__input--invalid {
   background-color: var(--layout__invalid-color);
 }
-.setting__row__content--filepath-path .flashpoint-path__input input[type="text"] {
+.setting__row__content--filepath-path .exodos-path__input input[type="text"] {
   color: var(--layout__primary-text-color);
 }
 /* Setting Row Content - Input Field */

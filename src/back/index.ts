@@ -127,7 +127,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   // Init services
   try {
     state.serviceInfo = await ServicesFile.readFile(
-      path.join(state.config.flashpointPath, state.config.jsonFolderPath),
+      path.join(state.config.exodosPath, state.config.jsonFolderPath),
       error => { log({ source: servicesSource, content: error.toString() }); }
     );
   } catch (error) { /* @TODO Do something about this error */ }
@@ -321,7 +321,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     }
   });
   state.themeWatcher.on('error', console.error);
-  const themeFolder = path.join(state.config.flashpointPath, state.config.themeFolderPath);
+  const themeFolder = path.join(state.config.exodosPath, state.config.themeFolderPath);
   fs.stat(themeFolder, (error) => {
     if (!error) { state.themeWatcher.watch(themeFolder, { recursionDepth: -1 }); }
     else {
@@ -414,7 +414,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
       });
     }
   });
-  const playlistFolder = path.join(state.config.flashpointPath, state.config.playlistFolderPath);
+  const playlistFolder = path.join(state.config.exodosPath, state.config.playlistFolderPath);
   fs.stat(playlistFolder, (error) => {
     if (!error) { state.playlistWatcher.watch(playlistFolder); }
     else {
@@ -430,7 +430,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   });
 
   // Init Game Manager
-  state.gameManager.platformsPath = path.join(state.config.flashpointPath, state.config.platformFolderPath);
+  state.gameManager.platformsPath = path.join(state.config.exodosPath, state.config.platformFolderPath);
   GameManager.loadPlatforms(state.gameManager)
   .then(errors => {
     if (errors.length > 0) {
@@ -447,7 +447,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   });
 
   // Load Exec Mappings
-  loadExecMappingsFile(path.join(state.config.flashpointPath, state.config.jsonFolderPath), content => log({ source: 'Launcher', content }))
+  loadExecMappingsFile(path.join(state.config.exodosPath, state.config.jsonFolderPath), content => log({ source: 'Launcher', content }))
   .then(data => {
     state.execMappings = data;
   })
@@ -570,7 +570,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     const proc = new ManagedChildProcess(
       id,
       name,
-      path.join(state.config.flashpointPath, info.path),
+      path.join(state.config.exodosPath, info.path),
       false,
       true,
       info
@@ -772,7 +772,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
           const game = findGame(addApp.gameId);
           GameLauncher.launchAdditionalApplication({
             addApp,
-            fpPath: path.resolve(state.config.flashpointPath),
+            fpPath: path.resolve(state.config.exodosPath),
             native: game && state.config.nativePlatforms.some(p => p === game.platform) || false,
             execMappings: state.execMappings,
             lang: state.languageContainer,
@@ -801,7 +801,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         GameLauncher.launchGame({
           game,
           addApps,
-          fpPath: path.resolve(state.config.flashpointPath),
+          fpPath: path.resolve(state.config.exodosPath),
           native: state.config.nativePlatforms.some(p => p === game.platform),
           execMappings: state.execMappings,
           lang: state.languageContainer,
@@ -886,7 +886,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
 
         // Copy images
         if (reqData.dupeImages) {
-          const imageFolder = path.join(state.config.flashpointPath, state.config.imageFolderPath);
+          const imageFolder = path.join(state.config.exodosPath, state.config.imageFolderPath);
           const oldLast = path.join(game.id.substr(0, 2), game.id.substr(2, 2), game.id+'.png');
           const newLast = path.join(newGame.id.substr(0, 2), newGame.id.substr(2, 2), newGame.id+'.png');
 
@@ -939,7 +939,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
 
           // Copy images
           if (!reqData.metaOnly) {
-            const imageFolder = path.join(state.config.flashpointPath, state.config.imageFolderPath);
+            const imageFolder = path.join(state.config.exodosPath, state.config.imageFolderPath);
             const last = path.join(game.id.substr(0, 2), game.id.substr(2, 2), game.id+'.png');
 
             const oldLogoPath = path.join(imageFolder, LOGOS, last);
@@ -1086,7 +1086,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
     case BackIn.SAVE_IMAGE: {
       const reqData: SaveImageData = req.data;
 
-      const imageFolder = path.join(state.config.flashpointPath, state.config.imageFolderPath);
+      const imageFolder = path.join(state.config.exodosPath, state.config.imageFolderPath);
       const folder = sanitizeFilename(reqData.folder);
       const id = sanitizeFilename(reqData.id);
       const fullPath = path.join(imageFolder, folder, id.substr(0, 2), id.substr(2, 2), id + '.png');
@@ -1116,7 +1116,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
     case BackIn.DELETE_IMAGE: {
       const reqData: DeleteImageData = req.data;
 
-      const imageFolder = path.join(state.config.flashpointPath, state.config.imageFolderPath);
+      const imageFolder = path.join(state.config.exodosPath, state.config.imageFolderPath);
       const folder = sanitizeFilename(reqData.folder);
       const id = sanitizeFilename(reqData.id);
       const fullPath = path.join(imageFolder, folder, id.substr(0, 2), id.substr(2, 2), id + '.png');
@@ -1344,7 +1344,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
           log: reqData.log ? log : undefined,
           date: (reqData.date !== undefined) ? new Date(reqData.date) : undefined,
           saveCuration: reqData.saveCuration,
-          fpPath: state.config.flashpointPath,
+          fpPath: state.config.exodosPath,
           imageFolderPath: state.config.imageFolderPath,
           openDialog: openDialog(event.target),
           openExternal: openExternal(event.target),
@@ -1369,7 +1369,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
 
       try {
         await launchCuration(reqData.key, reqData.meta, reqData.addApps, {
-          fpPath: path.resolve(state.config.flashpointPath),
+          fpPath: path.resolve(state.config.exodosPath),
           native: state.config.nativePlatforms.some(p => p === reqData.meta.platform),
           execMappings: state.execMappings,
           lang: state.languageContainer,
@@ -1396,7 +1396,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
 
       try {
         await launchAddAppCuration(reqData.curationKey, reqData.curation, {
-          fpPath: path.resolve(state.config.flashpointPath),
+          fpPath: path.resolve(state.config.exodosPath),
           native: state.config.nativePlatforms.some(p => p === reqData.platform) || false,
           execMappings: state.execMappings,
           lang: state.languageContainer,
@@ -1449,8 +1449,9 @@ function onFileServerRequest(req: http.IncomingMessage, res: http.ServerResponse
     switch (firstItem) {
       // Image folder
       case 'images': {
-        const imageFolder = path.join(state.config.flashpointPath, state.config.imageFolderPath);
+        const imageFolder = path.join(state.config.exodosPath, state.config.imageFolderPath);
         const filePath = path.join(imageFolder, urlPath.substr(index + 1));
+        console.log(filePath);
         if (filePath.startsWith(imageFolder)) {
           serveFile(req, res, filePath);
         }
@@ -1458,7 +1459,7 @@ function onFileServerRequest(req: http.IncomingMessage, res: http.ServerResponse
 
       // Theme folder
       case 'themes': {
-        const themeFolder = path.join(state.config.flashpointPath, state.config.themeFolderPath);
+        const themeFolder = path.join(state.config.exodosPath, state.config.themeFolderPath);
         const index = urlPath.indexOf('/');
         const relativeUrl = (index >= 0) ? urlPath.substr(index + 1) : urlPath;
         const filePath = path.join(themeFolder, relativeUrl);
@@ -1469,7 +1470,7 @@ function onFileServerRequest(req: http.IncomingMessage, res: http.ServerResponse
 
       // Logos folder
       case 'logos': {
-        const logoFolder = path.join(state.config.flashpointPath, state.config.logoFolderPath);
+        const logoFolder = path.join(state.config.exodosPath, state.config.logoFolderPath);
         const filePath = path.join(logoFolder, urlPath.substr(index + 1));
         if (filePath.startsWith(logoFolder)) {
           serveFile(req, res, filePath);
@@ -1478,7 +1479,7 @@ function onFileServerRequest(req: http.IncomingMessage, res: http.ServerResponse
 
       // JSON file(s)
       case 'credits.json': {
-        serveFile(req, res, path.join(state.config.flashpointPath, state.config.jsonFolderPath, 'credits.json'));
+        serveFile(req, res, path.join(state.config.exodosPath, state.config.jsonFolderPath, 'credits.json'));
       } break;
 
       // Nothing
@@ -1693,7 +1694,7 @@ function searchGames(opts: SearchGamesOpts): IGameInfo[] {
  * @param sync If the process should run synchronously (block this thread until it exits).
  */
 async function execProcess(proc: IBackProcessInfo, sync: boolean = false): Promise<void> {
-  const cwd: string = path.join(state.config.flashpointPath, proc.path);
+  const cwd: string = path.join(state.config.exodosPath, proc.path);
   log({
     source: servicesSource,
     content: `Executing "${proc.filename}" ${stringifyArray(proc.arguments)} in "${proc.path}"`

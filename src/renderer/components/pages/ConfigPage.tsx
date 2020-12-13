@@ -7,10 +7,10 @@ import { memoizeOne } from '@shared/memoize';
 import { updatePreferencesData } from '@shared/preferences/util';
 import { Theme } from '@shared/ThemeFile';
 import { formatString } from '@shared/utils/StringFormatter';
-import { isFlashpointValidCheck } from '../../Util';
+import { isExodosValidCheck } from '../../Util';
 import { LangContext } from '../../util/lang';
 import { CheckBox } from '../CheckBox';
-import { ConfigFlashpointPathInput } from '../ConfigFlashpointPathInput';
+import { ConfigExodosPathInput } from '../ConfigExodosPathInput';
 import { Dropdown } from '../Dropdown';
 import { DropdownInputField } from '../DropdownInputField';
 
@@ -27,10 +27,10 @@ type OwnProps = {
 export type ConfigPageProps = OwnProps & WithPreferencesProps;
 
 type ConfigPageState = {
-  /** If the currently entered Flashpoint path points to a "valid" Flashpoint folder (it exists and "looks" like a Flashpoint folder). */
-  isFlashpointPathValid?: boolean;
-  /** Currently entered Flashpoint path. */
-  flashpointPath: string;
+  /** If the currently entered Exodos path points to a "valid" Exodos folder (it exists and "looks" like a Exodos folder). */
+  isExodosPathValid?: boolean;
+  /** Currently entered Exodos path. */
+  exodosPath: string;
   /** If the "use custom title bar" checkbox is checked. */
   useCustomTitlebar: boolean;
   /** If the "use fiddler" checkbox is checked. */
@@ -57,8 +57,8 @@ export class ConfigPage extends React.Component<ConfigPageProps, ConfigPageState
     super(props);
     const configData = window.External.config.data;
     this.state = {
-      isFlashpointPathValid: undefined,
-      flashpointPath: configData.flashpointPath,
+      isExodosPathValid: undefined,
+      exodosPath: configData.exodosPath,
       useCustomTitlebar: configData.useCustomTitlebar,
       useFiddler: configData.useFiddler,
       nativePlatforms: configData.nativePlatforms
@@ -144,24 +144,24 @@ export class ConfigPage extends React.Component<ConfigPageProps, ConfigPageState
               </div>
             </div>
 
-          {/* -- Flashpoint -- */}
+          {/* -- Exodos -- */}
           <div className='setting'>
-            <p className='setting__title'>{strings.flashpointHeader}</p>
+            <p className='setting__title'>{strings.exodosHeader}</p>
             <div className='setting__body'>
-              {/* Flashpoint Path */}
+              {/* Exodos Path */}
               <div className='setting__row'>
                 <div className='setting__row__top'>
-                  <p className='setting__row__title'>{strings.flashpointPath}</p>
+                  <p className='setting__row__title'>{strings.exodosPath}</p>
                   <div className='setting__row__content setting__row__content--filepath-path'>
-                    <ConfigFlashpointPathInput
-                      input={this.state.flashpointPath}
+                    <ConfigExodosPathInput
+                      input={this.state.exodosPath}
                       buttonText={strings.browse}
-                      onInputChange={this.onFlashpointPathChange}
-                      isValid={this.state.isFlashpointPathValid} />
+                      onInputChange={this.onExodosPathChange}
+                      isValid={this.state.isExodosPathValid} />
                   </div>
                 </div>
                 <div className='setting__row__bottom'>
-                  <p>{strings.flashpointPathDesc}</p>
+                  <p>{strings.exodosPathDesc}</p>
                 </div>
               </div>
               {/* Redirector / Fiddler */}
@@ -384,12 +384,12 @@ export class ConfigPage extends React.Component<ConfigPageProps, ConfigPageState
     this.setState({ useFiddler: event.target.checked });
   }
 
-  /** When the "FlashPoint Folder Path" input text is changed. */
-  onFlashpointPathChange = async (filePath: string): Promise<void> => {
-    this.setState({ flashpointPath: filePath });
-    // Check if the file-path points at a valid FlashPoint folder
-    const isValid = await isFlashpointValidCheck(filePath);
-    this.setState({ isFlashpointPathValid: isValid });
+  /** When the "Exodos Folder Path" input text is changed. */
+  onExodosPathChange = async (filePath: string): Promise<void> => {
+    this.setState({ exodosPath: filePath });
+    // Check if the file-path points at a valid Exodos folder
+    const isValid = await isExodosValidCheck(filePath);
+    this.setState({ isExodosPathValid: isValid });
   }
 
   onUseCustomTitlebarChange = (isChecked: boolean): void => {
@@ -426,7 +426,7 @@ export class ConfigPage extends React.Component<ConfigPageProps, ConfigPageState
   onSaveAndRestartClick = () => {
     // Save new config to file, then restart the app
     window.External.back.send<any, UpdateConfigData>(BackIn.UPDATE_CONFIG, {
-      flashpointPath: this.state.flashpointPath,
+      exodosPath: this.state.exodosPath,
       useCustomTitlebar: this.state.useCustomTitlebar,
       useFiddler: this.state.useFiddler,
     }, () => { window.External.restart(); });

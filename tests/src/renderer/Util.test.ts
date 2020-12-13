@@ -1,5 +1,5 @@
 /* Tests for src/main/renderer/Util.ts */
-import { shuffle, joinLibraryRoute, getGameImageURL, getPlatformIconURL, toForcedURL, toURL, openConfirmDialog, isFlashpointValidCheck, easterEgg, findElementAncestor } from '@renderer/Util';
+import { shuffle, joinLibraryRoute, getGameImageURL, getPlatformIconURL, toForcedURL, toURL, openConfirmDialog, isExodosValidCheck, easterEgg, findElementAncestor } from '@renderer/Util';
 import * as Util from '@shared/Util';
 import * as path from 'path';
 import { STATIC_PATH } from '@tests/setup';
@@ -8,8 +8,8 @@ import { SharedSocket } from '@shared/back/SharedSocket';
 jest.mock('@shared/Util');
 
 describe('Util.shuffle()', function () {
-  const list: any[] = [9, '12', 29, 'Hello', 3.9, 'Flashpoint', -90];
-  expect(shuffle(list)).not.toBe([ 9, '12', 29, 'Hello', 3.9, 'Flashpoint', -90 ]);
+  const list: any[] = [9, '12', 29, 'Hello', 3.9, 'Exodos', -90];
+  expect(shuffle(list)).not.toBe([ 9, '12', 29, 'Hello', 3.9, 'Exodos', -90 ]);
 });
 
 describe('Util.joinLibraryRoute()', function () {
@@ -74,9 +74,9 @@ describe('Util Renderer Various', () => {
     expect(toURL(notUrl)).toBe(undefined);
   });
 
-  test('Is Flashpoint Path Valid', async () => {
-    await expect(isFlashpointValidCheck(path.join(STATIC_PATH, 'Util_Renderer', 'FlashpointPath'))).resolves.toBeTruthy();
-    await expect(isFlashpointValidCheck('./')).resolves.toBeFalsy();
+  test('Is Exodos Path Valid', async () => {
+    await expect(isExodosValidCheck(path.join(STATIC_PATH, 'Util_Renderer', 'ExodosPath'))).resolves.toBeTruthy();
+    await expect(isExodosValidCheck('./')).resolves.toBeFalsy();
   });
 });
 

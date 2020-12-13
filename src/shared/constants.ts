@@ -1,7 +1,7 @@
 /** Title of the main window. */
 export const APP_TITLE: string = 'eXoDOS v5 Launcher';
 
-// Flashpoint libraries
+// Exodos libraries
 export const ARCADE = 'arcade';
 export const THEATRE = 'theatre';
 
@@ -9,5 +9,5 @@ export const THEATRE = 'theatre';
 export const LOGOS = 'Logos';
 export const SCREENSHOTS = 'Screenshots';
 
-/** Path of the "htdocs" folder relative to the Flashpoint path. */
+/** Path of the "htdocs" folder relative to the Exodos path. */
 export const htdocsPath = 'Server/htdocs';

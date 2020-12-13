@@ -63,11 +63,11 @@ export function HomePage(props: HomePageProps) {
   }, [props.onLaunchGame]);
 
   const onHelpClick = React.useCallback(() => {
-    remote.shell.openItem(path.join(window.External.config.fullFlashpointPath, 'readme.txt'));
-  }, [window.External.config.fullFlashpointPath]);
+    remote.shell.openItem(path.join(window.External.config.fullExodosPath, 'readme.txt'));
+  }, [window.External.config.fullExodosPath]);
 
   const onHallOfFameClick = React.useCallback(() => {
-    const playlist = props.playlists.find(p => p.title === 'Flashpoint Hall of Fame');
+    const playlist = props.playlists.find(p => p.title === 'Exodos Hall of Fame');
     if (playlist) {
       props.onSelectPlaylist(ARCADE, playlist.filename);
       props.clearSearch();
@@ -224,13 +224,6 @@ export function HomePage(props: HomePageProps) {
             onClick={onFavoriteClick}>
             {strings.favoritesPlaylist}
           </Link>
-        </QuickStartItem>
-        <QuickStartItem icon='list'>
-          <a
-            href='http://bluemaxima.org/flashpoint/datahub/Genres'
-            target='_top'>
-            {strings.tagList}
-          </a>
         </QuickStartItem>
         <br />
         <QuickStartItem icon='tag'>

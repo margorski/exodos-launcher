@@ -186,7 +186,7 @@ function downloadUpgrade(upgrade: UpgradeStage, filename: string, onData: (offse
  * Check if all files in the stage's "verify_files" array exists.
  * This aborts as soon as it encounters a file that does not exist.
  * @param stage Stage to check the verification files of.
- * @param flashpointFolder Path of the Flashpoint folder root.
+ * @param exodosFolder Path of the Exodos folder root.
  */
 export async function checkUpgradeStateInstalled(stage: UpgradeStage, baseFolder: string): Promise<boolean> {
   const success = await Promise.all(stage.verify_files.map(check => (
@@ -205,7 +205,7 @@ export async function checkUpgradeStateInstalled(stage: UpgradeStage, baseFolder
  * Check if all files in the stage's "verify_files" array match their SHA256 counterparts from "verify_sha256".
  * This aborts as soon as it encounters a file that does not match its SHA256.
  * @param stage Stage to check the "checks" of.
- * @param flashpointFolder Path of the Flashpoint folder root.
+ * @param exodosFolder Path of the Exodos folder root.
  */
 export async function checkUpgradeStateUpdated(stage: UpgradeStage, baseFolder: string): Promise<boolean> {
   const success = await Promise.all(stage.verify_files.map((check, index) => {

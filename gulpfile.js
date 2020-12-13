@@ -74,8 +74,8 @@ gulp.task('pack', (done) => {
   console.log(publish);
   builder.build({
     config: {
-      appId: 'com.bluemaxima.flashpoint-launcher',
-      productName: 'Flashpoint',
+      appId: 'com.exo.exodos-launcher',
+      productName: 'eXoDOS',
       directories: {
         buildResources: './static/',
         output: './dist/'

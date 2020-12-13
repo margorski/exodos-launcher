@@ -111,7 +111,7 @@ export function getPlatformIconURL(platform: string): string {
 
 export function getGameImagePath(folderName: string, gameId: string): string {
   return path.join(
-    window.External.config.fullFlashpointPath,
+    window.External.config.fullExodosPath,
     window.External.config.data.imageFolderPath,
     folderName,
     `${gameId.substr(0, 2)}/${gameId.substr(2, 2)}/${gameId}.png`
@@ -251,6 +251,6 @@ export async function openConfirmDialog(title: string, message: string, cancel: 
 }
 
 // @TODO Move this to the back process
-export function isFlashpointValidCheck(flashpointPath: string): Promise<boolean> {
-  return new Promise(resolve => fs.stat(path.join(flashpointPath, 'Data/Platforms'), error => resolve(!error)));
+export function isExodosValidCheck(exodosPath: string): Promise<boolean> {
+  return new Promise(resolve => fs.stat(path.join(exodosPath, 'Data/Platforms'), error => resolve(!error)));
 }
