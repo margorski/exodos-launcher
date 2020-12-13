@@ -97,12 +97,16 @@ export function checkIfAncestor(start: Element | null, target: Element | null): 
   return false;
 }
 
-export function getGameImageURL(folderName: string, gameId: string): string {
-  return `${getFileServerURL()}/images/${folderName}/${gameId.substr(0, 2)}/${gameId.substr(2, 2)}/${gameId}.png`;
+export function getGameLogoImageURL(platform: string, gameName: string): string {
+  return `${getFileServerURL()}/images/${platform}/Clear Logo/${gameName}-01.png`;
+}
+
+export function getGameScreenshotImageURL(platform: string, gameName: string): string {
+  return `${getFileServerURL()}/images/${platform}/Screenshot - Gameplay/${gameName}-01.png`;
 }
 
 export function getPlatformIconURL(platform: string): string {
-  return `${getFileServerURL()}/logos/${platform}.png`;
+  return `${getFileServerURL()}/images/Platforms/${platform}/Clear Logo/${platform}.png`;
 }
 
 export function getGameImagePath(folderName: string, gameId: string): string {

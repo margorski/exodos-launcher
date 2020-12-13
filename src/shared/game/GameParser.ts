@@ -21,16 +21,16 @@ export class GameParser {
       for (let i = games.length - 1; i >= 0; i--) {
         collection.games[i] = GameParser.parseRawGame(games[i], filename); 
         if (games[i].ManualPath) {
-          console.log("JOU");
           collection.additionalApplications.push({
-          id: uuid(),
-          applicationPath: games[i].ManualPath || '',
-          autoRunBefore: false,
-          gameId: games[i].ID,
-          launchCommand: '',
-          name: 'Manual',
-          waitForExit: false,
-        });
+            id: uuid(),
+            applicationPath: games[i].ManualPath || '',
+            autoRunBefore: false,
+            gameId: games[i].ID,
+            launchCommand: '',
+            name: 'Manual',
+            waitForExit: false,
+          });
+        }
       }
     }
     return collection;

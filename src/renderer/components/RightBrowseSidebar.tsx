@@ -10,7 +10,7 @@ import { GamePlaylistEntry, GamePropSuggestions, PickType } from '@shared/interf
 import { LangContainer } from '@shared/lang';
 import { WithPreferencesProps } from '../containers/withPreferences';
 import { WithSearchProps } from '../containers/withSearch';
-import { getGameImagePath, getGameImageURL } from '../Util';
+import { getGameImagePath, getGameLogoImageURL, getGameScreenshotImageURL } from '../Util';
 import { LangContext } from '../util/lang';
 import { uuid } from '../util/uuid';
 import { CheckBox } from './CheckBox';
@@ -125,8 +125,8 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   componentDidUpdate(prevProps: RightBrowseSidebarProps, prevState: RightBrowseSidebarState): void {
     if (this.props.isEditing && !prevProps.isEditing) {
       if (this.props.currentGame) {
-        this.checkImageExistance(SCREENSHOTS, this.props.currentGame.id);
-        this.checkImageExistance(LOGOS, this.props.currentGame.id);
+        this.checkImageExistance(SCREENSHOTS, this.props.currentGame.platform, this.props.currentGame.title);
+        this.checkImageExistance(LOGOS, this.props.currentGame.platform, this.props.currentGame.title);
       } else {
         this.setState({
           screenshotExists: false,
@@ -145,7 +145,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
       const editDisabled = !preferencesData.enableEditing;
       const editable = !editDisabled && isEditing;
       const dateAdded = new Date(game.dateAdded).toUTCString();
-      const screenshotSrc = getGameImageURL(SCREENSHOTS, game.id);
+      const screenshotSrc = getGameScreenshotImageURL(game.platform, game.title);
       return (
         <div
           className={'browse-right-sidebar ' + (editable ? 'browse-right-sidebar--edit-enabled' : 'browse-right-sidebar--edit-disabled')}
@@ -504,7 +504,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
                     <div className='browse-right-sidebar__row__screenshot__placeholder__back'>
                       <GameImageSplit
                         text={strings.thumbnail}
-                        imgSrc={this.state.thumbnailExists ? getGameImageURL(LOGOS, game.id) : undefined}
+                        imgSrc={this.state.thumbnailExists ? getGameLogoImageURL(game.platform, game.title) : undefined}
                         showHeaders={true}
                         onAddClick={this.onAddThumbnailDialog}
                         onRemoveClick={this.onRemoveThumbnailClick}
@@ -586,16 +586,16 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
       // Refresh image if it was replaced or removed
       if (this.props.isEditing && this.props.currentGame && this.props.currentGame.id === resData.id) {
         if (resData.folder === LOGOS) {
-          this.checkImageExistance(LOGOS, this.props.currentGame.id);
+          this.checkImageExistance(LOGOS, this.props.currentGame.platform, this.props.currentGame.title);
         } else if (resData.folder === SCREENSHOTS) {
-          this.checkImageExistance(SCREENSHOTS, this.props.currentGame.id);
+          this.checkImageExistance(SCREENSHOTS, this.props.currentGame.platform, this.props.currentGame.title);
         }
       }
     }
   }
 
-  checkImageExistance(folder: typeof LOGOS | typeof SCREENSHOTS, id: string) {
-    fetch(getGameImageURL(folder, id))
+  checkImageExistance(folder: typeof LOGOS | typeof SCREENSHOTS, platform: string, title: string) {
+    fetch(folder == LOGOS ? getGameLogoImageURL(platform, title) : getGameScreenshotImageURL(platform, title))
     .then(res => {
       const target = (folder === LOGOS) ? 'thumbnailExists' : 'screenshotExists';
       const exists = (res.status >= 200 && res.status < 300);
