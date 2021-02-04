@@ -26,14 +26,12 @@ import { TitleBar } from './components/TitleBar';
 import { ConnectedFooter } from './containers/ConnectedFooter';
 import HeaderContainer from './containers/HeaderContainer';
 import { WithPreferencesProps } from './containers/withPreferences';
-import { CreditsFile } from './credits/CreditsFile';
 import { CreditsData } from './credits/types';
 import { GAMES, UpgradeStageState } from './interfaces';
 import { Paths } from './Paths';
 import { AppRouter, AppRouterProps } from './router';
 import { SearchQuery } from './store/search';
 import { UpgradeStage } from './upgrade/types';
-import { UpgradeFile } from './upgrade/UpgradeFile';
 import { isExodosValidCheck, joinLibraryRoute, openConfirmDialog } from './Util';
 import { LangContext } from './util/lang';
 import { checkUpgradeStateInstalled, checkUpgradeStateUpdated, downloadAndInstallUpgrade } from './util/upgrade';
@@ -82,15 +80,8 @@ export type AppState = {
   gamesTotal: number;
   localeCode: string;
 
-  /** Data and state used for the upgrade system (optional install-able downloads from the HomePage). */
-  upgrades: UpgradeStage[];
-  /** If upgrades files have loaded */
-  upgradesDoneLoading: boolean;
   /** Stop rendering to force component unmounts */
   stopRender: boolean;
-  /** Credits data (if any). */
-  creditsData?: CreditsData;
-  creditsDoneLoading: boolean;
   /** Current parameters for ordering games. */
   order: GameOrderChangeEvent;
   /** Scale of the games. */
@@ -160,11 +151,7 @@ export class App extends React.Component<AppProps, AppState> {
       themeList: window.External.initialThemes,
       gamesTotal: -1,
       localeCode: window.External.initialLocaleCode,
-      upgrades: [],
-      upgradesDoneLoading: false,
       stopRender: false,
-      creditsData: undefined,
-      creditsDoneLoading: false,
       gameScale: preferencesData.browsePageGameScale,
       gameLayout: preferencesData.browsePageLayout,
       lang: window.External.initialLang,
@@ -186,14 +173,7 @@ export class App extends React.Component<AppProps, AppState> {
     (() => {
       let askBeforeClosing = true;
       window.onbeforeunload = (event: BeforeUnloadEvent) => {
-        const { upgrades } = this.state;
         let stillDownloading = false;
-        for (let stage of upgrades) {
-          if (stage.state.isInstalling) {
-            stillDownloading = true;
-            break;
-          }
-        }
         if (askBeforeClosing && stillDownloading) {
           event.returnValue = 1; // (Prevent closing the window)
           remote.dialog.showMessageBox({
@@ -488,68 +468,7 @@ export class App extends React.Component<AppProps, AppState> {
     const folderPath = window.External.isDev
         ? process.cwd()
         : path.dirname(remote.app.getPath('exe'));
-    const upgradeCatch = (error: Error) => { console.warn(error); };
-    Promise.all([UpgradeFile.readFile(folderPath, log), UpgradeFile.readFile(fullJsonFolderPath, log)].map(p => p.catch(upgradeCatch)))
-    .then(async (fileData) => {
-      // Combine all file data
-      let allData: UpgradeStage[] = [];
-      for (let data of fileData) {
-        if (data) {
-          allData = allData.concat(data);
-        }
-      }
-      this.setState({
-        upgrades: allData,
-        upgradesDoneLoading: true,
-      });
-      const isValid = await isExodosValidCheck(window.External.config.data.exodosPath);
-      // Notify of downloading initial data (if available)
-      if (!isValid && allData.length > 0) {
-        remote.dialog.showMessageBox({
-          type: 'info',
-          title: strings.dialog.dataRequired,
-          message: strings.dialog.dataRequiredDesc,
-          buttons: [strings.misc.yes, strings.misc.no]
-        })
-        .then((res) => {
-          if (res.response === 0) {
-            this.onDownloadUpgradeClick(allData[0], strings);
-          }
-        });
-      }
-      // Do existance checks on all upgrades
-      await Promise.all(allData.map(async upgrade => {
-        const baseFolder = fullExodosPath;
-        // Perform install checks
-        const installed = await checkUpgradeStateInstalled(upgrade, baseFolder);
-        this.setUpgradeStageState(upgrade.id, {
-          alreadyInstalled: installed,
-          checksDone: true
-        });
-        // If installed, check for updates
-        if (installed) {
-          const upToDate = await checkUpgradeStateUpdated(upgrade, baseFolder);
-          this.setUpgradeStageState(upgrade.id, {
-            upToDate: upToDate
-          });
-        }
-      }));
-    });
-    // Load Credits
-    fetch(`${getFileServerURL()}/credits.json`)
-    .then(res => res.json())
-    .then(async (data) => {
-      this.setState({
-        creditsData: CreditsFile.parseCreditsData(data),
-        creditsDoneLoading: true
-      });
-    })
-    .catch((error) => {
-      console.warn(error);
-      log(`Failed to load credits.\n${error}`);
-      this.setState({ creditsDoneLoading: true });
-    });
-
+  
     // Updater code - DO NOT run in development environment!
     if (!window.External.isDev) {
       autoUpdater.autoDownload = false;
@@ -564,7 +483,8 @@ export class App extends React.Component<AppProps, AppState> {
         });
       });
       autoUpdater.on('update-downloaded', onUpdateDownloaded);
-      autoUpdater.checkForUpdates()
+      console.log("YABADABABADUUUUUUUUUUU", autoUpdater.currentVersion.version);
+      autoUpdater.checkForUpdatesAndNotify()
       .catch((error) => { log(`Error Fetching Update Info - ${error.message}`); });
       console.log('Checking for updates...');
     }
@@ -665,8 +585,6 @@ export class App extends React.Component<AppProps, AppState> {
     const loaded = (
       this.state.loaded[BackInit.GAMES] &&
       this.state.loaded[BackInit.PLAYLISTS] &&
-      this.state.upgradesDoneLoading &&
-      this.state.creditsDoneLoading &&
       this.state.loaded[BackInit.EXEC]
     );
     const libraryPath = getBrowseSubPath(this.props.location.pathname);
@@ -688,9 +606,6 @@ export class App extends React.Component<AppProps, AppState> {
       onQuickSearch: this.onQuickSearch,
       libraries: this.state.libraries,
       localeCode: this.state.localeCode,
-      upgrades: this.state.upgrades,
-      creditsData: this.state.creditsData,
-      creditsDoneLoading: this.state.creditsDoneLoading,
       order: this.state.order,
       gameScale: this.state.gameScale,
       gameLayout: this.state.gameLayout,
@@ -699,7 +614,6 @@ export class App extends React.Component<AppProps, AppState> {
       onSelectGame: this.onSelectGame,
       onSelectPlaylist: this.onSelectPlaylist,
       wasNewGameClicked: this.state.wasNewGameClicked,
-      onDownloadUpgradeClick: this.onDownloadUpgradeClick,
       gameLibrary: libraryPath,
       themeList: this.state.themeList,
       languages: this.state.langList,
@@ -715,8 +629,6 @@ export class App extends React.Component<AppProps, AppState> {
             <SplashScreen
               gamesLoaded={this.state.loaded[BackInit.GAMES]}
               playlistsLoaded={this.state.loaded[BackInit.PLAYLISTS]}
-              upgradesLoaded={this.state.upgradesDoneLoading}
-              creditsLoaded={this.state.creditsDoneLoading}
               miscLoaded={this.state.loaded[BackInit.EXEC]} />
             {/* Title-bar (if enabled) */}
             { window.External.config.data.useCustomTitlebar ? (
@@ -839,23 +751,6 @@ export class App extends React.Component<AppProps, AppState> {
             selectedGameId: undefined,
           }
         }
-      });
-    }
-  }
-
-  private onDownloadUpgradeClick = (stage: UpgradeStage, strings: LangContainer) => {
-    downloadAndInstallStage(stage, this.setUpgradeStageState, strings);
-  }
-
-  private setUpgradeStageState = (id: string, data: Partial<UpgradeStageState>) => {
-    const { upgrades } = this.state;
-    const index = upgrades.findIndex(u => u.id === id);
-    if (index !== -1) {
-      const newUpgrades = deepCopy(upgrades);
-      const newStageState = Object.assign({}, upgrades[index].state, data);
-      newUpgrades[index].state = newStageState;
-      this.setState({
-        upgrades: newUpgrades,
       });
     }
   }

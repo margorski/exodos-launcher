@@ -1477,11 +1477,6 @@ function onFileServerRequest(req: http.IncomingMessage, res: http.ServerResponse
         }
       } break;
 
-      // JSON file(s)
-      case 'credits.json': {
-        serveFile(req, res, path.join(state.config.exodosPath, state.config.jsonFolderPath, 'credits.json'));
-      } break;
-
       // Nothing
       default: {
         res.writeHead(404);

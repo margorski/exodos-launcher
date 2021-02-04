@@ -1,6 +1,6 @@
 {
   "name": "exodos-launcher",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "A desktop application used to browse, manage and play games from eXoDOS collection. Based on BlueMaxima's Flashpoint launcher.",
   "main": "build/main/index.js",
   "config": {
@@ -28,7 +28,7 @@
     "publish:darwin": "npx cross-env-shell NODE_ENV=production PUBLISH=true \"npm run build && npm run pack:darwin\"",
     "publish:all": "npx cross-env-shell NODE_ENV=production PUBLISH=true \"npm run build && npm run pack:all\""
   },
-  "author": "Jesper Gustafsson",
+  "author": "mgo",
   "license": "MIT",
   "dependencies": {
     "chokidar": "3.2.1",

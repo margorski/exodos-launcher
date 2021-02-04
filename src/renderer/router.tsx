@@ -36,9 +36,6 @@ export type AppRouterProps = {
   libraries: string[];
   localeCode: string;
 
-  upgrades: UpgradeStage[];
-  creditsData?: CreditsData;
-  creditsDoneLoading: boolean;
   order?: GameOrderChangeEvent;
   gameScale: number;
   gameLayout: BrowsePageLayout;
@@ -47,7 +44,6 @@ export type AppRouterProps = {
   onSelectGame: (gameId?: string) => void;
   onSelectPlaylist: (library: string, playlistId: string | undefined) => void;
   wasNewGameClicked: boolean;
-  onDownloadUpgradeClick: (stage: UpgradeStage, strings: LangContainer) => void;
   gameLibrary: string;
   themeList: Theme[];
   languages: LangFile[];
@@ -60,10 +56,8 @@ export class AppRouter extends React.Component<AppRouterProps> {
     const homeProps: ConnectedHomePageProps = {
       platforms: this.props.platforms,
       playlists: this.props.playlists,
-      upgrades: this.props.upgrades,
       onSelectPlaylist: this.props.onSelectPlaylist,
       onLaunchGame: this.props.onLaunchGame,
-      onDownloadUpgradeClick: this.props.onDownloadUpgradeClick,
       updateInfo: this.props.updateInfo,
       autoUpdater: this.props.autoUpdater
     };
@@ -92,10 +86,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
       availableLangs: this.props.languages,
       platforms: this.props.platformsFlat,
       localeCode: this.props.localeCode,
-    };
-    const aboutProps: AboutPageProps = {
-      creditsData: this.props.creditsData,
-      creditsDoneLoading: this.props.creditsDoneLoading
     };
     const curateProps: ConnectedCuratePageProps = {
       suggestions: this.props.suggestions,
@@ -127,7 +117,7 @@ export class AppRouter extends React.Component<AppRouterProps> {
         <PropsRoute
           path={Paths.ABOUT}
           component={AboutPage}
-          { ...aboutProps } />
+        />
         <PropsRoute
           path={Paths.CURATE}
           component={ConnectedCuratePage}

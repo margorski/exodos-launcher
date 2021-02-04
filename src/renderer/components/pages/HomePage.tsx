@@ -25,14 +25,10 @@ import { SizeProvider } from '../SizeProvider';
 type OwnProps = {
   platforms: Record<string, string[]>;
   playlists: GamePlaylist[];
-  /** Data and state used for the upgrade system (optional install-able downloads from the HomePage). */
-  upgrades: UpgradeStage[];
   onSelectPlaylist: (library: string, playlistId: string | undefined) => void;
   onLaunchGame: (gameId: string) => void;
   /** Clear the current search query (resets the current search filters). */
   clearSearch: () => void;
-  /** Called when the "download tech" button is clicked. */
-  onDownloadUpgradeClick: (stage: UpgradeStage, strings: LangContainer) => void;
   /** Whether an update is available to the Launcher */
   updateInfo: UpdateInfo | undefined;
   /** Callback to initiate the update */
@@ -44,15 +40,12 @@ export type HomePageProps = OwnProps & WithPreferencesProps & WithSearchProps;
 const updateProgressKey = 'home-page__update-progress';
 
 export function HomePage(props: HomePageProps) {
-  const { onDownloadUpgradeClick } = props;
 
   /** Offset of the starting point in the animated logo's animation (sync it with time of the machine). */
   const logoDelay = React.useMemo(() => (Date.now() * -0.001) + 's', []);
 
   const allStrings = React.useContext(LangContext);
   const strings = allStrings.home;
-
-  const upgradeStages = props.upgrades;
 
   /** Whether the Update Available button has been pressed */
   const [updateStarted, setUpdateStarted] = React.useState(false);
@@ -244,32 +237,6 @@ export function HomePage(props: HomePageProps) {
     </div>
   ), [strings, onFavoriteClick, platformList]);
 
-  const renderedUpgrades = React.useMemo(() => {
-    if (upgradeStages.length > 0) {
-      const renderedStages: JSX.Element[] = [];
-      for (let i = 0; i < upgradeStages.length; i++) {
-        renderedStages.push(
-          <div key={i * 2}>
-            {renderStageSection(allStrings, upgradeStages[i], (stage) => onDownloadUpgradeClick(stage, allStrings))}
-          </div>
-        );
-        renderedStages.push(
-          <br key={(i * 2) + 1}/>
-        );
-      }
-      // Remove trailing <br/>
-      if (renderedStages.length > 0) { renderedStages.pop(); }
-      return (
-        <div className='home-page__box home-page__box--upgrades'>
-          <div className='home-page__box-head'>{strings.upgradesHeader}</div>
-          <ul className='home-page__box-body'>
-            { renderedStages }
-          </ul>
-        </div>
-      );
-    }
-  }, [allStrings, upgradeStages, onDownloadUpgradeClick]);
-
   const renderedNotes = React.useMemo(() => (
     <div className='home-page__box'>
       <div className='home-page__box-head'>{strings.notesHeader}</div>
@@ -309,8 +276,6 @@ export function HomePage(props: HomePageProps) {
         { renderedUpdates }
         {/* Quick Start */}
         { renderedQuickStart }
-        {/* Upgrades */}
-        { renderedUpgrades }
         {/* Extras */}
         { renderedExtras }
         {/* Notes */}
@@ -319,7 +284,7 @@ export function HomePage(props: HomePageProps) {
         { renderedRandomGames }
       </div>
     </div>
-  ), [renderedUpdates, renderedQuickStart, renderedUpgrades, renderedExtras, renderedNotes, renderedRandomGames]);
+  ), [renderedUpdates, renderedQuickStart, renderedExtras, renderedNotes, renderedRandomGames]);
 }
 
 function QuickStartItem(props: { icon?: OpenIconType, className?: string, children?: React.ReactNode }): JSX.Element {
