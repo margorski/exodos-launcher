@@ -1,5 +1,5 @@
 /** Title of the main window. */
-export const APP_TITLE: string = 'eXoDOS v5 Launcher';
+export const APP_TITLE: string = 'exogui';
 
 // Exodos libraries
 export const ARCADE = 'arcade';

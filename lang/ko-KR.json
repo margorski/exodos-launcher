@@ -144,10 +144,10 @@
   },
   "about": {
     "aboutHeader": "소개",
-    "exodos": "BlueMaxima's eXoDOS",
+    "exodos": "eXoDOS",
     "exodosDesc": "플래시포인트 (eXoDOS) 프로젝트는 인터넷 게임들의 보존기록함, 박물관, 그리고 플레이 가능한 모음집이 되고자 목표삼는 보존 프로젝트입니다. 플래시포인트 런처는 이 프로젝트를 위해 만들어졌습니다.",
     "website": "웹사이트",
-    "exodosLauncher": "eXoDOS Launcher",
+    "exodosLauncher": "exogui",
     "exodosLauncherDesc": "플래시포인트 프로젝트의 게임들을 검색하고, 관리하고, 플레이하는데 쓰이는 오픈소스 데스크탑 애플리케이션입니다.",
     "version": "버전",
     "license": "라이센스",

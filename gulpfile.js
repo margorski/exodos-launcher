@@ -74,8 +74,8 @@ gulp.task('pack', (done) => {
   console.log(publish);
   builder.build({
     config: {
-      appId: 'com.exo.exodos-launcher',
-      productName: 'eXoDOS',
+      appId: 'com.exo.exogui',
+      productName: 'exogui',
       directories: {
         buildResources: './static/',
         output: './dist/'

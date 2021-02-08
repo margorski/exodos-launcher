@@ -144,10 +144,10 @@
   },
   "about": {
     "aboutHeader": "Sobre",
-    "exodos": "BlueMaxima's eXoDOS",
+    "exodos": "eXoDOS",
     "exodosDesc": "O projeto de preservação, que este Launcher foi feito para, tem a intenção de ser um arquivo, um museu e uma coleção jogável de jogos web-based da Internet.",
     "website": "Site",
-    "exodosLauncher": "eXoDOS Launcher",
+    "exodosLauncher": "exogui",
     "exodosLauncherDesc": "Uma aplicação open-source de desktop feita para navegar, gerenciar e jogar jogos do projeto eXoDOS.",
     "version": "Versão",
     "license": "Licença",

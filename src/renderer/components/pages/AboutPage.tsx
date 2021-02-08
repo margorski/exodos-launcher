@@ -55,7 +55,7 @@ export class AboutPage extends React.Component<AboutPageProps, AboutPageState> {
                     </div>
                   </div>
                 </div>
-                {/* About eXoDOS Launcher */}
+                {/* About exogui */}
                 <div className='about-page__section'>
                   <p className='about-page__section__title'>{strings.exodosLauncher}</p>
                   <div className='about-page__section__content'>

@@ -1,5 +1,5 @@
-# eXoDOS Launcher
-The launcher for eXoDOS.
+# exogui
+The launcher for eXoDOS project.
 
 ### Status
 
@@ -7,7 +7,7 @@ The launcher for eXoDOS.
 * [eXoDOS](https://exodos.the-eye.us) - eXoDOS project
 
 ## About
-The eXoDOS Launcher is a desktop application made for browsing, storing and launching other applications (games, manuals etc.). It is specifically made for eXoDOS v5 project. Application is based on Flashpoint Launcher application. [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) is generally very cool project so do not forget to check their website. eXoDOS launcher loads Launchbox configuration files format.
+The exogui is a desktop application made for browsing, storing and launching other applications (games, manuals etc.). It is specifically made for eXoDOS v5 project. Application is based on Flashpoint Launcher application. [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) is generally very cool project so do not forget to check their website. Exogui loads Launchbox configuration files format.
 
 ## Setup
 How to setup a development environment:

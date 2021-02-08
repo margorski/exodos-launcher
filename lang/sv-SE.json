@@ -144,10 +144,10 @@
   },
   "about": {
     "aboutHeader": "Om",
-    "exodos": "BlueMaxima's eXoDOS",
+    "exodos": "eXoDOS",
     "exodosDesc": "Bevaringsprojektet som det här programmet byggdes för, med målet att agera som ett arkiv, ett museum och en spelbar samling av webbspel.",
     "website": "Webbplats",
-    "exodosLauncher": "eXoDOS Launcher",
+    "exodosLauncher": "exogui",
     "exodosLauncherDesc": "Ett datorprogram med öppen källkod som används för att utforska, hantera och spela spel från eXoDOS-projektet.",
     "version": "Version",
     "license": "Licens",
