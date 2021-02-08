@@ -71,7 +71,6 @@ gulp.task('pack', (done) => {
   const targets = createBuildTargets(process.env.PACK_PLATFORM, process.env.PACK_ARCH);
   const publish = process.env.PUBLISH ? createPublishInfo() : []; // Uses Git repo for unpublished builds
   const copyFiles = getCopyFiles();
-  console.log(publish);
   builder.build({
     config: {
       appId: 'com.exo.exogui',
@@ -88,6 +87,9 @@ gulp.task('pack', (done) => {
       target: 'dir', // Keep unpacked versions of every pack
       asar: config.isRelease,
       publish: publish,
+      linux: {
+        publish: 'github'
+      },
       win: {
         icon: './icons/icon.ico',
       },
@@ -143,10 +145,6 @@ function getCopyFiles() {
     {
       from: './LICENSE',
       to: './licenses/LICENSE'
-    },
-    { // Copy the OS specific upgrade file
-      from: './upgrade/${os}.json',
-      to: './upgrade.json'
     }
   ];
 }
@@ -154,8 +152,9 @@ function getCopyFiles() {
 function createPublishInfo() {
   return [
     {
-      provider: 'generic',
-      url: 'https://download.unstable.life/${name}/${os}/${arch}/${channel}/'
+      provider: 'github',
+      owner: 'margorski',
+      repo: 'exodos-launcher',
     }
   ];
 }

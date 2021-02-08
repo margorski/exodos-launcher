@@ -471,7 +471,7 @@ export class App extends React.Component<AppProps, AppState> {
   
     // Updater code - DO NOT run in development environment!
     if (!window.External.isDev) {
-      autoUpdater.autoDownload = false;
+      autoUpdater.autoDownload = true;
       autoUpdater.on('error', (error: Error) => {
         console.log(error);
       });
@@ -484,7 +484,7 @@ export class App extends React.Component<AppProps, AppState> {
       });
       autoUpdater.on('update-downloaded', onUpdateDownloaded);
       console.log("YABADABABADUUUUUUUUUUU", autoUpdater.currentVersion.version);
-      autoUpdater.checkForUpdatesAndNotify()
+      autoUpdater.checkForUpdates()
       .catch((error) => { log(`Error Fetching Update Info - ${error.message}`); });
       console.log('Checking for updates...');
     }
