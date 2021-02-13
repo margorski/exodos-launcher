@@ -443,6 +443,7 @@ export class App extends React.Component<AppProps, AppState> {
 
           const index = this.state.playlists.findIndex(p => p.filename === resData);
           if (index >= 0) {
+
             const playlists = [ ...this.state.playlists ];
             playlists.splice(index, 1);
 
@@ -483,7 +484,6 @@ export class App extends React.Component<AppProps, AppState> {
         });
       });
       autoUpdater.on('update-downloaded', onUpdateDownloaded);
-      console.log("YABADABABADUUUUUUUUUUU", autoUpdater.currentVersion.version);
       autoUpdater.checkForUpdates()
       .catch((error) => { log(`Error Fetching Update Info - ${error.message}`); });
       console.log('Checking for updates...');
@@ -589,7 +589,7 @@ export class App extends React.Component<AppProps, AppState> {
     );
     const libraryPath = getBrowseSubPath(this.props.location.pathname);
     const view = this.state.views[libraryPath];
-    const playlists = this.filterAndOrderPlaylistsMemo(this.state.playlists, libraryPath);
+    const playlists = this.orderPlaylistsMemo(this.state.playlists);
     // Props to set to the router
     const routerProps: AppRouterProps = {
       games: view && view.games,
@@ -939,12 +939,11 @@ export class App extends React.Component<AppProps, AppState> {
     });
   }
 
-  filterAndOrderPlaylistsMemo = memoizeOne((playlists: GamePlaylist[], library: string) => {
-    // @FIXTHIS "arcade" should not be hard coded as the "default" library
-    const lowerLibrary = library.toLowerCase();
+  orderPlaylistsMemo = memoizeOne((playlists: GamePlaylist[]) => {
     return (
       playlists
-      .filter(p => p.library ? p.library.toLowerCase() === lowerLibrary : (lowerLibrary === '' || lowerLibrary === 'arcade'))
+      // filter some old and deprecated playlist still existing in app
+      .filter(p => p.title !== "Installed eXoDOS Games")
       .sort((a, b) => {
         if (a.title < b.title) { return -1; }
         if (a.title > b.title) { return  1; }

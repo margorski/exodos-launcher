@@ -391,6 +391,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
         if (playlist) {
           const index = state.playlists.findIndex(p => p.filename === filename);
           if (index >= 0) {
+
             state.playlists[index] = playlist;
             // Clear all query caches that uses this playlist
             const hashes = Object.keys(state.queries);
@@ -1256,64 +1257,64 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
     } break;
 
     case BackIn.SAVE_PLAYLIST: {
-      const reqData: SavePlaylistData = req.data;
+      // const reqData: SavePlaylistData = req.data;
 
-      const folder = state.playlistWatcher.getFolder();
-      const filename = sanitizeFilename(reqData.playlist.filename || `${reqData.playlist.title}.json`);
-      if (folder && filename) {
-        if (reqData.prevFilename === filename) { // (Existing playlist)
-          await PlaylistFile.saveFile(path.join(folder, filename), reqData.playlist);
-        } else {
-          let coolFilename = filename;
+      // const folder = state.playlistWatcher.getFolder();
+      // const filename = sanitizeFilename(reqData.playlist.filename || `${reqData.playlist.title}.json`);
+      // if (folder && filename) {
+      //   if (reqData.prevFilename === filename) { // (Existing playlist)
+      //     await PlaylistFile.saveFile(path.join(folder, filename), reqData.playlist);
+      //   } else {
+      //     let coolFilename = filename;
 
-          // Attempt to find an available filename
-          if (await pathExists(path.join(folder, filename))) {
-            const parts: string[] = [];
+      //     // Attempt to find an available filename
+      //     if (await pathExists(path.join(folder, filename))) {
+      //       const parts: string[] = [];
 
-            // Split filename into "name" and "extension"
-            const dotIndex = filename.lastIndexOf('.');
-            if (dotIndex >= 0) {
-              parts.push(coolFilename.substr(0, dotIndex));
-              parts.push(coolFilename.substr(dotIndex));
-            } else {
-              parts.push(coolFilename);
-            }
+      //       // Split filename into "name" and "extension"
+      //       const dotIndex = filename.lastIndexOf('.');
+      //       if (dotIndex >= 0) {
+      //         parts.push(coolFilename.substr(0, dotIndex));
+      //         parts.push(coolFilename.substr(dotIndex));
+      //       } else {
+      //         parts.push(coolFilename);
+      //       }
 
-            // Attempt extracting a "number" from the "name"
-            let n = 2;
-            const match = parts[parts.length - 1].match(/ \d+$/);
-            if (match) {
-              n = parseInt(match[0]) + 1;
-              parts[parts.length - 1] = parts[parts.length - 1].replace(/ \d+$/, '');
-            }
+      //       // Attempt extracting a "number" from the "name"
+      //       let n = 2;
+      //       const match = parts[parts.length - 1].match(/ \d+$/);
+      //       if (match) {
+      //         n = parseInt(match[0]) + 1;
+      //         parts[parts.length - 1] = parts[parts.length - 1].replace(/ \d+$/, '');
+      //       }
 
-            // Add space between "name" and "number"
-            if (parts.length > 1 && parts[0].length > 0 && !parts[0].endsWith(' ')) { parts[0] += ' '; }
+      //       // Add space between "name" and "number"
+      //       if (parts.length > 1 && parts[0].length > 0 && !parts[0].endsWith(' ')) { parts[0] += ' '; }
 
-            // Increment the "number" and try again a few times
-            let foundName = false;
-            while (n < 100) {
-              const str = `${parts[0] || ''}${n++}${parts[1] || ''}`;
-              if (!(await pathExists(path.join(folder, str)))) {
-                foundName = true;
-                coolFilename = str;
-                break;
-              }
-            }
+      //       // Increment the "number" and try again a few times
+      //       let foundName = false;
+      //       while (n < 100) {
+      //         const str = `${parts[0] || ''}${n++}${parts[1] || ''}`;
+      //         if (!(await pathExists(path.join(folder, str)))) {
+      //           foundName = true;
+      //           coolFilename = str;
+      //           break;
+      //         }
+      //       }
 
-            if (!foundName) { coolFilename = ''; } // Abort save
-          }
+      //       if (!foundName) { coolFilename = ''; } // Abort save
+      //     }
 
-          if (coolFilename) {
-            await PlaylistFile.saveFile(path.join(folder, coolFilename), reqData.playlist);
+      //     if (coolFilename) {
+      //       await PlaylistFile.saveFile(path.join(folder, coolFilename), reqData.playlist);
 
-            // Delete old playlist (if renaming it)
-            if (reqData.prevFilename) {
-              await deletePlaylist(reqData.prevFilename, folder, state.playlists);
-            }
-          }
-        }
-      }
+      //       // Delete old playlist (if renaming it)
+      //       if (reqData.prevFilename) {
+      //         await deletePlaylist(reqData.prevFilename, folder, state.playlists);
+      //       }
+      //     }
+      //   }
+      // }
 
       respond(event.target, {
         id: req.id,
@@ -1451,7 +1452,6 @@ function onFileServerRequest(req: http.IncomingMessage, res: http.ServerResponse
       case 'images': {
         const imageFolder = path.join(state.config.exodosPath, state.config.imageFolderPath);
         const filePath = path.join(imageFolder, urlPath.substr(index + 1));
-        console.log(filePath);
         if (filePath.startsWith(imageFolder)) {
           serveFile(req, res, filePath);
         }
