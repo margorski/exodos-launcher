@@ -5,7 +5,7 @@ import { BackOut, ImageChangeData, ViewGame, WrappedResponse } from '@shared/bac
 import { LOGOS } from '@shared/constants';
 import { GameOrderBy, GameOrderReverse } from '@shared/order/interfaces';
 import { GAMES } from '../interfaces';
-import { findElementAncestor, getGameScreenshotImageURL, getGameLogoImageURL } from '../Util';
+import { findElementAncestor, getGameBoxImageURL } from '../Util';
 import { GameGridItem } from './GameGridItem';
 import { GameItemContainer } from './GameItemContainer';
 
@@ -175,7 +175,7 @@ export class GameGrid extends React.Component<GameGridProps> {
         id={game.id}
         title={game.title}
         platform={game.platform}
-        thumbnail={getGameLogoImageURL(game.platform, game.title)}
+        thumbnail={getGameBoxImageURL(game.platform, game.title)}
         isDraggable={true}
         isSelected={game.id === selectedGameId}
         isDragged={game.id === draggedGameId} />
@@ -188,7 +188,7 @@ export class GameGrid extends React.Component<GameGridProps> {
 
       // Update the image in the browsers cache
       if (resData.folder === LOGOS) {
-        fetch(getGameLogoImageURL(resData.folder, resData.id))
+        fetch(getGameBoxImageURL(resData.folder, resData.id))
         .then(() => {
           // Refresh the image for the game(s) that uses it
           const elements = document.getElementsByClassName('game-grid-item');

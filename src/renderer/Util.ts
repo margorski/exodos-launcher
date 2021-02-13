@@ -97,12 +97,13 @@ export function checkIfAncestor(start: Element | null, target: Element | null): 
   return false;
 }
 
-export function getGameLogoImageURL(platform: string, gameName: string): string {
-  return `${getFileServerURL()}/images/${platform}/Clear Logo/${gameName}-01.png`;
+export function getGameBoxImageURL(platform: string, gameName: string): string {
+  return `${getFileServerURL()}/images/${platform}/Screenshot - Game Title/${gameName.replace(':', '_')}-01.png`;
 }
 
+// TODO change to return all of screenshots for game
 export function getGameScreenshotImageURL(platform: string, gameName: string): string {
-  return `${getFileServerURL()}/images/${platform}/Screenshot - Gameplay/${gameName}-01.png`;
+  return `${getFileServerURL()}/images/${platform}/Screenshot - Gameplay/${gameName.replace(':', '_')}-01.png`;
 }
 
 export function getPlatformIconURL(platform: string): string {

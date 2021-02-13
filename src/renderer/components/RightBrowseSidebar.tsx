@@ -10,7 +10,7 @@ import { GamePlaylistEntry, GamePropSuggestions, PickType } from '@shared/interf
 import { LangContainer } from '@shared/lang';
 import { WithPreferencesProps } from '../containers/withPreferences';
 import { WithSearchProps } from '../containers/withSearch';
-import { getGameImagePath, getGameLogoImageURL, getGameScreenshotImageURL } from '../Util';
+import { getGameImagePath, getGameBoxImageURL, getGameScreenshotImageURL } from '../Util';
 import { LangContext } from '../util/lang';
 import { uuid } from '../util/uuid';
 import { CheckBox } from './CheckBox';
@@ -123,7 +123,6 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   }
 
   componentDidUpdate(prevProps: RightBrowseSidebarProps, prevState: RightBrowseSidebarState): void {
-    if (this.props.isEditing && !prevProps.isEditing) {
       if (this.props.currentGame) {
         this.checkImageExistance(SCREENSHOTS, this.props.currentGame.platform, this.props.currentGame.title);
         this.checkImageExistance(LOGOS, this.props.currentGame.platform, this.props.currentGame.title);
@@ -133,7 +132,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
           thumbnailExists: false,
         });
       }
-    }
+    
   }
 
   render() {
@@ -233,16 +232,6 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
             <>
               <div className='browse-right-sidebar__section'>
                 <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                  <p>{strings.alternateTitles}: </p>
-                  <InputField
-                    text={game.alternateTitles}
-                    placeholder={strings.noAlternateTitles}
-                    className='browse-right-sidebar__searchable'
-                    onChange={this.onAlternateTitlesChange}
-                    editable={editable}
-                    onKeyDown={this.onInputKeyDown} />
-                </div>
-                <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
                   <p>{strings.tags}: </p>
                   <DropdownInputField
                     text={game.tags}
@@ -316,30 +305,6 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
 
                 </div>
                 <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                  <p>{strings.status}: </p>
-                  <DropdownInputField
-                    text={game.status}
-                    placeholder={strings.noStatus}
-                    onChange={this.onStatusChange}
-                    className='browse-right-sidebar__searchable'
-                    editable={editable}
-                    items={suggestions && filterSuggestions(suggestions.status) || []}
-                    onItemSelect={text => { game.status = text; this.forceUpdate(); }}
-                    onClick={this.onStatusClick}
-                    onKeyDown={this.onInputKeyDown} />
-                </div>
-                <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                  <p>{strings.version}: </p>
-                  <InputField
-                    text={game.version}
-                    placeholder={strings.noVersion}
-                    className='browse-right-sidebar__searchable'
-                    onChange={this.onVersionChange}
-                    editable={editable}
-                    onClick={this.onVersionClick}
-                    onKeyDown={this.onInputKeyDown} />
-                </div>
-                <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
                   <p>{strings.releaseDate}: </p>
                   <InputField
                     text={game.releaseDate}
@@ -351,17 +316,6 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
                     onKeyDown={this.onInputKeyDown} />
                 </div>
                 <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                  <p>{strings.language}: </p>
-                  <InputField
-                    text={game.language}
-                    placeholder={strings.noLanguage}
-                    onChange={this.onLanguageChange}
-                    className='browse-right-sidebar__searchable'
-                    editable={editable}
-                    onClick={this.onLanguageClick}
-                    onKeyDown={this.onInputKeyDown} />
-                </div>
-                <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
                   <p>{strings.dateAdded}: </p>
                   <p
                     className='browse-right-sidebar__row__date-added'
@@ -369,29 +323,24 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
                     {dateAdded}
                   </p>
                 </div>
-                <div className='browse-right-sidebar__row'>
-                  <div
-                    className='browse-right-sidebar__row__check-box-wrapper'
-                    onClick={this.onBrokenChange}>
-                    <CheckBox
-                      checked={game.broken}
-                      className='browse-right-sidebar__row__check-box' />
-                    <p> {strings.brokenInInfinity}</p>
-                  </div>
-                </div>
-                <div className='browse-right-sidebar__row'>
-                  <div
-                    className='browse-right-sidebar__row__check-box-wrapper'
-                    onClick={this.onExtremeChange}>
-                    <CheckBox
-                      checked={game.extreme}
-                      className='browse-right-sidebar__row__check-box' />
-                    <p> {strings.extreme}</p>
-                  </div>
-                </div>
               </div>
             </>
           ) }
+          {/* -- Screenshot -- */}
+          { this.state.thumbnailExists ? (
+          <div className='browse-right-sidebar__section'>
+            <div className='browse-right-sidebar__row'>
+              <div
+                className='browse-right-sidebar__row__screenshot'
+                onContextMenu={this.onScreenshotContextMenu}>
+                  <img
+                    className='browse-right-sidebar__row__screenshot-image'
+                    alt='' // Hide the broken link image if source is not found
+                    src={screenshotSrc}
+                    onClick={this.onScreenshotClick} />
+              </div>
+            </div>
+          </div>) : null }
           {/* -- Playlist Game Entry Notes -- */}
           { gamePlaylistEntry ? (
             <div className='browse-right-sidebar__section'>
@@ -492,45 +441,6 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
               </div>
             </div>
           ) : undefined }
-          {/* -- Screenshot -- */}
-          <div className='browse-right-sidebar__section browse-right-sidebar__section--below-gap'>
-            <div className='browse-right-sidebar__row browse-right-sidebar__row__spacer' />
-            <div className='browse-right-sidebar__row'>
-              <div
-                className='browse-right-sidebar__row__screenshot'
-                onContextMenu={this.onScreenshotContextMenu}>
-                { isEditing ? (
-                  <div className='browse-right-sidebar__row__screenshot__placeholder'>
-                    <div className='browse-right-sidebar__row__screenshot__placeholder__back'>
-                      <GameImageSplit
-                        text={strings.thumbnail}
-                        imgSrc={this.state.thumbnailExists ? getGameLogoImageURL(game.platform, game.title) : undefined}
-                        showHeaders={true}
-                        onAddClick={this.onAddThumbnailDialog}
-                        onRemoveClick={this.onRemoveThumbnailClick}
-                        onDrop={this.onThumbnailDrop} />
-                      <GameImageSplit
-                        text={strings.screenshot}
-                        imgSrc={this.state.screenshotExists ? screenshotSrc : undefined}
-                        showHeaders={true}
-                        onAddClick={this.onAddScreenshotDialog}
-                        onRemoveClick={this.onRemoveScreenshotClick}
-                        onDrop={this.onScreenshotDrop} />
-                    </div>
-                    <div className='browse-right-sidebar__row__screenshot__placeholder__front'>
-                      <p>{strings.dropImageHere}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <img
-                    className='browse-right-sidebar__row__screenshot-image'
-                    alt='' // Hide the broken link image if source is not found
-                    src={screenshotSrc}
-                    onClick={this.onScreenshotClick} />
-                ) }
-              </div>
-            </div>
-          </div>
           {/* -- Screenshot Preview -- */}
           { this.state.showPreview ? (
             <ImagePreview
@@ -595,10 +505,12 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   }
 
   checkImageExistance(folder: typeof LOGOS | typeof SCREENSHOTS, platform: string, title: string) {
-    fetch(folder == LOGOS ? getGameLogoImageURL(platform, title) : getGameScreenshotImageURL(platform, title))
+    console.log("CHECK EXISTENCE", folder, platform, title);
+    fetch(folder == LOGOS ? getGameBoxImageURL(platform, title) : getGameScreenshotImageURL(platform, title))
     .then(res => {
       const target = (folder === LOGOS) ? 'thumbnailExists' : 'screenshotExists';
       const exists = (res.status >= 200 && res.status < 300);
+      console.log("EXISTS", exists, target);
       if (this.state[target] !== exists) {
         this.setState({ [target]: exists } as any); // setState is very annoying to make typesafe
       } else {
