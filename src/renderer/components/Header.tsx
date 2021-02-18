@@ -95,21 +95,8 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
               title={strings.logs}
               link={Paths.LOGS} />
             <MenuItem
-              title={strings.config}
-              link={Paths.CONFIG} />
-            <MenuItem
               title={strings.about}
               link={Paths.ABOUT} />
-            { enableEditing ? (
-              <MenuItem
-                title={strings.curate}
-                link={Paths.CURATE} />
-            ) : undefined }
-            { showDeveloperTab ? (
-              <MenuItem
-                title={strings.developer}
-                link={Paths.DEVELOPER} />
-            ) : undefined }
           </ul>
         </div>
         {/* Header Search */}

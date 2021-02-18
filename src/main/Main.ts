@@ -332,7 +332,7 @@ export function main(init: Init): void {
       },
     });
     // Remove the menu bar
-    window.setMenu(null);
+    window.setMenuBarVisibility(Util.isDev);
     // and load the index.html of the app.
     window.loadFile(path.join(__dirname, '../window/index.html'));
     // Open the DevTools. Don't open if using a remote debugger (like vscode)

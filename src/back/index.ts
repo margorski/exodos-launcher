@@ -1,5 +1,5 @@
 import { AddLogData, BackIn, BackInit, BackInitArgs, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, DeleteGameData, DeleteImageData, DeletePlaylistData, DuplicateGameData, ExportGameData, GetAllGamesResponseData, GetExecData, GetGameData, GetGameResponseData, GetGamesTotalResponseData, GetMainInitDataResponse, GetPlaylistResponse, GetRendererInitDataResponse, GetSuggestionsResponseData, ImageChangeData, ImportCurationData, ImportCurationResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchAddAppData, LaunchCurationAddAppData, LaunchCurationData, LaunchGameData, LocaleUpdateData, OpenDialogData, OpenDialogResponseData, OpenExternalData, OpenExternalResponseData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, RandomGamesData, RandomGamesResponseData, SaveGameData, SaveImageData, SavePlaylistData, ServiceActionData, SetLocaleData, ThemeChangeData, ThemeListChangeData, UpdateConfigData, ViewGame, WrappedRequest, WrappedResponse } from '@shared/back/types';
-import { overwriteConfigData } from '@shared/config/util';
+import { getDefaultConfigData, overwriteConfigData } from '@shared/config/util';
 import { LOGOS, SCREENSHOTS } from '@shared/constants';
 import { findMostUsedApplicationPaths } from '@shared/curate/defaultValues';
 import { stringifyCurationFormat } from '@shared/curate/format/stringifier';
@@ -117,12 +117,12 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   state.exePath = content.exePath;
 
   // Read configs & preferences
-  const [pref, conf] = await (Promise.all([
-    PreferencesFile.readOrCreateFile(path.join(state.configFolder, preferencesFilename)),
-    ConfigFile.readOrCreateFile(path.join(state.configFolder, configFilename))
-  ]));
-  state.preferences = pref;
-  state.config = conf;
+  // const [pref, conf] = await (Promise.all([
+  //   PreferencesFile.readOrCreateFile(path.join(state.configFolder, preferencesFilename)),
+  //   ConfigFile.readOrCreateFile(path.join(state.configFolder, configFilename))
+  // ]));
+  state.preferences = defaultPreferencesData;
+  state.config = getDefaultConfigData(process.platform);
 
   // Init services
   try {

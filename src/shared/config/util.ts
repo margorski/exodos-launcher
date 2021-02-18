@@ -11,7 +11,7 @@ type IConfigDataDefaults = {
 
 /** Default config values used as a "base" for the different platform defaults. */
 const configDataDefaultBase: Readonly<IAppConfigData> = Object.freeze({
-  exodosPath: '',
+  exodosPath: './',
   imageFolderPath: 'Images',
   logoFolderPath: 'Data/Logos',
   playlistFolderPath: 'Data/Playlists',
