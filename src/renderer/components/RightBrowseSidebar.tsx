@@ -506,12 +506,10 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   }
 
   checkImageExistance(folder: typeof LOGOS | typeof SCREENSHOTS, platform: string, title: string) {
-    console.log("CHECK EXISTENCE", folder, platform, title);
     fetch(folder == LOGOS ? getGameBoxImageURL(platform, title) : getGameScreenshotImageURL(platform, title))
     .then(res => {
       const target = (folder === LOGOS) ? 'thumbnailExists' : 'screenshotExists';
       const exists = (res.status >= 200 && res.status < 300);
-      console.log("EXISTS", exists, target);
       if (this.state[target] !== exists) {
         this.setState({ [target]: exists } as any); // setState is very annoying to make typesafe
       } else {
