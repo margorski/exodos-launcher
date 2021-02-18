@@ -123,6 +123,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   }
 
   componentDidUpdate(prevProps: RightBrowseSidebarProps, prevState: RightBrowseSidebarState): void {
+    if (this.props.currentGame !== prevProps.currentGame) {
       if (this.props.currentGame) {
         this.checkImageExistance(SCREENSHOTS, this.props.currentGame.platform, this.props.currentGame.title);
         this.checkImageExistance(LOGOS, this.props.currentGame.platform, this.props.currentGame.title);
@@ -132,7 +133,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
           thumbnailExists: false,
         });
       }
-    
+    }
   }
 
   render() {
