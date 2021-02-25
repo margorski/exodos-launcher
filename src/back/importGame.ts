@@ -197,6 +197,7 @@ function createGameFromCurationMeta(gameId: string, meta: EditCurationMeta, date
   return {
     id:                  gameId, // (Re-use the id of the curation)
     title:               meta.title               || '',
+    convertedTitle:      '',
     alternateTitles:     meta.alternateTitles     || '',
     series:              meta.series              || '',
     developer:           meta.developer           || '',
