@@ -20,6 +20,7 @@ export enum BackIn {
   GET_ALL_GAMES,
   RANDOM_GAMES,
   LAUNCH_GAME,
+  LAUNCH_GAME_SETUP,
   DELETE_GAME,
   DUPLICATE_GAME,
   EXPORT_GAME,
@@ -281,6 +282,7 @@ export type UpdateConfigData = Partial<IAppConfigData>;
 export type ViewGame = {
   id: string;
   title: string;
+  convertedTitle: string;
   platform: string;
   // List view only
   genre: string;

@@ -6,6 +6,7 @@ export class GameInfo {
     return {
       id: '',
       title: '',
+      convertedTitle: '',
       alternateTitles: '',
       series: '',
       developer: '',

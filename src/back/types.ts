@@ -49,6 +49,7 @@ export type BackState = {
   playlistQueue: EventQueue;
   playlists: GamePlaylist[];
   execMappings: ExecMapping[];
+  installedGames: string[];
 }
 
 export type BackQueryChache = {

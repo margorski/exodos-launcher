@@ -6,9 +6,7 @@ type OrderFn = (a: IGameInfo, b: IGameInfo) => number;
 
 /** Order games by their order title alphabetically (ascending) */
 function orderByTitle(a: IGameInfo, b: IGameInfo): number {
-  if (a.orderTitle < b.orderTitle) { return -1; }
-  if (a.orderTitle > b.orderTitle) { return  1; }
-  return 0;
+  return a.orderTitle.localeCompare(b.orderTitle);
 }
 
 /** Order games by their first tag alphabetically (ascending) */
@@ -159,7 +157,7 @@ function filterSearch(text: string, games: IGameInfo[]): IGameInfo[] {
       for (let j = titleFilters.length - 1; j >= 0; j--) {
         const filter = titleFilters[j];
         const word = filter.phrase.toLowerCase();
-        if (game.title.toLowerCase().indexOf(word)           === -1 &&
+        if (game.convertedTitle.toLowerCase().indexOf(word)           === -1 &&
             game.alternateTitles.toLowerCase().indexOf(word) === -1 &&
             game.developer.toLowerCase().indexOf(word)       === -1 &&
             game.publisher.toLowerCase().indexOf(word)       === -1 &&

@@ -18,6 +18,8 @@ export interface IPureGameInfo {
   id: string;
   /** Full title of the game */
   title: string;
+  /** Title of the game with The moved to end if exists */
+  convertedTitle: string;
   /** Any alternate titles to match against search */
   alternateTitles: string;
   /** Game series the game belongs to (empty string if none) */

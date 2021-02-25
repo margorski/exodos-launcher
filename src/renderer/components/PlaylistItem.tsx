@@ -88,17 +88,7 @@ export function PlaylistItem(props: PlaylistItemProps) {
               style={{ backgroundImage: icon }}
               onClick={onIconClick} />
           </div>
-        ) : (
-          <div
-            className='playlist-list-item__icon simple-center'
-            onClick={onIconClick}>
-            <div className='playlist-list-item__icon-placeholder simple-center__inner'>
-              <OpenIcon
-                icon='question-mark'
-                className='playlist-list-item__icon-placeholder-inner' />
-            </div>
-          </div>
-        ) }
+        ) : null }
         {/* Title */}
         <div className='playlist-list-item__title simple-center'>
           <InputField

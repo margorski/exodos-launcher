@@ -1,20 +1,19 @@
 import { AddLogData, BackIn, BackInit, BackInitArgs, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, DeleteGameData, DeleteImageData, DeletePlaylistData, DuplicateGameData, ExportGameData, GetAllGamesResponseData, GetExecData, GetGameData, GetGameResponseData, GetGamesTotalResponseData, GetMainInitDataResponse, GetPlaylistResponse, GetRendererInitDataResponse, GetSuggestionsResponseData, ImageChangeData, ImportCurationData, ImportCurationResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchAddAppData, LaunchCurationAddAppData, LaunchCurationData, LaunchGameData, LocaleUpdateData, OpenDialogData, OpenDialogResponseData, OpenExternalData, OpenExternalResponseData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, RandomGamesData, RandomGamesResponseData, SaveGameData, SaveImageData, SavePlaylistData, ServiceActionData, SetLocaleData, ThemeChangeData, ThemeListChangeData, UpdateConfigData, ViewGame, WrappedRequest, WrappedResponse } from '@shared/back/types';
-import { getDefaultConfigData, overwriteConfigData } from '@shared/config/util';
+import { overwriteConfigData } from '@shared/config/util';
 import { LOGOS, SCREENSHOTS } from '@shared/constants';
 import { findMostUsedApplicationPaths } from '@shared/curate/defaultValues';
 import { stringifyCurationFormat } from '@shared/curate/format/stringifier';
 import { convertToCurationMeta } from '@shared/curate/metaToMeta';
 import { FilterGameOpts, filterGames, orderGames, orderGamesInPlaylist } from '@shared/game/GameFilter';
 import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
-import { DeepPartial, GamePlaylist, IBackProcessInfo, IService, ProcessAction, RecursivePartial } from '@shared/interfaces';
+import { DeepPartial, GamePlaylist, GamePlaylistEntry, IBackProcessInfo, IService, ProcessAction, RecursivePartial } from '@shared/interfaces';
 import { autoCode, getDefaultLocalization, LangContainer, LangFile, LangFileContent } from '@shared/lang';
 import { ILogEntry, ILogPreEntry } from '@shared/Log/interface';
-import { stringifyLogEntriesRaw } from '@shared/Log/LogCommon';
 import { GameOrderBy, GameOrderReverse } from '@shared/order/interfaces';
 import { PreferencesFile } from '@shared/preferences/PreferencesFile';
 import { defaultPreferencesData, overwritePreferenceData } from '@shared/preferences/util';
 import { parseThemeMetaData, themeEntryFilename, ThemeMeta } from '@shared/ThemeFile';
-import { createErrorProxy, deepCopy, isErrorProxy, recursiveReplace, removeFileExtension, stringifyArray } from '@shared/Util';
+import { createErrorProxy, deepCopy, isErrorProxy, recursiveReplace, removeFileExtension, stringifyArray, getFilePathExtension } from '@shared/Util';
 import { Coerce } from '@shared/utils/Coerce';
 import * as child_process from 'child_process';
 import { createHash } from 'crypto';
@@ -26,6 +25,7 @@ import * as mime from 'mime';
 import * as path from 'path';
 import * as util from 'util';
 import * as WebSocket from 'ws';
+import * as chokidar from 'chokidar';
 import { ConfigFile } from './ConfigFile';
 import { loadExecMappingsFile } from './Execs';
 import { GameManager } from './game/GameManager';
@@ -96,6 +96,7 @@ const state: BackState = {
   playlistQueue: new EventQueue(),
   playlists: [],
   execMappings: [],
+  installedGames: []
 };
 
 const preferencesFilename = 'preferences.json';
@@ -116,13 +117,24 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   state.localeCode = content.localeCode;
   state.exePath = content.exePath;
 
-  // Read configs & preferences
-  // const [pref, conf] = await (Promise.all([
-  //   PreferencesFile.readOrCreateFile(path.join(state.configFolder, preferencesFilename)),
-  //   ConfigFile.readOrCreateFile(path.join(state.configFolder, configFilename))
-  // ]));
-  state.preferences = defaultPreferencesData;
-  state.config = getDefaultConfigData(process.platform);
+  //Read configs & preferences
+  const [pref, conf] = await (Promise.all([
+    PreferencesFile.readOrCreateFile(path.join(state.configFolder, preferencesFilename)),
+    ConfigFile.readOrCreateFile(path.join(state.configFolder, configFilename))
+  ]));
+  state.preferences = pref;
+  state.config = conf;
+
+
+  console.log('Starting directory: ' + process.cwd());
+  
+  try {
+    process.chdir(state.configFolder);
+    console.log('New directory: ' + process.cwd());
+  }
+  catch (err) {
+    console.log('chdir: ' + err);
+  }
 
   // Init services
   try {
@@ -147,6 +159,87 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     }
   }
 
+  const gamesPath = path.join(state.config.exodosPath, 'eXo/eXoDOS/');
+
+  function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
+    const dosPlatform = state.gameManager.platforms.find(p => p.name === 'MS-DOS');
+    if (!dosPlatform) {
+      console.log("Cannot create installed game playlist. MS-DOS platform not loaded yet.");
+      return;
+    }
+
+    const gamesList = state.installedGames.map(gameName => { 
+      const gameInPlatform = dosPlatform.collection.games.find(
+        game => game.applicationPath.split('\\').includes(gameName)
+      );
+      if (gameInPlatform) return { id: gameInPlatform.id };
+      else return;
+    }).filter(g => g) as GamePlaylistEntry[];
+
+    const playlistDummyFilename = 'installedgamesdummyfile';
+    var existingPlaylistIndex = state.playlists.findIndex(p => p.filename === playlistDummyFilename);
+    if (existingPlaylistIndex !== -1) {
+      state.playlists[existingPlaylistIndex].games = gamesList;
+    }
+    else state.playlists.unshift({
+      title: 'Installed games',
+      description: 'A list of installed games.',
+      author: '',
+      icon: '',
+      library: 'MS-DOS.xml',
+      filename: playlistDummyFilename,
+      games: gamesList
+    });
+
+    // Clear all query caches that uses this playlist
+    const hashes = Object.keys(state.queries);
+    for (let hash of hashes) {
+      const cache = state.queries[hash];
+      if (cache.query.playlistId === playlistDummyFilename) {
+        delete state.queries[hash]; // Clear query from cache
+      }
+    }
+    if (doBroadcast) {
+      broadcast<PlaylistUpdateData>({
+        id: '',
+        type: BackOut.PLAYLIST_UPDATE,
+        data: state.playlists[0],
+      });
+    }
+  }
+  function rescanInstalledGames() {
+    const installedGames = fs.readdirSync(gamesPath, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .filter(dirent => dirent.name !== `!dos`)
+      .map(dirent => dirent.name);
+    return installedGames;
+  }
+  // Init games watcher
+  var installedGamesWatcherInitialized = false;
+  const installedGamesWatcher = chokidar.watch(gamesPath, {ignored: /^\./, persistent: true, awaitWriteFinish: true, depth: 0});
+  installedGamesWatcher
+    .on('addDir', path => {
+      if (!installedGamesWatcherInitialized) return;
+      console.log(`Game ${path} added, rescan installed games.`);
+      state.installedGames = rescanInstalledGames();
+      addInstalledGamesPlaylist(true);
+    })
+    .on('unlinkDir', path => {
+      if (!installedGamesWatcherInitialized) return;
+      console.log(`Game ${path} has been removed, rescan installed games.`)
+      state.installedGames = rescanInstalledGames();
+      addInstalledGamesPlaylist(true);
+    })
+    .on('ready', () => {
+      installedGamesWatcherInitialized = true;
+      state.installedGames = rescanInstalledGames();
+      console.log('Initial scan complete. Ready for changes');
+    })
+    .on('error', error => console.log(`Watcher error: ${error}`));
+    
+
+  
+        
   // Init language
   state.languageWatcher.on('ready', () => {
     // Add event listeners
@@ -372,6 +465,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
       state.init[BackInit.PLAYLISTS] = true;
       state.initEmitter.emit(BackInit.PLAYLISTS);
     });
+
     // Functions
     function onPlaylistAddOrChange(filename: string, offsetPath: string, doBroadcast: boolean = true) {
       state.playlistQueue.push(async () => {
@@ -445,6 +539,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   .finally(() => {
     state.init[BackInit.GAMES] = true;
     state.initEmitter.emit(BackInit.GAMES);
+    addInstalledGamesPlaylist(false);
   });
 
   // Load Exec Mappings
@@ -639,8 +734,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
     return;
   }
 
-  // console.log('Back Request - ', req); // @DEBUG
-
   state.messageEmitter.emit(req.id, req);
 
   switch (req.type) {
@@ -800,6 +893,32 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
 
       if (game) {
         GameLauncher.launchGame({
+          game,
+          addApps,
+          fpPath: path.resolve(state.config.exodosPath),
+          native: state.config.nativePlatforms.some(p => p === game.platform),
+          execMappings: state.execMappings,
+          lang: state.languageContainer,
+          log,
+          openDialog: openDialog(event.target),
+          openExternal: openExternal(event.target),
+        });
+      }
+
+      respond(event.target, {
+        id: req.id,
+        type: BackOut.GENERIC_RESPONSE,
+        data: undefined
+      });
+    } break;
+
+    case BackIn.LAUNCH_GAME_SETUP: {
+      const reqData: LaunchGameData = req.data;
+      const game = findGame(reqData.id);
+      const addApps = findAddApps(reqData.id);
+
+      if (game) {
+        GameLauncher.launchGameSetup({
           game,
           addApps,
           fpPath: path.resolve(state.config.exodosPath),
@@ -1037,9 +1156,12 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         playlistId: reqData.query.playlistId,
       };
 
-      const hash = createHash('sha256').update(JSON.stringify(query)).digest('base64');
-      let cache = state.queries[hash];
-      if (!cache) { state.queries[hash] = cache = queryGames(query); } // @TODO Start clearing the cache if it gets too full
+      // const hash = createHash('sha256').update(JSON.stringify(query)).digest('base64');
+      // let cache = state.queries[hash];
+      // if (!cache) { state.queries[hash] = 
+        
+       var cache = queryGames(query); 
+      //} // @TODO Start clearing the cache if it gets too full
 
       respond<BrowseViewPageResponseData>(event.target, {
         id: req.id,
@@ -1169,7 +1291,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
           break;
         }
       }
-
       respond<QuickSearchResponseData>(event.target, {
         id: req.id,
         type: BackOut.GENERIC_RESPONSE,
@@ -1477,6 +1598,19 @@ function onFileServerRequest(req: http.IncomingMessage, res: http.ServerResponse
         }
       } break;
 
+      // Exodos directory, serving html from there
+      case 'exo': {
+        const extension = getFilePathExtension(urlPath);
+        if (extension.toLocaleLowerCase() === 'html' || extension.toLocaleLowerCase() === 'htm') {
+          const filePath = path.join(state.config.exodosPath, urlPath);
+          serveFile(req, res, filePath);
+        }
+        else {
+          res.writeHead(404);
+          res.end();
+        }
+        break;
+      }
       // Nothing
       default: {
         res.writeHead(404);
@@ -1561,12 +1695,10 @@ function exit() {
 }
 
 function respond<T>(target: WebSocket, response: WrappedResponse<T>): void {
-  // console.log('RESPOND', response);
   target.send(JSON.stringify(response));
 }
 
 function broadcast<T>(response: WrappedResponse<T>): number {
-  // console.log('BROADCAST', response);
   let count = 0;
   if (!isErrorProxy(state.server)) {
     const message = JSON.stringify(response);
@@ -1596,9 +1728,9 @@ function log(preEntry: ILogPreEntry, id?: string): void {
     entry.content = entry.content+'';
   }
 
-  fs.appendFile('./launcher.log', stringifyLogEntriesRaw([entry]), () => {
-    console.error('Failed to write to log file');
-  });
+  // fs.appendFile('./launcher.log', stringifyLogEntriesRaw([entry]), () => {
+  //   console.error('Failed to write to log file');
+  // });
   state.log.push(entry);
 
   broadcast({
@@ -1672,13 +1804,8 @@ function searchGames(opts: SearchGamesOpts): IGameInfo[] {
       foundGames = foundGames.concat(filterGames(platforms[i].collection.games, filterOpts));
     }
   }
-
   // Order games
-  if (opts.playlist) {
-    orderGamesInPlaylist(foundGames, opts.playlist);
-  } else {
-    orderGames(foundGames, { orderBy: opts.orderBy, orderReverse: opts.orderReverse });
-  }
+  orderGames(foundGames, { orderBy: opts.orderBy, orderReverse: opts.orderReverse });
 
   return foundGames;
 }
@@ -1779,7 +1906,6 @@ async function deletePlaylist(id: string, folder: string, playlists: GamePlaylis
 
 function queryGames(query: BackQuery): BackQueryChache {
   const playlist = state.playlists.find(p => p.filename === query.playlistId);
-
   const results = searchGames({
     extreme: query.extreme,
     broken: query.broken,
@@ -1796,6 +1922,7 @@ function queryGames(query: BackQuery): BackQueryChache {
     viewGames[i] = {
       id: g.id,
       title: g.title,
+      convertedTitle: g.convertedTitle,
       platform: g.platform,
       genre: g.tags,
       developer: g.developer,

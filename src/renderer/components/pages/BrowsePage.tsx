@@ -74,7 +74,7 @@ export type BrowsePageState = {
   currentAddApps?: IAdditionalApplicationInfo[];
   /** Buffer for the playlist notes of the selected game/playlist (all changes are made to the game until saved). */
   currentPlaylistNotes?: string;
-  /** If the "edit mode" is currently enabled. */
+  /** If game is installed */
   isEditingGame: boolean;
   /** If the selected game is a new game being created. */
   isNewGame: boolean;
@@ -119,19 +119,18 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
     this.state = initialState;
   }
 
+  componentDidMount() {
+    updatePreferencesData({ browsePageShowLeftSidebar: !!this.props.playlists.length });
+  }
+
   componentDidUpdate(prevProps: BrowsePageProps, prevState: BrowsePageState) {
     const { gameLibrary, selectedGameId, selectedPlaylistId } = this.props;
-    const { isEditingGame, quickSearch } = this.state;
-    // Check if it ended editing
-    if (!isEditingGame && prevState.isEditingGame) {
-      this.updateCurrentGameAndAddApps();
-      // this.setState({ suggestions: undefined });
-    }
-    // Check if it started editing
-    if (isEditingGame && !prevState.isEditingGame) {
-      this.updateCurrentGameAndAddApps();
-      // this.setState({ suggestions: getSuggestions(central.games.listPlatforms(), libraryData.libraries) }); @FIXTHIS
-    }
+    const { quickSearch } = this.state;
+
+    if (this.props.playlists !== prevProps.playlists) {
+      updatePreferencesData({ browsePageShowLeftSidebar: !!this.props.playlists.length });
+    } 
+    
     // Update current game and add-apps if the selected game changes
     if (selectedGameId && selectedGameId !== prevProps.selectedGameId) {
       this.updateCurrentGameAndAddApps();
@@ -161,10 +160,11 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
     if (prevState.quickSearch !== quickSearch && quickSearch !== '') {
       this.props.onQuickSearch(quickSearch);
     }
-    // Create a new game if the "New Game" button is pushed
-    this.createNewGameIfClicked(prevProps.wasNewGameClicked);
     // Check the library selection changed (and no game is selected)
     if (!selectedGameId && gameLibrary !== prevProps.gameLibrary) {
+      if (this.props.clearSearch) {
+        this.props.clearSearch();
+      }
       this.setState({
         currentGame: undefined,
         currentAddApps: undefined,
@@ -235,7 +235,6 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
                   noRowsRenderer={this.noRowsRendererMemo(strings.browse)}
                   onGameSelect={this.onGameSelect}
                   onGameLaunch={this.onGameLaunch}
-                  onContextMenu={this.onGameContextMenuMemo(strings)}
                   onGameDragStart={this.onGameDragStart}
                   onGameDragEnd={this.onGameDragEnd}
                   onRequestGames={this.props.onRequestGames}
@@ -256,7 +255,6 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
                   noRowsRenderer={this.noRowsRendererMemo(strings.browse)}
                   onGameSelect={this.onGameSelect}
                   onGameLaunch={this.onGameLaunch}
-                  onContextMenu={this.onGameContextMenuMemo(strings)}
                   onGameDragStart={this.onGameDragStart}
                   onGameDragEnd={this.onGameDragEnd}
                   onRequestGames={this.props.onRequestGames}
@@ -285,6 +283,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
             gamePlaylistEntry={gamePlaylistEntry}
             isEditing={this.state.isEditingGame}
             isNewGame={this.state.isNewGame}
+            isInstalled={this.isGameInstalled()}
             onEditClick={this.onStartEditClick}
             onDiscardClick={this.onDiscardEditClick}
             onSaveGame={this.onSaveEditClick}
@@ -294,6 +293,13 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
     );
   }
 
+  private isGameInstalled = () => {
+    if (this.props.playlists.length === 0 || !this.state.currentGame) return false;
+    const gameId = this.state.currentGame.id;
+
+    return this.props.playlists[0].games.findIndex(g => g.id === gameId) !== -1;
+    // this.props.playlists[0].games.find(g => g.id === this.state.currentGame?.id) !== undefined;
+  }
   private noRowsRendererMemo = memoizeOne((strings: LangContainer['browse']) => {
     return () => (
       <div className='game-list__no-games'>
@@ -604,6 +610,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
         currentGame: {
           id: uuid(),
           title: '',
+          convertedTitle: '',
           alternateTitles: '',
           series: '',
           developer: '',

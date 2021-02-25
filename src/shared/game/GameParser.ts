@@ -36,12 +36,19 @@ export class GameParser {
     return collection;
   }
 
+  private static convertTheInTitle(title: string): string {
+    if (title.toLowerCase().startsWith('the ')) {
+      return title.replace(/the /ig, '').concat(', The');
+    }
+    return title;
+  }
 
   public static parseRawGame(data: Partial<IRawGameInfo>, library: string): IGameInfo {
-    const title: string = unescapeHTML(data.Title);
+    const title = data.Title ? this.convertTheInTitle(data.Title.toString()) : "";
     return {
       id: unescapeHTML(data.ID),
-      title: title,
+      title: unescapeHTML(data.Title),
+      convertedTitle: unescapeHTML(title),
       alternateTitles: unescapeHTML(data.AlternateTitles),
       series: unescapeHTML(data.Series),
       developer: unescapeHTML(data.Developer),

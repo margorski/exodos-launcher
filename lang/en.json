@@ -176,7 +176,7 @@
     "noStatus": "No Status",
     "version": "Version",
     "noVersion": "No Version",
-    "releaseDate": "Release Date",
+    "releaseYear": "Release Year",
     "noReleaseDate": "No Release Date",
     "language": "Language",
     "noLanguage": "No Language",
@@ -189,7 +189,7 @@
     "noNotes": "No Notes",
     "originalDescription": "Original Description",
     "noOriginalDescription": "No Original Description",
-    "additionalApplications": "Additional Applications",
+    "additionalApplications": "Additional Resources",
     "noName": "No Name",
     "launch": "Launch",
     "autoRunBefore": "Auto Run Before",
@@ -228,7 +228,11 @@
     "loadingGames": "Loading Games...",
     "thereAreNoGames": "There are no games.",
     "noGameMatchedDesc": "No game title matched your search.",
-    "noGameMatchedSearch": "Try searching for something less restrictive."
+    "noGameMatchedSearch": "Try searching for something less restrictive.",
+    "play": "Play",
+    "install": "Install",
+    "remove": "Remove",
+    "open": "Open"
   },
   "curate": {
     "importAll": "Import All",

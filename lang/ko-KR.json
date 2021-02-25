@@ -176,7 +176,7 @@
     "noStatus": "상태 없음",
     "version": "버전",
     "noVersion": "버전 없음",
-    "releaseDate": "출시일",
+    "releaseYear": "출시일",
     "noReleaseDate": "출시일 없음",
     "language": "언어",
     "noLanguage": "언어 없음",
@@ -228,7 +228,11 @@
     "loadingGames": "게임을 로딩하는 중입니다...",
     "thereAreNoGames": "게임을 찾을 수 없습니다.",
     "noGameMatchedDesc": "검색 조건에 맞는 게임이 없습니다.",
-    "noGameMatchedSearch": "좀 더 넓은 범위의 조건을 사용해 검색해보세요."
+    "noGameMatchedSearch": "좀 더 넓은 범위의 조건을 사용해 검색해보세요.",
+    "play": "Play",
+    "install": "Install",
+    "remove": "Remove",
+    "open": "Open"
   },
   "curate": {
     "importAll": "모두 가져오기",

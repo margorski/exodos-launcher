@@ -15,7 +15,7 @@ export type RightBrowseSidebarAddAppProps = {
   /** Called when a field is edited */
   onDelete?: (addAppId: string) => void;
   /** Called when the launch button is clicked */
-  onLaunch?: (addAppId: string) => void;
+  onLaunch?: (addApp: IAdditionalApplicationInfo) => void;
   /** If the editing is disabled (it cant go into "edit mode") */
   editDisabled?: boolean;
 };
@@ -120,7 +120,7 @@ export class RightBrowseSidebarAddApp extends React.Component<RightBrowseSidebar
 
   onLaunchClick = (): void => {
     if (this.props.onLaunch) {
-      this.props.onLaunch(this.props.addApp.id);
+      this.props.onLaunch(this.props.addApp);
     }
   }
 

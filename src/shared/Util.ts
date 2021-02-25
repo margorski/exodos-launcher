@@ -51,6 +51,14 @@ export function removeFileExtension(filename: string): string {
   return filename.substr(0, lastDotIndex);
 }
 
+export function getFilePathExtension(filepath: string): string {
+  const lastDotIndex = filepath.lastIndexOf('.');
+  if (lastDotIndex < -1) return "";
+
+  const splittedFilepath = filepath.split('.');
+  return splittedFilepath[splittedFilepath.length - 1];
+}
+
 /**
  * Get the filename of a path or url
  * (get everything after the last slash symbol)

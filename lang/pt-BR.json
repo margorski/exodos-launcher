@@ -176,7 +176,7 @@
     "noStatus": "Sem Estado",
     "version": "Versão",
     "noVersion": "Sem Versão",
-    "releaseDate": "Data de Lançamento",
+    "releaseYear": "Data de Lançamento",
     "noReleaseDate": "Sem Data de Lançamento",
     "language": "Idioma",
     "noLanguage": "Sem Idioma",
@@ -228,7 +228,11 @@
     "loadingGames": "Carregando Jogos...",
     "thereAreNoGames": "Não há jogos.",
     "noGameMatchedDesc": "Nenhum título de jogo corresponde à sua pesquisa.",
-    "noGameMatchedSearch": "Tente procurar por algo menos restritivo."
+    "noGameMatchedSearch": "Tente procurar por algo menos restritivo.",
+    "play": "Play",
+    "install": "Install",
+    "remove": "Remove",
+    "open": "Open"
   },
   "curate": {
     "importAll": "Importar Todos",

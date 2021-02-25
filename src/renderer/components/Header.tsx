@@ -110,7 +110,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                   value={searchText}
                   placeholder={strings.searchPlaceholder}
                   onChange={this.onSearchChange}
-                  onKeyDown={this.onSearchKeyDown} />
+                  />
               </div>
               <div
                 className='header__search__right'
@@ -133,25 +133,6 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
               orderReverse={this.props.order.orderReverse} />
           </div>
         </div>
-        {/* Right-most portion */}
-        <div className='header__wrap header__right'>
-          <div>
-            {/* Toggle Right Sidebar */}
-            <div
-              className='header__toggle-sidebar'
-              title={browsePageShowRightSidebar ? strings.hideRightSidebar : strings.showRightSidebar}
-              onClick={onToggleRightSidebarClick}>
-              <OpenIcon icon={browsePageShowRightSidebar ? 'collapse-right' : 'expand-right'} />
-            </div>
-            {/* Toggle Left Sidebar */}
-            <div
-              className='header__toggle-sidebar'
-              title={browsePageShowLeftSidebar ? strings.hideLeftSidebar : strings.showLeftSidebar}
-              onClick={onToggleLeftSidebarClick}>
-              <OpenIcon icon={browsePageShowLeftSidebar ? 'collapse-left' : 'expand-left'} />
-            </div>
-          </div>
-        </div>
       </div>
     );
   }
@@ -159,16 +140,9 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
   onSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const value = event.target.value;
     this.setState({ searchText: value });
+    this.props.onSearch(value, true);
     // "Clear" the search when the search field gets empty
     if (value === '') { this.props.onSearch('', false); }
-  }
-
-  onSearchKeyDown = (event: React.KeyboardEvent): void => {
-    if (event.key === 'Enter') {
-      const value = this.state.searchText;
-      this.props.onSearch(value, true);
-      easterEgg(value);
-    }
   }
 
   onKeypress = (event: KeyboardEvent): void => {

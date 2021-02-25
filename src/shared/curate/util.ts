@@ -39,7 +39,6 @@ export async function indexContentFolder(contentPath: string, log: (content: str
     .catch((error) => {
       const msg = `Content folder given doesn't exist, skipping... (${contentPath})`;
       log(msg);
-      console.log(msg);
     });
   return content;
 }

@@ -4,8 +4,8 @@
   "description": "A desktop application used to browse, manage and play games from eXoDOS collection. Based on BlueMaxima's Flashpoint launcher.",
   "main": "build/main/index.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/margorski/exodos-launcher.git"
+    "type": "git",
+    "url": "https://github.com/margorski/exodos-launcher.git"
   },
   "config": {
     "installed": false
@@ -41,6 +41,7 @@
     "fast-xml-parser": "3.12.19",
     "follow-redirects": "1.7.0",
     "fs-extra": "8.1.0",
+    "hound": "1.0.5",
     "jest-diff": "26.6.2",
     "mime": "2.4.4",
     "node-7z": "1.1.1",

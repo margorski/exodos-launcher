@@ -266,22 +266,7 @@ export function HomePage(props: HomePageProps) {
   return React.useMemo(() => (
     <div className='home-page simple-scroll'>
       <div className='home-page__inner'>
-        {/* Logo */}
-        <div className='home-page__logo fp-logo-box'>
-          <div
-            className='fp-logo fp-logo--animated'
-            style={{ animationDelay: logoDelay }} />
-        </div>
-        {/* Updates */}
-        { renderedUpdates }
-        {/* Quick Start */}
-        { renderedQuickStart }
-        {/* Extras */}
-        { renderedExtras }
-        {/* Notes */}
-        { renderedNotes }
-        {/* Random Games */}
-        { renderedRandomGames }
+        <h1>eXoDOS</h1>
       </div>
     </div>
   ), [renderedUpdates, renderedQuickStart, renderedExtras, renderedNotes, renderedRandomGames]);

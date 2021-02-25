@@ -7,7 +7,6 @@ import { AddLogData, BackIn } from '@shared/back/types';
 import configureStore from './configureStore';
 import ConnectedApp from './containers/ConnectedApp';
 import { ContextReducerProvider } from './context-reducer/ContextReducerProvider';
-import { CurationContext } from './context/CurationContext';
 import { PreferencesContextProvider } from './context/PreferencesContext';
 import { ProgressContext } from './context/ProgressContext';
 
@@ -29,12 +28,10 @@ import { ProgressContext } from './context/ProgressContext';
   ReactDOM.render((
       <Provider store={store}>
         <PreferencesContextProvider>
-          <ContextReducerProvider context={CurationContext}>
-            <ContextReducerProvider context={ProgressContext}>
-              <ConnectedRouter history={history}>
-                <ConnectedApp />
-              </ConnectedRouter>
-            </ContextReducerProvider>
+          <ContextReducerProvider context={ProgressContext}>
+            <ConnectedRouter history={history}>
+              <ConnectedApp />
+            </ConnectedRouter>
           </ContextReducerProvider>
         </PreferencesContextProvider>
       </Provider>

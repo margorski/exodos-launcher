@@ -4,21 +4,18 @@ import { Route, Switch } from 'react-router-dom';
 import { BrowsePageLayout } from '@shared/BrowsePageLayout';
 import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
 import { GamePlaylist, GamePropSuggestions } from '@shared/interfaces';
-import { LangContainer, LangFile } from '@shared/lang';
+import {  LangFile } from '@shared/lang';
 import { Theme } from '@shared/ThemeFile';
 import { GameOrderChangeEvent } from './components/GameOrder';
-import { AboutPage, AboutPageProps } from './components/pages/AboutPage';
+import { AboutPage } from './components/pages/AboutPage';
 import { DeveloperPage, DeveloperPageProps } from './components/pages/DeveloperPage';
 import { NotFoundPage } from './components/pages/NotFoundPage';
 import ConnectedBrowsePage, { ConnectedBrowsePageProps } from './containers/ConnectedBrowsePage';
 import { ConnectedConfigPage, ConnectedConfigPageProps } from './containers/ConnectedConfigPage';
-import { ConnectedCuratePage, ConnectedCuratePageProps } from './containers/ConnectedCuratePage';
 import { ConnectedHomePage, ConnectedHomePageProps } from './containers/ConnectedHomePage';
 import { ConnectedLogsPage } from './containers/ConnectedLogsPage';
-import { CreditsData } from './credits/types';
 import { GAMES } from './interfaces';
 import { Paths } from './Paths';
-import { UpgradeStage } from './upgrade/types';
 
 export type AppRouterProps = {
   games: GAMES | undefined;
@@ -87,11 +84,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
       platforms: this.props.platformsFlat,
       localeCode: this.props.localeCode,
     };
-    const curateProps: ConnectedCuratePageProps = {
-      suggestions: this.props.suggestions,
-      appPaths: this.props.appPaths,
-      libraries: this.props.libraries,
-    };
     const developerProps: DeveloperPageProps = {
       platforms: this.props.platformsFlat,
       playlists: this.props.playlists,
@@ -118,10 +110,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
           path={Paths.ABOUT}
           component={AboutPage}
         />
-        <PropsRoute
-          path={Paths.CURATE}
-          component={ConnectedCuratePage}
-          { ...curateProps } />
         <PropsRoute
           path={Paths.DEVELOPER}
           component={DeveloperPage}

@@ -1,7 +1,7 @@
 import { Menu, MenuItemConstructorOptions, remote } from 'electron';
 import * as fs from 'fs';
 import * as React from 'react';
-import { BackIn, BackOut, DeleteImageData, ImageChangeData, LaunchAddAppData, SaveImageData, WrappedResponse } from '@shared/back/types';
+import { BackIn, BackOut, DeleteImageData, ImageChangeData, LaunchAddAppData, LaunchGameData, SaveImageData, WrappedResponse } from '@shared/back/types';
 import { LOGOS, SCREENSHOTS } from '@shared/constants';
 import { AdditionalApplicationInfo } from '@shared/game/AdditionalApplicationInfo';
 import { wrapSearchTerm } from '@shared/game/GameFilter';
@@ -10,17 +10,14 @@ import { GamePlaylistEntry, GamePropSuggestions, PickType } from '@shared/interf
 import { LangContainer } from '@shared/lang';
 import { WithPreferencesProps } from '../containers/withPreferences';
 import { WithSearchProps } from '../containers/withSearch';
-import { getGameImagePath, getGameBoxImageURL, getGameScreenshotImageURL } from '../Util';
+import { getGameImagePath, getGameScreenshotsUrls, resourceExists } from '../Util';
 import { LangContext } from '../util/lang';
 import { uuid } from '../util/uuid';
-import { CheckBox } from './CheckBox';
-import { ConfirmElement, ConfirmElementArgs } from './ConfirmElement';
 import { DropdownInputField } from './DropdownInputField';
-import { GameImageSplit } from './GameImageSplit';
 import { ImagePreview } from './ImagePreview';
 import { InputField } from './InputField';
-import { OpenIcon } from './OpenIcon';
 import { RightBrowseSidebarAddApp } from './RightBrowseSidebarAddApp';
+import { getFileServerURL } from '@shared/Util';
 
 type OwnProps = {
   /** Currently selected game (if any) */
@@ -45,6 +42,8 @@ type OwnProps = {
   isEditing: boolean;
   /** If the selected game is a new game being created */
   isNewGame: boolean;
+  /** If the selected game is installed */
+  isInstalled: boolean;
   /** ... */
   suggestions: Partial<GamePropSuggestions>;
 
@@ -57,9 +56,8 @@ export type RightBrowseSidebarProps = OwnProps & WithPreferencesProps & WithSear
 
 type RightBrowseSidebarState = {
   /** If a preview of the current game's screenshot should be shown. */
-  showPreview: boolean;
-  screenshotExists: boolean;
-  thumbnailExists: boolean;
+  screenshotPreviewUrl: string;
+  screenshots: string[];  
 };
 
 export interface RightBrowseSidebar {
@@ -69,7 +67,7 @@ export interface RightBrowseSidebar {
 /** Sidebar on the right side of BrowsePage. */
 export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps, RightBrowseSidebarState> {
   // Bound "on change" callbacks for game fields
-  onTitleChange               = this.wrapOnTextChange((game, text) => { game.title               = text; });
+  onTitleChange               = this.wrapOnTextChange((game, text) => { game.convertedTitle      = text; });
   onAlternateTitlesChange     = this.wrapOnTextChange((game, text) => { game.alternateTitles     = text; });
   onDeveloperChange           = this.wrapOnTextChange((game, text) => { game.developer           = text; });
   onTagsChange                = this.wrapOnTextChange((game, text) => { game.tags                = text; });
@@ -98,7 +96,6 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   onPlayModeClick             = this.wrapOnTextClick('playMode');
   onStatusClick               = this.wrapOnTextClick('status');
   onVersionClick              = this.wrapOnTextClick('version');
-  onReleaseDateClick          = this.wrapOnTextClick('releaseDate');
   onLanguageClick             = this.wrapOnTextClick('language');
 
   launchCommandRef: React.RefObject<HTMLInputElement> = React.createRef();
@@ -106,32 +103,46 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   constructor(props: RightBrowseSidebarProps) {
     super(props);
     this.state = {
-      showPreview: false,
-      screenshotExists: false,
-      thumbnailExists: false,
+      screenshotPreviewUrl: "",
+      screenshots: []
     };
   }
 
+  async getExistingScreenshotsList(game: IGameInfo | null) : Promise<string[]> {
+    if (!game) return [];
+
+    var allScreenshots = getGameScreenshotsUrls(game.platform, game.title);
+    var existingScreenshots = [];
+
+    for (var s of allScreenshots) {
+      if (await resourceExists(s)) existingScreenshots.push(s);
+    }
+    return existingScreenshots;
+  }
+
   componentDidMount() {
-    window.External.back.on('message', this.onResponse);
+    // window.External.back.on('message', this.onResponse);
     window.addEventListener('keydown', this.onGlobalKeyDown);
   }
 
   componentWillUnmount() {
-    window.External.back.off('message', this.onResponse);
+    // window.External.back.off('message', this.onResponse);
     window.removeEventListener('keydown', this.onGlobalKeyDown);
   }
 
   componentDidUpdate(prevProps: RightBrowseSidebarProps, prevState: RightBrowseSidebarState): void {
     if (this.props.currentGame !== prevProps.currentGame) {
       if (this.props.currentGame) {
-        this.checkImageExistance(SCREENSHOTS, this.props.currentGame.platform, this.props.currentGame.title);
-        this.checkImageExistance(LOGOS, this.props.currentGame.platform, this.props.currentGame.title);
-      } else {
-        this.setState({
-          screenshotExists: false,
-          thumbnailExists: false,
+        this.getExistingScreenshotsList(this.props.currentGame).then(screenshots => {
+          this.setState({
+            screenshots: screenshots
+          })
         });
+      }
+      else {
+        this.setState({
+          screenshots: []
+        })
       }
     }
   }
@@ -139,13 +150,15 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   render() {
     const strings = this.context.browse;
     const game: IGameInfo | undefined = this.props.currentGame;
+
+    // TODO
     if (game) {
-      const { currentAddApps, gamePlaylistEntry, currentPlaylistNotes, isEditing, isNewGame, preferencesData, suggestions } = this.props;
+      const { currentAddApps, gamePlaylistEntry, currentPlaylistNotes, isEditing, isNewGame, isInstalled, preferencesData, suggestions } = this.props;
       const isPlaceholder = game.placeholder;
       const editDisabled = !preferencesData.enableEditing;
       const editable = !editDisabled && isEditing;
-      const dateAdded = new Date(game.dateAdded).toUTCString();
-      const screenshotSrc = getGameScreenshotImageURL(game.platform, game.title);
+      const isDosPlatform = game.platform === 'MS-DOS';
+      const playButtonLabel = isDosPlatform ? (isInstalled ? strings.play : strings.install) : strings.open;
       return (
         <div
           className={'browse-right-sidebar ' + (editable ? 'browse-right-sidebar--edit-enabled' : 'browse-right-sidebar--edit-disabled')}
@@ -156,61 +169,26 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
               <div className='browse-right-sidebar__title-row'>
                 <div className='browse-right-sidebar__title-row__title'>
                   <InputField
-                    text={game.title}
+                    text={game.convertedTitle}
                     placeholder={strings.noTitle}
                     editable={editable}
                     onChange={this.onTitleChange}
                     onKeyDown={this.onInputKeyDown} />
                 </div>
                 <div className='browse-right-sidebar__title-row__buttons'>
-                  { editDisabled ? undefined : (
-                    <>
-                      { isEditing ? ( /* While Editing */
-                        <>
-                          {/* "Save" Button */}
-                          <div
-                            className='browse-right-sidebar__title-row__buttons__save-button'
-                            title={strings.saveChanges}
-                            onClick={this.props.onSaveGame}>
-                            <OpenIcon icon='check' />
-                          </div>
-                          {/* "Discard" Button */}
-                          <div
-                            className='browse-right-sidebar__title-row__buttons__discard-button'
-                            title={strings.discardChanges}
-                            onClick={this.props.onDiscardClick}>
-                            <OpenIcon icon='x' />
-                          </div>
-                        </>
-                      ) : ( /* While NOT Editing */
-                        <>
-                          {/* "Edit" Button */}
-                          { isPlaceholder ? undefined : (
-                            <div
-                              className='browse-right-sidebar__title-row__buttons__edit-button'
-                              title={strings.editGame}
-                              onClick={this.props.onEditClick}>
-                              <OpenIcon icon='pencil' />
-                            </div>
-                          ) }
-                          {/* "Remove From Playlist" Button */}
-                          { gamePlaylistEntry ? (
-                            <ConfirmElement
-                              onConfirm={this.props.onRemoveSelectedGameFromPlaylist}
-                              children={this.renderRemoveFromPlaylistButton}
-                              extra={strings} />
-                          ) : undefined }
-                          {/* "Delete Game" Button */}
-                          { (isPlaceholder || isNewGame || gamePlaylistEntry) ? undefined : (
-                            <ConfirmElement
-                              onConfirm={this.onDeleteGameClick}
-                              children={this.renderDeleteGameButton}
-                              extra={strings} />
-                          ) }
-                        </>
-                      ) }
-                    </>
-                  ) }
+                  <input
+                    type='button'
+                    className='simple-button'
+                    value={playButtonLabel}
+                    onClick={() => window.External.back.send<LaunchGameData>(BackIn.LAUNCH_GAME, { id: game.id })}
+                    />
+                  { isDosPlatform ? <input
+                    type='button'
+                    className='simple-button'
+                    disabled={!isInstalled}
+                    value={strings.remove}
+                    onClick={() => window.External.back.send<LaunchGameData>(BackIn.LAUNCH_GAME_SETUP, { id: game.id })}
+                    /> : null}
                 </div>
               </div>
             </div>
@@ -306,42 +284,37 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
 
                 </div>
                 <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                  <p>{strings.releaseDate}: </p>
+                  <p>{strings.releaseYear}: </p>
                   <InputField
-                    text={game.releaseDate}
+                    text={(new Date(game.releaseDate)).getFullYear().toString()}
                     placeholder={strings.noReleaseDate}
                     onChange={this.onReleaseDateChange}
                     className='browse-right-sidebar__searchable'
                     editable={editable}
-                    onClick={this.onReleaseDateClick}
+                    onClick={() => this.props.onSearch(`releaseDate:${(new Date(game.releaseDate)).getFullYear().toString()}`)}
                     onKeyDown={this.onInputKeyDown} />
-                </div>
-                <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                  <p>{strings.dateAdded}: </p>
-                  <p
-                    className='browse-right-sidebar__row__date-added'
-                    title={dateAdded}>
-                    {dateAdded}
-                  </p>
                 </div>
               </div>
             </>
           ) }
           {/* -- Screenshot -- */}
-          { this.state.thumbnailExists ? (
           <div className='browse-right-sidebar__section'>
-            <div className='browse-right-sidebar__row'>
+          { this.state.screenshots.map((s, idx) => 
+            <div className='browse-right-sidebar__row' key={`screenshot-row-div-${idx}`}>
               <div
                 className='browse-right-sidebar__row__screenshot'
+                key={`screenshot-div-${idx}`}
                 onContextMenu={this.onScreenshotContextMenu}>
                   <img
                     className='browse-right-sidebar__row__screenshot-image'
                     alt='' // Hide the broken link image if source is not found
-                    src={screenshotSrc}
-                    onClick={this.onScreenshotClick} />
+                    src={s}
+                    key={`screenshot-img-${idx}`}
+                    onClick={() => this.onScreenshotClick(s)} />
               </div>
             </div>
-          </div>) : null }
+          )}
+          </div>
           {/* -- Playlist Game Entry Notes -- */}
           { gamePlaylistEntry ? (
             <div className='browse-right-sidebar__section'>
@@ -407,45 +380,11 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
               )) }
             </div>
           ) : undefined }
-          {/* -- Application Path & Launch Command -- */}
-          { editable && !isPlaceholder ? (
-            <div className='browse-right-sidebar__section'>
-              <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                <p>{strings.applicationPath}: </p>
-                <DropdownInputField
-                  text={game.applicationPath}
-                  placeholder={strings.noApplicationPath}
-                  onChange={this.onApplicationPathChange}
-                  editable={editable}
-                  items={suggestions && filterSuggestions(suggestions.applicationPath) || []}
-                  onItemSelect={text => { game.applicationPath = text; this.forceUpdate(); }}
-                  onKeyDown={this.onInputKeyDown} />
-              </div>
-              <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                <p>{strings.launchCommand}: </p>
-                <InputField
-                  text={game.launchCommand}
-                  placeholder={strings.noLaunchCommand}
-                  onChange={this.onLaunchCommandChange}
-                  editable={editable}
-                  onKeyDown={this.onInputKeyDown}
-                  reference={this.launchCommandRef} />
-              </div>
-            </div>
-          ) : undefined }
-          {/* -- Game ID -- */}
-          { editable || isPlaceholder ? (
-            <div className='browse-right-sidebar__section'>
-              <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
-                <p>ID: </p>
-                <p className='browse-right-sidebar__row__game-id'>{game.id}</p>
-              </div>
-            </div>
-          ) : undefined }
+        
           {/* -- Screenshot Preview -- */}
-          { this.state.showPreview ? (
+          { this.state.screenshotPreviewUrl ? (
             <ImagePreview
-              src={screenshotSrc}
+              src={this.state.screenshotPreviewUrl}
               onCancel={this.onScreenshotPreviewClick} />
           ) : undefined }
         </div>
@@ -458,65 +397,6 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
         </div>
       );
     }
-  }
-
-  renderDeleteGameButton({ activate, activationCounter, reset, extra }: ConfirmElementArgs<LangContainer['browse']>): JSX.Element {
-    return (
-      <div
-        className={
-          'browse-right-sidebar__title-row__buttons__delete-game' +
-          ((activationCounter > 0) ? ' browse-right-sidebar__title-row__buttons__delete-game--active simple-vertical-shake' : '')
-        }
-        title={extra.deleteGameAndAdditionalApps}
-        onClick={activate}
-        onMouseLeave={reset}>
-        <OpenIcon icon='trash' />
-      </div>
-    );
-  }
-
-  renderRemoveFromPlaylistButton({ activate, activationCounter, reset, extra }: ConfirmElementArgs<LangContainer['browse']>): JSX.Element {
-    return (
-      <div
-        className={
-          'browse-right-sidebar__title-row__buttons__remove-from-playlist' +
-          ((activationCounter > 0) ? ' browse-right-sidebar__title-row__buttons__remove-from-playlist--active simple-vertical-shake' : '')
-        }
-        title={extra.removeGameFromPlaylist}
-        onClick={activate}
-        onMouseLeave={reset}>
-        <OpenIcon icon='circle-x' />
-      </div>
-    );
-  }
-
-  onResponse = (res: WrappedResponse) => {
-    if (res.type === BackOut.IMAGE_CHANGE) {
-      const resData: ImageChangeData = res.data;
-
-      // Refresh image if it was replaced or removed
-      if (this.props.isEditing && this.props.currentGame && this.props.currentGame.id === resData.id) {
-        if (resData.folder === LOGOS) {
-          this.checkImageExistance(LOGOS, this.props.currentGame.platform, this.props.currentGame.title);
-        } else if (resData.folder === SCREENSHOTS) {
-          this.checkImageExistance(SCREENSHOTS, this.props.currentGame.platform, this.props.currentGame.title);
-        }
-      }
-    }
-  }
-
-  checkImageExistance(folder: typeof LOGOS | typeof SCREENSHOTS, platform: string, title: string) {
-    fetch(folder == LOGOS ? getGameBoxImageURL(platform, title) : getGameScreenshotImageURL(platform, title))
-    .then(res => {
-      const target = (folder === LOGOS) ? 'thumbnailExists' : 'screenshotExists';
-      const exists = (res.status >= 200 && res.status < 300);
-      if (this.state[target] !== exists) {
-        this.setState({ [target]: exists } as any); // setState is very annoying to make typesafe
-      } else {
-        // @PERF It is a little bit wasteful to refresh all images instead of just the changed one
-        GameImageSplit.refreshImages();
-      }
-    });
   }
 
   /** When a key is pressed down "globally" (and this component is present) */
@@ -642,8 +522,29 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
     this.props.onDeleteSelectedGame();
   }
 
-  onAddAppLaunch(addAppId: string): void {
-    window.External.back.send<any, LaunchAddAppData>(BackIn.LAUNCH_ADDAPP, { id: addAppId });
+  onAddAppLaunch(addApp: IAdditionalApplicationInfo): void {
+    const isHtml = addApp.applicationPath.toLocaleLowerCase().endsWith('.html') || 
+                   addApp.applicationPath.toLocaleLowerCase().endsWith('.htm');
+    if (isHtml) {
+      let url = `${getFileServerURL()}/${addApp.applicationPath.replace('\\', '/')}`;
+      console.log(`Got HTML additional application, running in new browser window. ${url}`)
+      let win = new remote.BrowserWindow(
+        { 
+          show: false, 
+          title: addApp.name,
+          resizable: false,
+          width: 1100,
+          height: 962
+        })
+      win.setMenuBarVisibility(false);
+      win.loadURL(url);
+      win.once('ready-to-show', () => {
+          win.show();
+      })
+    }
+    else {
+      window.External.back.send<any, LaunchAddAppData>(BackIn.LAUNCH_ADDAPP, { id: addApp.id });
+    }
   }
 
   onAddAppDelete = (addAppId: string): void => {
@@ -664,13 +565,12 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
     this.props.currentAddApps.push(newAddApp);
     this.forceUpdate();
   }
-
-  onScreenshotClick = (): void => {
-    this.setState({ showPreview: true });
+  onScreenshotClick = (screenshotUrl:string): void => {
+    this.setState({ screenshotPreviewUrl: screenshotUrl });
   }
 
   onScreenshotPreviewClick = (): void => {
-    this.setState({ showPreview: false });
+    this.setState({ screenshotPreviewUrl: "" });
   }
 
   onEditPlaylistNotes = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -681,6 +581,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   onInputKeyDown = (event: React.KeyboardEvent): void => {
     if (event.key === 'Enter') { this.props.onSaveGame(); }
   }
+
 
   /** Create a callback for when a game field is clicked. */
   wrapOnTextClick<T extends PickType<IGameInfo, string>>(field: T): () => void {

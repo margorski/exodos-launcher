@@ -10,17 +10,16 @@ import { IObjectParserProp, ObjectParser } from '../utils/ObjectParser';
 import { IAppPreferencesData, IAppPreferencesDataMainWindow } from './interfaces';
 
 export function updatePreferencesData(data: DeepPartial<IAppPreferencesData>, send: boolean = true) {
-  console.log("BOOOOP! We are not saving preferences. Leave default prefs alone!");
-  // const preferences = window.External.preferences;
-  // // @TODO Figure out the delta change of the object tree, and only send the changes
-  // preferences.data = overwritePreferenceData(deepCopy(preferences.data), data);
-  // if (preferences.onUpdate) { preferences.onUpdate(); }
-  // if (send) {
-  //   window.External.back.send(
-  //     BackIn.UPDATE_PREFERENCES,
-  //     preferences.data
-  //   );
-  // }
+  const preferences = window.External.preferences;
+  // @TODO Figure out the delta change of the object tree, and only send the changes
+  preferences.data = overwritePreferenceData(deepCopy(preferences.data), data);
+  if (preferences.onUpdate) { preferences.onUpdate(); }
+  if (send) {
+    window.External.back.send(
+      BackIn.UPDATE_PREFERENCES,
+      preferences.data
+    );
+  }
 }
 
 const { num, str } = Coerce;

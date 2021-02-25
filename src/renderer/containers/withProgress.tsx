@@ -59,7 +59,6 @@ export function withProgress<T extends WithProgressProps>(Component: React.Compo
 
     // Reset the progress
     const newProgress = useCallback((usePercentDone: boolean) => {
-      console.log('NEW');
       setItemCount('clear');
       setTotalItems(0);
       setPercentDone(0);

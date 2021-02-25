@@ -85,7 +85,7 @@ gulp.task('pack', (done) => {
       extraFiles: copyFiles, // Files to copy to the build folder
       compression: 'maximum', // Only used if a compressed target (like 7z, nsis, dmg etc)
       target: 'dir', // Keep unpacked versions of every pack
-      asar: config.isRelease,
+      asar: true,
       publish: publish,
       linux: {
         publish: 'github'
@@ -128,7 +128,7 @@ function createBuildTargets(os, arch) {
     case 'darwin':
       return Platform.MAC.createTarget('dmg');
     case 'linux':
-      return Platform.LINUX.createTarget('appimage', archFromString(arch));
+      return Platform.LINUX.createTarget(['tar.gz', 'dir'], archFromString(arch));
   }
 }
 

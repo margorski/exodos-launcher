@@ -1,7 +1,7 @@
 import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
 import { ExecMapping } from '@shared/interfaces';
 import { LangContainer } from '@shared/lang';
-import { fixSlashes, padStart, stringifyArray } from '@shared/Util';
+import { fixSlashes, getFilename, padStart, stringifyArray } from '@shared/Util';
 import { ChildProcess, exec, execFile } from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
@@ -59,22 +59,23 @@ export namespace GameLauncher {
       default:
         const appPath: string = fixSlashes(path.join(opts.fpPath, getApplicationPath(opts.addApp.applicationPath, opts.execMappings, opts.native)));
         const appArgs: string = opts.addApp.launchCommand;
+        const command = createCommand(appPath, appArgs);
         const proc = exec(
-          createCommand(appPath, appArgs),
-          { env: getEnvironment(opts.fpPath) }
-        );
-        logProcessOutput(proc, opts.log);
-        opts.log({
-          source: logSource,
-          content: `Launch Add-App "${opts.addApp.name}" (PID: ${proc.pid}) [ path: "${opts.addApp.applicationPath}", arg: "${opts.addApp.launchCommand}" ]`,
-        });
-        return new Promise((resolve, reject) => {
-          if (proc.killed) { resolve(); }
-          else {
-            proc.once('exit', () => { resolve(); });
-            proc.once('error', error => { reject(error); });
-          }
-        });
+            command,
+            { env: getEnvironment(opts.fpPath) }
+          );
+          logProcessOutput(proc, opts.log);
+          opts.log({
+            source: logSource,
+            content: `Launch Add-App "${opts.addApp.name}" (PID: ${proc.pid}) [ path: "${opts.addApp.applicationPath}", arg: "${opts.addApp.launchCommand}", command: ${command} ]`,
+          });
+          return new Promise((resolve, reject) => {
+            if (proc.killed) { resolve(); }
+            else {
+              proc.once('exit', () => { resolve(); });
+              proc.once('error', error => { reject(error); });
+            }
+          });
     }
   }
 
@@ -121,6 +122,31 @@ export namespace GameLauncher {
   }
 
   /**
+   * Launch a game
+   * @param game Game to launch
+   */
+  export async function launchGameSetup(opts: LaunchGameOpts): Promise<void> {
+    // Launch game
+    let proc: ChildProcess;
+    const setupPath = opts.game.applicationPath.replace(getFilename(opts.game.applicationPath), 'install.sh');
+    const gamePath: string = fixSlashes(path.join(opts.fpPath, getApplicationPath(setupPath, opts.execMappings, opts.native)));
+
+    const gameArgs: string = opts.game.launchCommand;
+    const command: string = createCommand(gamePath, gameArgs);
+
+    proc = exec(command, { env: getEnvironment(opts.fpPath) });
+    logProcessOutput(proc, opts.log);
+    opts.log({
+      source: logSource,
+      content: `Launch Game Setup "${opts.game.title}" (PID: ${proc.pid}) [\n`+
+              `    applicationPath: "${opts.game.applicationPath}",\n`+
+              `    launchCommand:   "${opts.game.launchCommand}",\n`+
+              `    command:         "${command}" ]`
+    });   
+  }
+
+
+  /**
    * The paths provided in the Game/AdditionalApplication XMLs are only accurate
    * on Windows. So we replace them with other hard-coded paths here.
    */
@@ -155,12 +181,7 @@ export namespace GameLauncher {
 
   /** Get an object containing the environment variables to use for the game / additional application. */
   function getEnvironment(fpPath: string): NodeJS.ProcessEnv {
-    // When using Linux, use the proxy created in BackgroundServices.ts
-    // This is only needed on Linux because the proxy is installed on system
-    // level entire system when using Windows.
     return {
-      // Add proxy env vars if it's running on linux
-      ...((process.platform === 'linux') ? { http_proxy: 'http://localhost:22500/' } : null),
       // Copy this processes environment variables
       ...process.env,
     };

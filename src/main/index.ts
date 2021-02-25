@@ -42,10 +42,6 @@ function getArgs(): Init {
       }
     }
   }
-
   init.rest = args.slice(lastArgIndex + 1).join(' ');
-
-  console.log(init); // @DEBUG
-
   return init;
 }

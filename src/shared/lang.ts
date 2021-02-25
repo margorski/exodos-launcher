@@ -183,7 +183,7 @@ const langTemplate = {
     'noStatus',
     'version',
     'noVersion',
-    'releaseDate',
+    'releaseYear',
     'noReleaseDate',
     'language',
     'noLanguage',
@@ -239,6 +239,10 @@ const langTemplate = {
     'thereAreNoGames',
     'library',
     'defaultLibrary',
+    'play',
+    'install',
+    'remove',
+    'open'
   ] as const,
   curate: [
     'importAll',

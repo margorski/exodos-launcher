@@ -71,8 +71,9 @@ body {
 }
 /* Simple Button */
 .simple-button {
-  padding: 0 0.2em;
-  font-size: 1em;
+  padding: 0.1em 0.3em;
+  margin: 0 0 0 0.4em;
+  font-size: 0.9em;
   border: 1px solid;
   user-select: none;
 }
@@ -1169,7 +1170,6 @@ body {
 .browse-right-sidebar__title-row__title {
   flex: 1 1 auto;
   overflow: hidden;
-  height: 1.6rem;
   font-size: 1.15rem;
   font-weight: bold;
 }
@@ -1179,23 +1179,13 @@ body {
 }
 .browse-right-sidebar--edit-disabled .browse-right-sidebar__title-row__title > * {
   overflow-x: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 /* BrowseSidebar Title-Row Buttons */
 .browse-right-sidebar__title-row__buttons {
-  flex: 0 0 auto;
-  display: flex;
-  margin-left: 0.3rem;
-  user-select: none;
+  flex: none;
+  text-align: right;
 }
-.browse-right-sidebar__title-row__buttons > *:not(:first-child) {
-  margin-left: 0.6rem;
-}
-.browse-right-sidebar__title-row__buttons > * {
-  height: 0.9rem;
-  width: 0.9rem;
-}
+
 /* Browse-Right-Sidebar Row - Sub Elements */
 .browse-right-sidebar__row__check-box-wrapper {
   display: contents;

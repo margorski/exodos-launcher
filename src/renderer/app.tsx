@@ -1,10 +1,8 @@
 import { ipcRenderer, remote } from 'electron';
 import { AppUpdater, UpdateInfo } from 'electron-updater';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router-dom';
-import * as which from 'which';
 import { AddLogData, BackIn, BackInit, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, GetGamesTotalResponseData, GetPlaylistResponse, GetSuggestionsResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchGameData, LocaleUpdateData, LogEntryAddedData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, SaveGameData, SavePlaylistData, ServiceChangeData, ThemeChangeData, ThemeListChangeData, UpdateConfigData } from '@shared/back/types';
 import { BrowsePageLayout } from '@shared/BrowsePageLayout';
 import { APP_TITLE } from '@shared/constants';
@@ -17,26 +15,23 @@ import { GameOrderBy, GameOrderReverse } from '@shared/order/interfaces';
 import { updatePreferencesData } from '@shared/preferences/util';
 import { setTheme } from '@shared/Theme';
 import { Theme } from '@shared/ThemeFile';
-import { getUpgradeString } from '@shared/upgrade/util';
-import { canReadWrite, deepCopy, getFileServerURL, recursiveReplace } from '@shared/Util';
-import { formatString } from '@shared/utils/StringFormatter';
+import { deepCopy, recursiveReplace } from '@shared/Util';
 import { GameOrderChangeEvent } from './components/GameOrder';
 import { SplashScreen } from './components/SplashScreen';
 import { TitleBar } from './components/TitleBar';
 import { ConnectedFooter } from './containers/ConnectedFooter';
 import HeaderContainer from './containers/HeaderContainer';
 import { WithPreferencesProps } from './containers/withPreferences';
-import { CreditsData } from './credits/types';
-import { GAMES, UpgradeStageState } from './interfaces';
+import { GAMES } from './interfaces';
 import { Paths } from './Paths';
 import { AppRouter, AppRouterProps } from './router';
 import { SearchQuery } from './store/search';
-import { UpgradeStage } from './upgrade/types';
-import { isExodosValidCheck, joinLibraryRoute, openConfirmDialog } from './Util';
+import { joinLibraryRoute } from './Util';
 import { LangContext } from './util/lang';
-import { checkUpgradeStateInstalled, checkUpgradeStateUpdated, downloadAndInstallUpgrade } from './util/upgrade';
 import { debounce } from '@shared/utils/debounce';
 
+// Auto updater works only with .appImage distribution. We are using .tar.gz
+// so it will just fail silently. Code is left for future.
 const autoUpdater: AppUpdater = remote.require('electron-updater').autoUpdater;
 
 const VIEW_PAGE_SIZE = 250;
@@ -221,7 +216,6 @@ export class App extends React.Component<AppProps, AppState> {
     });
 
     window.External.back.on('message', res => {
-      // console.log('IN', res);
       switch (res.type) {
         case BackOut.INIT_EVENT: {
           const resData: InitEventData = res.data;
@@ -474,11 +468,10 @@ export class App extends React.Component<AppProps, AppState> {
     if (!window.External.isDev) {
       autoUpdater.autoDownload = true;
       autoUpdater.on('error', (error: Error) => {
-        console.log(error);
+        console.error(error);
       });
       autoUpdater.on('update-available', (info) => {
         log(`Update Available - ${info.version}`);
-        console.log(info);
         this.setState({
           updateInfo: info
         });
@@ -589,7 +582,8 @@ export class App extends React.Component<AppProps, AppState> {
     );
     const libraryPath = getBrowseSubPath(this.props.location.pathname);
     const view = this.state.views[libraryPath];
-    const playlists = this.orderPlaylistsMemo(this.state.playlists);
+    const playlists = this.orderAndFilterPlaylistsMemo(this.state.playlists, libraryPath);
+
     // Props to set to the router
     const routerProps: AppRouterProps = {
       games: view && view.games,
@@ -846,7 +840,6 @@ export class App extends React.Component<AppProps, AppState> {
     }
 
     if (pages.length > 0) {
-      // console.log(`GET (PAGES: ${pageMin} - ${pageMax} | OFFSET: ${pageMin * VIEW_PAGE_SIZE} | LIMIT: ${(pageMax - pageMin + 1) * VIEW_PAGE_SIZE})`);
       window.External.back.sendReq<any, BrowseViewPageData>({
         id: library, // @TODO Add this as an optional property of the data instead of misusing the id
         type: BackIn.BROWSE_VIEW_PAGE,
@@ -887,12 +880,10 @@ export class App extends React.Component<AppProps, AppState> {
   onQuickSearch = (search: string): void => {
     const library = getBrowseSubPath(this.props.location.pathname);
     const view = this.state.views[library];
-
     if (!view) {
       log(`Failed to quick search. Current view is missing (Library: "${library}", View: "${view}").`);
       return;
     }
-
     window.External.back.send<QuickSearchResponseData, QuickSearchData>(BackIn.QUICK_SEARCH, {
       search: search,
       query: {
@@ -939,8 +930,9 @@ export class App extends React.Component<AppProps, AppState> {
     });
   }
 
-  orderPlaylistsMemo = memoizeOne((playlists: GamePlaylist[]) => {
+  orderAndFilterPlaylistsMemo = memoizeOne((playlists: GamePlaylist[], libraryPath:string) => {
     return (
+      libraryPath === 'MS-DOS.xml' ?
       playlists
       // filter some old and deprecated playlist still existing in app
       .filter(p => p.title !== "Installed eXoDOS Games")
@@ -948,7 +940,7 @@ export class App extends React.Component<AppProps, AppState> {
         if (a.title < b.title) { return -1; }
         if (a.title > b.title) { return  1; }
         return 0;
-      })
+      }) : []
     );
   });
 
@@ -969,108 +961,6 @@ export class App extends React.Component<AppProps, AppState> {
     }
     return names;
   });
-}
-
-async function downloadAndInstallStage(stage: UpgradeStage, setStageState: (id: string, stage: Partial<UpgradeStageState>) => void, strings: LangContainer) {
-  // Check data folder is set
-  let exodosPath = window.External.config.data.exodosPath;
-  const isValid = await isExodosValidCheck(exodosPath);
-  if (!isValid) {
-    let verifiedPath = false;
-    let chosenPath: (string | undefined);
-    while (verifiedPath !== true) {
-      // If folder isn't set, ask to set now
-      const res = await openConfirmDialog(strings.dialog.exodosPathInvalid, strings.dialog.exodosPathNotFound);
-      if (!res) { return; }
-      // Set folder now
-      const chosenPaths = window.External.showOpenDialogSync({
-        title: strings.dialog.selectFolder,
-        properties: ['openDirectory', 'promptToCreate', 'createDirectory']
-      });
-      if (chosenPaths && chosenPaths.length > 0) {
-        // Take first selected folder (Should only be able to select 1 anyway!)
-        chosenPath = chosenPaths[0];
-        // Make sure we can write to this path
-        const havePerms = await canReadWrite(chosenPath);
-        if (!havePerms) {
-          remote.dialog.showMessageBoxSync({
-            title: strings.dialog.badFolderPerms,
-            type: 'error',
-            message: strings.dialog.pickAnotherFolder
-          });
-        } else {
-          // Verify the path chosen is the one desired
-          const topString = formatString(strings.dialog.upgradeWillInstallTo, getUpgradeString(stage.title, strings.upgrades));
-          const choiceVerify = await openConfirmDialog(strings.dialog.areYouSure, `${topString}:\n\n${chosenPath}\n\n${strings.dialog.verifyPathSelection}`);
-          if (choiceVerify) {
-            verifiedPath = true;
-          }
-        }
-      } else {
-        // Window closed, cancel the upgrade
-        return;
-      }
-    }
-    // Make sure folder given exists
-    if (chosenPath) {
-      exodosPath = chosenPath;
-      fs.ensureDirSync(exodosPath);
-      // Save picked folder to config
-      window.External.back.send<any, UpdateConfigData>(BackIn.UPDATE_CONFIG, {
-        exodosPath: exodosPath,
-      }, () => { /* window.External.restart(); */ });
-    }
-  }
-  // Flag as installing
-  setStageState(stage.id, {
-    isInstalling: true,
-    installProgressNote: '...',
-  });
-  // Grab filename from url
-
-  for (let source of stage.sources) {
-    const filename = stage.id + '__' + source.split('/').pop() || 'unknown';
-    let lastUpdateType = '';
-    // Start download and installation
-    let prevProgressUpdate = Date.now();
-    const state = downloadAndInstallUpgrade(stage, {
-      installPath: path.join(exodosPath),
-      downloadFilename: filename
-    })
-    .on('progress', () => {
-      const now = Date.now();
-      if (now - prevProgressUpdate > 100 || lastUpdateType !== state.currentTask) {
-        prevProgressUpdate = now;
-        lastUpdateType = state.currentTask;
-        switch (state.currentTask) {
-          case 'downloading': setStageState(stage.id, { installProgressNote: `${strings.misc.downloading}: ${(state.downloadProgress * 100).toFixed(1)}%` }); break;
-          case 'extracting':  setStageState(stage.id, { installProgressNote: `${strings.misc.extracting}: ${(state.extractProgress * 100).toFixed(1)}%` });   break;
-          case 'installing':  setStageState(stage.id, { installProgressNote: `${strings.misc.installingFiles}`});                                         break;
-          default:            setStageState(stage.id, { installProgressNote: '...' });                                                        break;
-        }
-      }
-    })
-    .once('done', async () => {
-      // Flag as done installing
-      setStageState(stage.id, {
-        isInstalling: false,
-        isInstallationComplete: true,
-      });
-      const res = await openConfirmDialog(strings.dialog.restartNow, strings.dialog.restartToApplyUpgrade);
-      if (res) {
-        window.External.restart();
-      }
-    })
-    .once('error', (error) => {
-      // Flag as not installing (so the user can retry if they want to)
-      setStageState(stage.id, {
-        isInstalling: false,
-      });
-      log(`Error installing '${stage.title}' - ${error.message}`);
-      console.error(error);
-    })
-    .on('warn', console.warn);
-  }
 }
 
 /** Get the "library route" of a url (returns empty string if URL is not a valid "sub-browse path") */

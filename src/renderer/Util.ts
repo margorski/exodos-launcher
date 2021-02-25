@@ -97,17 +97,33 @@ export function checkIfAncestor(start: Element | null, target: Element | null): 
   return false;
 }
 
-export function getGameBoxImageURL(platform: string, gameName: string): string {
+export function getGameTitleScreenshotUrl(platform: string, gameName: string): string {
   return `${getFileServerURL()}/images/${platform}/Screenshot - Game Title/${gameName.replace(':', '_')}-01.png`;
-}
-
-// TODO change to return all of screenshots for game
-export function getGameScreenshotImageURL(platform: string, gameName: string): string {
-  return `${getFileServerURL()}/images/${platform}/Screenshot - Gameplay/${gameName.replace(':', '_')}-01.png`;
 }
 
 export function getPlatformIconURL(platform: string): string {
   return `${getFileServerURL()}/images/Platforms/${platform}/Clear Logo/${platform}.png`;
+}
+  
+export function getGameScreenshotImageURL(platform: string, gameName: string, idx: number = 1): string {
+  return `${getFileServerURL()}/images/${platform}/Screenshot - Gameplay/${gameName.replace(':', '_')}-0${idx}.png`;
+}
+
+export async function resourceExists(url: string): Promise<boolean> {
+  try {
+    var response = await fetch(url);    
+    return (response.status >= 200 && response.status < 300);
+  }
+  catch (e) {
+    console.error(e);
+    return false;
+  }
+}
+
+export function getGameScreenshotsUrls(platform: string, gameName: string): string[] {
+  var screenshots = [];
+  screenshots.push(getGameTitleScreenshotUrl(platform, gameName));
+  return screenshots.concat([1,2,3,4].map(x => getGameScreenshotImageURL(platform, gameName, x)));
 }
 
 export function getGameImagePath(folderName: string, gameId: string): string {

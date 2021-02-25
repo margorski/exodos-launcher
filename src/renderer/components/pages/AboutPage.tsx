@@ -50,7 +50,7 @@ export class AboutPage extends React.Component<AboutPageProps, AboutPageState> {
                       {strings.exodos}
                     </p>
                     <div className='about-page__section__links'>
-                      {link(strings.website, 'https://exodos.the-eye.us/')}
+                      {link(strings.website, 'https://www.retro-exo.com/exodos.html')}
                       {link('Discord', 'https://discord.gg/SaMKayf')}
                     </div>
                   </div>
@@ -93,8 +93,8 @@ export class AboutPage extends React.Component<AboutPageProps, AboutPageState> {
           {/* Bottom */}
           <div className='about-page__bottom'>
             <div className='about-page__bottom__inner'>
-              <p className='about-page__bottom__quote'>"It's not up to us to decide what the future finds interesting"</p>
-              <p className='about-page__bottom__author'>-Jason Scott</p>
+              <p className='about-page__bottom__quote'>"Players will be able to adjust the volume from 1 to 100 in increments of 1. You could play the game 100 times and have an entirely different experience."</p>
+              <p className='about-page__bottom__author'>-Peter Molyneux</p>
             </div>
           </div>
         </div>

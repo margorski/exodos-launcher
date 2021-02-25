@@ -32,7 +32,7 @@ export type GameListProps = {
   /** Called when the user attempts to launch a game. */
   onGameLaunch: (gameId: string) => void;
   /** Called when the user attempts to open a context menu (at a game). */
-  onContextMenu: (gameId: string) => void;
+  onContextMenu?: (gameId: string) => void;
   /** Called when the user starts to drag a game. */
   onGameDragStart: (event: React.DragEvent, gameId: string) => void;
   /** Called when the user stops dragging a game (when they release it). */
@@ -134,7 +134,7 @@ export class GameList extends React.Component<GameListProps> {
         { ...props }
         key={props.key}
         id={game.id}
-        title={game.title}
+        title={game.convertedTitle}
         platform={game.platform}
         tags={game.genre}
         developer={game.developer}
@@ -172,7 +172,7 @@ export class GameList extends React.Component<GameListProps> {
 
   /** When a row is right clicked. */
   onGameContextMenu = (event: React.MouseEvent<HTMLDivElement>, gameId: string): void => {
-    this.props.onContextMenu(gameId);
+    if (this.props.onContextMenu) this.props.onContextMenu(gameId);
   }
 
   /** When a row is starting to be dragged. */
