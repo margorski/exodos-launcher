@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Route, Switch } from 'react-router-dom';
 import { BrowsePageLayout } from '@shared/BrowsePageLayout';
 import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
-import { GamePlaylist, GamePropSuggestions } from '@shared/interfaces';
+import { ExodosBackendInfo, GamePlaylist, GamePropSuggestions } from '@shared/interfaces';
 import {  LangFile } from '@shared/lang';
 import { Theme } from '@shared/ThemeFile';
 import { GameOrderChangeEvent } from './components/GameOrder';
@@ -45,7 +45,8 @@ export type AppRouterProps = {
   themeList: Theme[];
   languages: LangFile[];
   updateInfo: UpdateInfo | undefined,
-  autoUpdater: AppUpdater
+  autoUpdater: AppUpdater,
+  exodosBackendInfo: ExodosBackendInfo | undefined
 };
 
 export class AppRouter extends React.Component<AppRouterProps> {
@@ -53,6 +54,7 @@ export class AppRouter extends React.Component<AppRouterProps> {
     const homeProps: ConnectedHomePageProps = {
       platforms: this.props.platforms,
       playlists: this.props.playlists,
+      exodosBackendInfo: this.props.exodosBackendInfo,
       onSelectPlaylist: this.props.onSelectPlaylist,
       onLaunchGame: this.props.onLaunchGame,
       updateInfo: this.props.updateInfo,

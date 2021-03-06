@@ -36,6 +36,7 @@ export enum BackIn {
   IMPORT_CURATION,
   LAUNCH_CURATION,
   LAUNCH_CURATION_ADDAPP,
+  LAUNCH_COMMAND,
   QUIT,
   /** Get a page of a browse view. */
   BROWSE_VIEW_PAGE,
@@ -70,6 +71,7 @@ export enum BackOut {
   PLAYLIST_UPDATE,
   PLAYLIST_REMOVE,
   IMPORT_CURATION_RESPONSE,
+  EXODOS_IS_INSTALLED,
   QUIT,
 }
 
@@ -209,6 +211,10 @@ export type RandomGamesResponseData = IGameInfo[];
 
 export type LaunchAddAppData = {
   id: string;
+}
+
+export type LaunchExodosContentData = {
+  path: string; 
 }
 
 export type BrowseViewAllData = {

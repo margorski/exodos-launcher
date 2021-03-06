@@ -14,7 +14,7 @@ export function SplashScreen(props: SplashScreenProps) {
   return (
     <div className={'splash-screen' + extraClass}>
       <div className='splash-screen__logo fp-logo-box'>
-        <div className='fp-logo' />
+        <div className='exo-logo' />
       </div>
       <div className='splash-screen__status-block'>
         <div className='splash-screen__status-header'>

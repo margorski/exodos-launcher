@@ -7,7 +7,7 @@ import { AddLogData, BackIn, BackInit, BackOut, BrowseChangeData, BrowseViewInde
 import { BrowsePageLayout } from '@shared/BrowsePageLayout';
 import { APP_TITLE } from '@shared/constants';
 import { IAdditionalApplicationInfo, IGameInfo, UNKNOWN_LIBRARY } from '@shared/game/interfaces';
-import { GamePlaylist, GamePropSuggestions, ProcessState, WindowIPC } from '@shared/interfaces';
+import { ExodosBackendInfo, GamePlaylist, GamePropSuggestions, ProcessState, WindowIPC } from '@shared/interfaces';
 import { LangContainer, LangFile } from '@shared/lang';
 import { getLibraryItemTitle } from '@shared/library/util';
 import { memoizeOne } from '@shared/memoize';
@@ -15,7 +15,7 @@ import { GameOrderBy, GameOrderReverse } from '@shared/order/interfaces';
 import { updatePreferencesData } from '@shared/preferences/util';
 import { setTheme } from '@shared/Theme';
 import { Theme } from '@shared/ThemeFile';
-import { deepCopy, recursiveReplace } from '@shared/Util';
+import { deepCopy, getFileServerURL, recursiveReplace } from '@shared/Util';
 import { GameOrderChangeEvent } from './components/GameOrder';
 import { SplashScreen } from './components/SplashScreen';
 import { TitleBar } from './components/TitleBar';
@@ -74,6 +74,7 @@ export type AppState = {
   themeList: Theme[];
   gamesTotal: number;
   localeCode: string;
+  exodosInstalled: boolean;
 
   /** Stop rendering to force component unmounts */
   stopRender: boolean;
@@ -91,6 +92,8 @@ export type AppState = {
   langList: LangFile[];
   /** Info of the update, if one was found */
   updateInfo: UpdateInfo | undefined;
+  /** Exodos backend info for displaying at homepage  */
+  exodosBackendInfo: ExodosBackendInfo | undefined;
 };
 
 export class App extends React.Component<AppProps, AppState> {
@@ -154,16 +157,31 @@ export class App extends React.Component<AppProps, AppState> {
       wasNewGameClicked: false,
       updateInfo: undefined,
       order,
+      exodosInstalled: false,
+      exodosBackendInfo: undefined
     };
 
     // Initialize app
     this.init();
   }
 
+  async initializeExodosBackendInfo() {
+    const changelogRequest = await fetch(`${getFileServerURL()}/eXo/Update/changelog.txt`);
+    const changelog = await changelogRequest.text();
+
+    const versionRequest = await fetch(`${getFileServerURL()}/eXo/Update/ver/ver_linux.txt`);
+    const version = await versionRequest.text();
+    
+    this.setState({
+      ...this.state,
+      exodosBackendInfo: {
+        changelog: changelog,
+        version: version.split(' ')[1]
+      }
+    })
+  }
+
   init() {
-    const strings = this.state.lang;
-    const fullExodosPath = window.External.config.fullExodosPath;
-    const fullJsonFolderPath = window.External.config.fullJsonFolderPath;
     // Warn the user when closing the launcher WHILE downloading or installing an upgrade
     (() => {
       let askBeforeClosing = true;
@@ -191,6 +209,9 @@ export class App extends React.Component<AppProps, AppState> {
         }
       };
     })();
+
+    this.initializeExodosBackendInfo();
+
     // Listen for the window to move or resize (and update the preferences when it does)
     ipcRenderer.on(WindowIPC.WINDOW_MOVE, debounce((sender, x: number, y: number, isMaximized: boolean) => {
       if (!isMaximized) {
@@ -253,6 +274,10 @@ export class App extends React.Component<AppProps, AppState> {
           }
 
           this.setState({ loaded });
+        } break;
+
+        case BackOut.EXODOS_IS_INSTALLED: {
+          this.setState({ exodosInstalled: true })
         } break;
 
         case BackOut.LOG_ENTRY_ADDED: {
@@ -613,6 +638,7 @@ export class App extends React.Component<AppProps, AppState> {
       languages: this.state.langList,
       updateInfo: this.state.updateInfo,
       autoUpdater: autoUpdater,
+      exodosBackendInfo: this.state.exodosBackendInfo
     };
     // Render
     return (
@@ -633,6 +659,7 @@ export class App extends React.Component<AppProps, AppState> {
               <>
                 {/* Header */}
                 <HeaderContainer
+                  exodosInstalled={this.state.exodosInstalled}
                   libraries={this.state.libraries}
                   onOrderChange={this.onOrderChange}
                   onToggleLeftSidebarClick={this.onToggleLeftSidebarClick}

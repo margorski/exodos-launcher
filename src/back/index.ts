@@ -1,10 +1,10 @@
-import { AddLogData, BackIn, BackInit, BackInitArgs, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, DeleteGameData, DeleteImageData, DeletePlaylistData, DuplicateGameData, ExportGameData, GetAllGamesResponseData, GetExecData, GetGameData, GetGameResponseData, GetGamesTotalResponseData, GetMainInitDataResponse, GetPlaylistResponse, GetRendererInitDataResponse, GetSuggestionsResponseData, ImageChangeData, ImportCurationData, ImportCurationResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchAddAppData, LaunchCurationAddAppData, LaunchCurationData, LaunchGameData, LocaleUpdateData, OpenDialogData, OpenDialogResponseData, OpenExternalData, OpenExternalResponseData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, RandomGamesData, RandomGamesResponseData, SaveGameData, SaveImageData, SavePlaylistData, ServiceActionData, SetLocaleData, ThemeChangeData, ThemeListChangeData, UpdateConfigData, ViewGame, WrappedRequest, WrappedResponse } from '@shared/back/types';
+import { AddLogData, BackIn, BackInit, BackInitArgs, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, DeleteGameData, DeleteImageData, DeletePlaylistData, DuplicateGameData, ExportGameData, GetAllGamesResponseData, GetExecData, GetGameData, GetGameResponseData, GetGamesTotalResponseData, GetMainInitDataResponse, GetPlaylistResponse, GetRendererInitDataResponse, GetSuggestionsResponseData, ImageChangeData, ImportCurationData, ImportCurationResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchAddAppData, LaunchCurationAddAppData, LaunchCurationData, LaunchGameData, LocaleUpdateData, OpenDialogData, OpenDialogResponseData, OpenExternalData, OpenExternalResponseData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, RandomGamesData, RandomGamesResponseData, SaveGameData, SaveImageData, SavePlaylistData, ServiceActionData, SetLocaleData, ThemeChangeData, ThemeListChangeData, UpdateConfigData, ViewGame, WrappedRequest, WrappedResponse, LaunchExodosContentData } from '@shared/back/types';
 import { overwriteConfigData } from '@shared/config/util';
 import { LOGOS, SCREENSHOTS } from '@shared/constants';
 import { findMostUsedApplicationPaths } from '@shared/curate/defaultValues';
 import { stringifyCurationFormat } from '@shared/curate/format/stringifier';
 import { convertToCurationMeta } from '@shared/curate/metaToMeta';
-import { FilterGameOpts, filterGames, orderGames, orderGamesInPlaylist } from '@shared/game/GameFilter';
+import { FilterGameOpts, filterGames, orderGames } from '@shared/game/GameFilter';
 import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
 import { DeepPartial, GamePlaylist, GamePlaylistEntry, IBackProcessInfo, IService, ProcessAction, RecursivePartial } from '@shared/interfaces';
 import { autoCode, getDefaultLocalization, LangContainer, LangFile, LangFileContent } from '@shared/lang';
@@ -13,7 +13,7 @@ import { GameOrderBy, GameOrderReverse } from '@shared/order/interfaces';
 import { PreferencesFile } from '@shared/preferences/PreferencesFile';
 import { defaultPreferencesData, overwritePreferenceData } from '@shared/preferences/util';
 import { parseThemeMetaData, themeEntryFilename, ThemeMeta } from '@shared/ThemeFile';
-import { createErrorProxy, deepCopy, isErrorProxy, recursiveReplace, removeFileExtension, stringifyArray, getFilePathExtension } from '@shared/Util';
+import { createErrorProxy, deepCopy, isErrorProxy, recursiveReplace, removeFileExtension, stringifyArray, getFilePathExtension, fixSlashes } from '@shared/Util';
 import { Coerce } from '@shared/utils/Coerce';
 import * as child_process from 'child_process';
 import { createHash } from 'crypto';
@@ -130,7 +130,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   
   try {
     process.chdir(state.configFolder);
-    console.log('New directory: ' + process.cwd());
+    console.log('New directory: ' + state.configFolder);
   }
   catch (err) {
     console.log('chdir: ' + err);
@@ -159,7 +159,8 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     }
   }
 
-  const gamesPath = path.join(state.config.exodosPath, 'eXo/eXoDOS/');
+  const gamesPath = path.resolve(path.join(state.config.exodosPath, 'eXo/eXoDOS/'));
+  console.log(`Scanning for new games in ${gamesPath}`);
 
   function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
     const dosPlatform = state.gameManager.platforms.find(p => p.name === 'MS-DOS');
@@ -214,6 +215,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
       .map(dirent => dirent.name);
     return installedGames;
   }
+
   // Init games watcher
   var installedGamesWatcherInitialized = false;
   const installedGamesWatcher = chokidar.watch(gamesPath, {ignored: /^\./, persistent: true, awaitWriteFinish: true, depth: 0});
@@ -237,9 +239,6 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     })
     .on('error', error => console.log(`Watcher error: ${error}`));
     
-
-  
-        
   // Init language
   state.languageWatcher.on('ready', () => {
     // Add event listeners
@@ -727,6 +726,21 @@ async function onMessageWrap(event: WebSocket.MessageEvent) {
   }
 }
 
+function initExodosWatcher() {
+  // checking if linux script exists for one game, if it exists we can assume that exodos for linux is installed
+  const anyGameLinuxScript = path.resolve(path.join(state.config.exodosPath, "eXo/eXoDOS/!dos/ZZTRev/ZZT's Revenge! (1992).sh"));
+  const exodosInstalledWatcher = chokidar.watch(anyGameLinuxScript);
+  exodosInstalledWatcher
+    .on('add', path => {
+      console.log(`Found linux game script, exodos is installed`);
+      exodosInstalledWatcher.close();
+      broadcast<void>({
+        id: '',
+        type: BackOut.EXODOS_IS_INSTALLED
+      });
+    });
+}
+
 async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
   const [req, error] = parseWrappedRequest(event.data);
   if (error || !req) {
@@ -748,7 +762,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         type: BackOut.GET_MAIN_INIT_DATA,
         data: {
           preferences: state.preferences,
-          config: state.config,
+          config: state.config
         },
       });
     } break;
@@ -771,6 +785,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         platforms[p.library].push(p.name);
       }
 
+      initExodosWatcher();
       respond<GetRendererInitDataResponse>(event.target, {
         id: req.id,
         type: BackOut.GENERIC_RESPONSE,
@@ -878,6 +893,17 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         }
       }
 
+      respond(event.target, {
+        id: req.id,
+        type: BackOut.GENERIC_RESPONSE,
+        data: undefined
+      });
+    } break;
+
+    case BackIn.LAUNCH_COMMAND: {
+      const reqData: LaunchExodosContentData = req.data;
+      const appPath = fixSlashes(path.join(path.resolve(state.config.exodosPath), reqData.path));
+      GameLauncher.launchCommand(appPath, '', log);
       respond(event.target, {
         id: req.id,
         type: BackOut.GENERIC_RESPONSE,
@@ -1601,7 +1627,7 @@ function onFileServerRequest(req: http.IncomingMessage, res: http.ServerResponse
       // Exodos directory, serving html from there
       case 'exo': {
         const extension = getFilePathExtension(urlPath);
-        if (extension.toLocaleLowerCase() === 'html' || extension.toLocaleLowerCase() === 'htm') {
+        if (extension.toLocaleLowerCase() === 'html' || extension.toLocaleLowerCase() === 'htm' || extension.toLocaleLowerCase() === 'txt') {
           const filePath = path.join(state.config.exodosPath, urlPath);
           serveFile(req, res, filePath);
         }

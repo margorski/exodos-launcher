@@ -17,6 +17,8 @@ type OwnProps = {
   order: GameOrderChangeEvent;
   /** Array of library routes */
   libraries: string[];
+  /** Whether exodos is installed or not */
+  exodosInstalled: boolean;
   /** Called when a search is made. */
   onSearch: (text: string, redirect: boolean) => void;
   /** Called when any of the ordering parameters are changed (by the header or a sub-component). */
@@ -79,24 +81,17 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
         <div className='header__wrap'>
           <ul className='header__menu'>
             <MenuItem title={strings.home} link={Paths.HOME} />
-            { libraries.length > 0 ? (
+            { libraries.length > 0 && this.props.exodosInstalled ? (
               libraries.map(library => (
                 <MenuItem
                   key={library}
                   title={getLibraryItemTitle(library, this.context.libraries)}
                   link={joinLibraryRoute(library)} />
               ))
-            ) : (
-              <MenuItem
-                title={strings.browse}
-                link={Paths.BROWSE} />
-            ) }
+            ) : null }
             <MenuItem
               title={strings.logs}
               link={Paths.LOGS} />
-            <MenuItem
-              title={strings.about}
-              link={Paths.ABOUT} />
           </ul>
         </div>
         {/* Header Search */}

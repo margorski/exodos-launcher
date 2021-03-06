@@ -1,3 +1,4 @@
+import { LaunchExodosContentData } from '@shared/back/types';
 import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
 import { ExecMapping } from '@shared/interfaces';
 import { LangContainer } from '@shared/lang';
@@ -29,6 +30,25 @@ type LaunchBaseOpts = {
 
 export namespace GameLauncher {
   const logSource = 'Game Launcher';
+  
+  export function launchCommand(appPath:string, appArgs:string, log:LogFunc):Promise<void> {
+    const command = createCommand(appPath, appArgs);
+    const proc = exec(
+        command
+      );
+      logProcessOutput(proc, log);
+      log({
+        source: logSource,
+        content: `Launch command (PID: ${proc.pid}) [ path: "${appPath}", arg: "${appArgs}", command: ${command} ]`,
+      });
+      return new Promise((resolve, reject) => {
+        if (proc.killed) { resolve(); }
+        else {
+          proc.once('exit', () => { resolve(); });
+          proc.once('error', error => { reject(error); });
+        }
+      });
+  }
 
   export function launchAdditionalApplication(opts: LaunchAddAppOpts): Promise<void> {
     // @FIXTHIS It is not possible to open dialog windows from the back process (all electron APIs are undefined).
@@ -59,23 +79,7 @@ export namespace GameLauncher {
       default:
         const appPath: string = fixSlashes(path.join(opts.fpPath, getApplicationPath(opts.addApp.applicationPath, opts.execMappings, opts.native)));
         const appArgs: string = opts.addApp.launchCommand;
-        const command = createCommand(appPath, appArgs);
-        const proc = exec(
-            command,
-            { env: getEnvironment(opts.fpPath) }
-          );
-          logProcessOutput(proc, opts.log);
-          opts.log({
-            source: logSource,
-            content: `Launch Add-App "${opts.addApp.name}" (PID: ${proc.pid}) [ path: "${opts.addApp.applicationPath}", arg: "${opts.addApp.launchCommand}", command: ${command} ]`,
-          });
-          return new Promise((resolve, reject) => {
-            if (proc.killed) { resolve(); }
-            else {
-              proc.once('exit', () => { resolve(); });
-              proc.once('error', error => { reject(error); });
-            }
-          });
+        return launchCommand(appPath, appArgs, opts.log);
     }
   }
 
@@ -110,7 +114,7 @@ export namespace GameLauncher {
     const gameArgs: string = opts.game.launchCommand;
     const command: string = createCommand(gamePath, gameArgs);
 
-    proc = exec(command, { env: getEnvironment(opts.fpPath) });
+    proc = exec(command);
     logProcessOutput(proc, opts.log);
     opts.log({
       source: logSource,
@@ -134,7 +138,7 @@ export namespace GameLauncher {
     const gameArgs: string = opts.game.launchCommand;
     const command: string = createCommand(gamePath, gameArgs);
 
-    proc = exec(command, { env: getEnvironment(opts.fpPath) });
+    proc = exec(command);
     logProcessOutput(proc, opts.log);
     opts.log({
       source: logSource,
@@ -177,14 +181,6 @@ export namespace GameLauncher {
 
     // No Native exec found, return Windows/XML application path
     return filePath;
-  }
-
-  /** Get an object containing the environment variables to use for the game / additional application. */
-  function getEnvironment(fpPath: string): NodeJS.ProcessEnv {
-    return {
-      // Copy this processes environment variables
-      ...process.env,
-    };
   }
 
   function createCommand(filename: string, args: string): string {

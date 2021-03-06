@@ -79,7 +79,7 @@ export function main(init: Init): void {
     let p = exists('./.installed')
     .then(exists => {
       state._installed = exists;
-      state.mainFolderPath = Util.getMainFolderPath(state._installed);
+      state.mainFolderPath = Util.getMainFolderPath();
     })
     // Load version number
     .then(() => new Promise(resolve => {

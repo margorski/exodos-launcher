@@ -540,6 +540,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
       win.loadURL(url);
       win.once('ready-to-show', () => {
           win.show();
+          win.focus();
       })
     }
     else {

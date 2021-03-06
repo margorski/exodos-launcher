@@ -240,3 +240,8 @@ export type GamePropSuggestionsMap = {
 export type GamePropSuggestions = {
   [P in SuggestionProps]: string[];
 }
+
+export type ExodosBackendInfo = {
+  changelog: string;
+  version: string;
+}

@@ -1,26 +1,17 @@
 import { remote } from 'electron';
 import { AppUpdater, UpdateInfo } from 'electron-updater';
-import * as path from 'path';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ARCADE, THEATRE } from '@shared/constants';
-import { wrapSearchTerm } from '@shared/game/GameFilter';
-import { GamePlaylist } from '@shared/interfaces';
+import { ExodosBackendInfo, GamePlaylist } from '@shared/interfaces';
 import { LangContainer } from '@shared/lang';
-import { getUpgradeString } from '@shared/upgrade/util';
-import { formatString } from '@shared/utils/StringFormatter';
 import { WithPreferencesProps } from '../../containers/withPreferences';
 import { WithSearchProps } from '../../containers/withSearch';
-import { newProgress, ProgressContext, ProgressDispatch } from '../../context/ProgressContext';
-import { Paths } from '../../Paths';
 import { UpgradeStage } from '../../upgrade/types';
-import { joinLibraryRoute } from '../../Util';
 import { LangContext } from '../../util/lang';
 import { OpenIcon, OpenIconType } from '../OpenIcon';
-import { AutoProgressComponent } from '../ProgressComponents';
 import { RandomGames } from '../RandomGames';
-import { SimpleButton } from '../SimpleButton';
 import { SizeProvider } from '../SizeProvider';
+import { BackIn, LaunchExodosContentData } from '@shared/back/types';
 
 type OwnProps = {
   platforms: Record<string, string[]>;
@@ -33,220 +24,146 @@ type OwnProps = {
   updateInfo: UpdateInfo | undefined;
   /** Callback to initiate the update */
   autoUpdater: AppUpdater;
+  exodosBackendInfo: ExodosBackendInfo | undefined;
 };
 
 export type HomePageProps = OwnProps & WithPreferencesProps & WithSearchProps;
 
-const updateProgressKey = 'home-page__update-progress';
-
 export function HomePage(props: HomePageProps) {
-
-  /** Offset of the starting point in the animated logo's animation (sync it with time of the machine). */
-  const logoDelay = React.useMemo(() => (Date.now() * -0.001) + 's', []);
-
   const allStrings = React.useContext(LangContext);
   const strings = allStrings.home;
-
-  /** Whether the Update Available button has been pressed */
-  const [updateStarted, setUpdateStarted] = React.useState(false);
-  const [progressState, progressDispatch] = React.useContext(ProgressContext.context);
 
   const onLaunchGame = React.useCallback((gameId: string) => {
     props.onLaunchGame(gameId);
   }, [props.onLaunchGame]);
 
-  const onHelpClick = React.useCallback(() => {
-    remote.shell.openItem(path.join(window.External.config.fullExodosPath, 'readme.txt'));
-  }, [window.External.config.fullExodosPath]);
-
-  const onHallOfFameClick = React.useCallback(() => {
-    const playlist = props.playlists.find(p => p.title === 'Exodos Hall of Fame');
-    if (playlist) {
-      props.onSelectPlaylist(ARCADE, playlist.filename);
-      props.clearSearch();
-    }
-  }, [props.playlists, props.onSelectPlaylist, props.clearSearch]);
-
-  const onFavoriteClick = React.useCallback(() => {
-    const playlist = props.playlists.find(p => p.title === '*Favorites*');
-    if (playlist) {
-      props.onSelectPlaylist(ARCADE, playlist.filename);
-      props.clearSearch();
-    }
-  }, [props.playlists, props.onSelectPlaylist, props.clearSearch]);
-
-  const onAllGamesClick = React.useCallback(() => {
-    props.onSelectPlaylist(ARCADE, undefined);
-    props.clearSearch();
-  }, [props.onSelectPlaylist, props.clearSearch]);
-
-  const onAllAnimationsClick = React.useCallback(() => {
-    props.onSelectPlaylist(THEATRE, undefined);
-    props.clearSearch();
-  }, [props.onSelectPlaylist, props.clearSearch]);
-
-  const platformList = React.useMemo(() => {
-    const libraries = Object.keys(props.platforms);
-    const elements: JSX.Element[] = [];
-    let index = 0;
-    for (let i = 0; i < libraries.length; i++) {
-      const library = libraries[i];
-      const platforms = props.platforms[library];
-      if (platforms.length > 0) {
-        // Add a space between library platforms
-        if (i !== 0) {
-          elements.push(<br key={index++} />);
-          elements.push(<br key={index++} />);
-        }
-        // Add library name above links
-        elements.push(<p key={index++}>{allStrings.libraries[library] || library}</p>);
-        // Add all libraries from the platform
-        elements.push(...platforms.map((platform, j) => (
-          <span key={index++}>
-            <Link
-              to={joinLibraryRoute(library)}
-              onClick={() => {
-                props.onSearch('!' + wrapSearchTerm(platform));
-                props.onSelectPlaylist(library, undefined);
-              }}>
-              {platform}
-            </Link>
-            { (j < platforms.length - 1) ? ', ' : undefined }
-          </span>
-        )));
-      }
-    }
-    return elements;
-  }, [props.platforms]);
+  const onLaunchCommand = React.useCallback((commandPath) => {
+    window.External.back.send<any, LaunchExodosContentData>(BackIn.LAUNCH_COMMAND, { path: commandPath });
+  }, []);
 
   // (These are kind of "magic numbers" and the CSS styles are designed to fit with them)
   const height: number = 140;
   const width: number = (height * 0.666) | 0;
 
-  // Render all owned ProgressData as components
-  const updateProgressComponent = React.useMemo(() => {
-    const progressArray = progressState[updateProgressKey];
-    if (progressArray) {
-      return progressArray.map((data, index) => (
-        <AutoProgressComponent
-          key={index}
-          progressData={data}
-          wrapperClass={'home-page__progress-wrapper'} />
-      ));
-    }
-  }, [progressState[updateProgressKey]]);
-
   // -- Render the boxes --
 
-  const renderedUpdates = React.useMemo(() => {
-    if (window.External.installed) {
-      return (
-        <div className='home-page__box'>
-          <div className='home-page__box-head'>{strings.updateHeader}</div>
-          <ul className='home-page__box-body home-page__update-box'>
-            {strings.currentVersion} - {remote.app.getVersion()}
-            <br/>
-            { props.updateInfo !== undefined ?
-            <>
-              <p>{strings.nextVersion} - {props.updateInfo.version}</p>
-              { updateStarted ? undefined :
-                <SimpleButton
-                  value={strings.updateAvailable}
-                  onClick={() => {
-                    if (props.updateInfo) {
-                      const updateNow = onUpdateDownload(props.updateInfo, props.autoUpdater.downloadUpdate);
-                      if (updateNow) {
-                        const updateProgressState = newProgress(updateProgressKey, progressDispatch);
-                        ProgressDispatch.setText(updateProgressState, strings.downloadingUpdate);
-                        props.autoUpdater.on('download-progress', (progress) => {
-                          ProgressDispatch.setPercentDone(updateProgressState, Math.floor(progress.percent));
-                        });
-                        props.autoUpdater.once('update-downloaded', (info) => {
-                          ProgressDispatch.finished(updateProgressState);
-                        });
-                        props.autoUpdater.downloadUpdate();
-                        setUpdateStarted(true);
-                      }
-                    }
-                  }}>
-                </SimpleButton>
-              }
-              { updateProgressComponent }
-            </>
-            : strings.upToDate }
-          </ul>
-        </div>
-      );
-    } else {
-      return (
-        <></>
-      );
-    }
-  }, [strings, props.autoUpdater, props.updateInfo, updateStarted, setUpdateStarted, updateProgressComponent]);
-
-  const renderedQuickStart = React.useMemo(() => (
-    <div className='home-page__box'>
-      <div className='home-page__box-head'>{strings.quickStartHeader}</div>
+  const renderedSetupSection = React.useMemo(() => (
+    <div className='home-page__box home-page__box_narrow'>
+      <div className='home-page__box-head'>Setup</div>
       <ul className='home-page__box-body'>
-        <QuickStartItem icon='badge'>
-          {formatString(strings.hallOfFameInfo, <Link to={joinLibraryRoute(ARCADE)} onClick={onHallOfFameClick}>{strings.hallOfFame}</Link>)}
-        </QuickStartItem>
-        <QuickStartItem icon='play-circle'>
-          {formatString(strings.allGamesInfo, <Link to={joinLibraryRoute(ARCADE)} onClick={onAllGamesClick}>{strings.allGames}</Link>)}
-        </QuickStartItem>
-        <QuickStartItem icon='video'>
-          {formatString(strings.allAnimationsInfo, <Link to={joinLibraryRoute(THEATRE)} onClick={onAllAnimationsClick}>{strings.allAnimations}</Link>)}
-        </QuickStartItem>
         <QuickStartItem icon='wrench'>
-          {formatString(strings.configInfo, <Link to={Paths.CONFIG}>{strings.config}</Link>)}
-        </QuickStartItem>
-        <QuickStartItem icon='info'>
-          {formatString(strings.helpInfo, <Link to='#' onClick={onHelpClick}>{strings.help}</Link>)}
-        </QuickStartItem>
-      </ul>
-    </div>
-  ), [strings, onHallOfFameClick, onAllGamesClick, onAllAnimationsClick, onHelpClick]);
-
-  const renderedExtras = React.useMemo(() => (
-    <div className='home-page__box home-page__box--extras'>
-      <div className='home-page__box-head'>{strings.extrasHeader}</div>
-      <ul className='home-page__box-body'>
-        <QuickStartItem icon='heart'>
           <Link
-            to={joinLibraryRoute(ARCADE)}
-            onClick={onFavoriteClick}>
-            {strings.favoritesPlaylist}
+            to='#'
+            onClick={() => onLaunchCommand('install_linux_dependencies.sh')}>
+            Install dependencies
           </Link>
         </QuickStartItem>
-        <br />
-        <QuickStartItem icon='tag'>
-          {strings.filterByPlatform}:
+        <QuickStartItem icon='cog'>
+          <Link
+            to='#'
+            onClick={() => onLaunchCommand('Setup.sh')}>
+            eXoDOS Setup
+          </Link>
         </QuickStartItem>
-        <QuickStartItem className='home-page__box-item--platforms'>
-          { platformList }
-        </QuickStartItem>
-        <br />
-        <QuickStartItem icon='code'>
-          <a
-            href='https://trello.com/b/Tu9E5GLk/launcher'
-            target='_top'>
-            {strings.plannedFeatures}
-          </a>
+        <QuickStartItem icon='data-transfer-download'>
+          <Link
+            to='#'
+            onClick={() => onLaunchCommand('eXo/Update/update.sh')}>
+            Check for updates
+          </Link>
         </QuickStartItem>
       </ul>
     </div>
-  ), [strings, onFavoriteClick, platformList]);
+  ), [strings, onLaunchCommand]);
 
-  const renderedNotes = React.useMemo(() => (
-    <div className='home-page__box'>
-      <div className='home-page__box-head'>{strings.notesHeader}</div>
+  const renderedDocs = React.useMemo(() => (
+    <div className='home-page__box home-page__box_narrow'>
+      <div className='home-page__box-head'>Docs</div>
       <ul className='home-page__box-body'>
-        <QuickStartItem>
-          {strings.notes}
+        <QuickStartItem icon='script'>
+          <Link
+            to='#'
+            onClick={() => onLaunchCommand('eXoDOS ReadMe.txt')}>
+            ReadMe
+          </Link>
+        </QuickStartItem>
+        <QuickStartItem icon='script'>
+          <Link
+            to='#'
+            onClick={() => onLaunchCommand('eXoDOS Linux ReadMe.txt')}>
+            Linux ReadMe
+          </Link>
+        </QuickStartItem>
+        <QuickStartItem icon='book'>
+          <Link
+            to='#'
+            onClick={() => onLaunchCommand('eXoDOS Manual.pdf')}>
+            Manual
+          </Link>
+        </QuickStartItem>
+        <QuickStartItem icon='book'>
+          <Link
+            to='#'
+            onClick={() => onLaunchCommand('eXoDOS Catalog.pdf')}>
+            Catalog
+          </Link>
         </QuickStartItem>
       </ul>
     </div>
-  ), [strings]);
+  ), [strings, onLaunchCommand]);
+
+  const renderedChangelog = React.useMemo(() => (
+    <div className='home-page__box'>
+      <div className='home-page__box-head'>Changelog</div>
+      <ul className='home-page__box-body home-page__changelog'>
+          {props.exodosBackendInfo ? 
+            props.exodosBackendInfo.changelog.split("\n").map((line, idx) => (<div key={`changelog-${idx}-line`}>{line.trim() ? line : (<br />)}</div>))
+            : '' }
+      </ul>
+    </div>
+  ), [props.exodosBackendInfo, strings]);
+
+  const renderedGreetings = React.useMemo(() => (
+    <div className='home-page__box'>
+      <div className='home-page__box-head'>Welcome to eXoDOS!</div>
+      <div className='home-page__box-body'>
+        <p>This pack includes 7,200 DOS games. The games have already been configured to run in DOSBox. Games which are supported by ScummVM will give you the option at launch as to which emulator you would like to use.</p>
+        <br />
+        <p>If you have not already done so, run the utilities in the Setup box to install the collection on your computer. Then, click on the MS-DOS tab to browse through and play the games, or the DOS Magazines tab to read magazines.</p>
+      </div>
+    </div>
+  ), []);
+
+  const renderedHeader = () => (
+    <div className='home-page__two_columns_container'>
+      <div className='home-page__header'>
+        <div className=''>
+          <div><h1>eXoDOS v5</h1></div> 
+          <div><h4>{`backend: ${props.exodosBackendInfo ? props.exodosBackendInfo.version : ''}`}</h4></div>
+          <div><h4>{`exogui: ${remote.app.getVersion()}`}</h4></div>
+        </div>
+        <div className='home-page__subheader'>
+          {link('Website', 'https://www.retro-exo.com/exodos.html')}
+          |
+          {link('Discord', 'https://discord.gg/SaMKayf')}
+        </div>
+      </div>
+      {/* Logo */}
+      <div className='home-page__logo'>
+        <img src="images/logo.png" />
+      </div>
+    </div>
+  );
+
+  const link = (title: string, url: string): JSX.Element => {
+    return (
+      <a
+        href={url}
+        title={url}>
+        {title}
+      </a>
+    );
+  }
 
   const renderedRandomGames = React.useMemo(() => (
     <SizeProvider width={width} height={height}>
@@ -263,13 +180,21 @@ export function HomePage(props: HomePageProps) {
   ), [strings, onLaunchGame]);
 
   // Render
-  return React.useMemo(() => (
+  return (
     <div className='home-page simple-scroll'>
       <div className='home-page__inner'>
-        <h1>eXoDOS</h1>
+        { renderedHeader() }
+        { renderedGreetings }
+        <div className='home-page__two_columns_container'>
+          {/* Quick Start */}
+          { renderedSetupSection }
+          {/* Extras */}
+          { renderedDocs }    
+        </div>
+        { renderedChangelog }
       </div>
     </div>
-  ), [renderedUpdates, renderedQuickStart, renderedExtras, renderedNotes, renderedRandomGames]);
+  ); //, [renderedHeader, renderedGreetings, renderedSetupSection, renderedDocs, renderedChangelog]);
 }
 
 function QuickStartItem(props: { icon?: OpenIconType, className?: string, children?: React.ReactNode }): JSX.Element {
@@ -285,54 +210,4 @@ function QuickStartItem(props: { icon?: OpenIconType, className?: string, childr
       </div>
     </li>
   );
-}
-
-function renderStageSection(strings: LangContainer, stage: UpgradeStage, onDownload: (stage: UpgradeStage) => void) {
-  return (
-    <>
-      <QuickStartItem><b>{getUpgradeString(stage.title, strings.upgrades)}</b></QuickStartItem>
-      <QuickStartItem><i>{getUpgradeString(stage.description, strings.upgrades)}</i></QuickStartItem>
-      <QuickStartItem>{ renderStageButton(strings.home, stage, onDownload) }</QuickStartItem>
-    </>
-  );
-}
-
-function renderStageButton(strings: LangContainer['home'], stage: UpgradeStage, onDownload: (stage: UpgradeStage) => void) {
-  const stageState = stage.state;
-  return (
-    stageState.checksDone ? (
-      stageState.alreadyInstalled && stageState.upToDate ? (
-        <p className='home-page__grayed-out'>{strings.alreadyInstalled}</p>
-      ) : (
-        stageState.isInstallationComplete ? (
-          strings.installComplete
-        ) : (
-          stageState.isInstalling ? (
-            <p>{stageState.installProgressNote}</p>
-          ) : (
-            <a
-              className='simple-button'
-              onClick={() => { onDownload(stage); }}>
-              {stageState.alreadyInstalled ? strings.update : strings.download}
-            </a>
-          )
-        )
-      )
-    ) : strings.checkingUpgradeState
-  );
-}
-
-function onUpdateDownload(updateInfo: UpdateInfo, downloadFunc: () => void): boolean {
-  const message = (updateInfo.releaseName ? `${updateInfo.releaseName}\n\n` : '')
-              + (updateInfo.releaseNotes ? `Release Notes:\n${updateInfo.releaseNotes}\n\n` : 'No Release Notes Available.\n\n')
-              + 'Download and Install now?';
-  const res = remote.dialog.showMessageBoxSync({
-    title: 'Update Available',
-    message: message,
-    buttons: ['Yes', 'No']
-  });
-  if (res === 0) {
-    return true;
-  }
-  return false;
 }
