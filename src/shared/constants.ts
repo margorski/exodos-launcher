@@ -11,3 +11,6 @@ export const SCREENSHOTS = 'Screenshots';
 
 /** Path of the "htdocs" folder relative to the Exodos path. */
 export const htdocsPath = 'Server/htdocs';
+
+export const EXODOS_GAMES_PLATFORM_NAME = 'MS-DOS';
+export const EXODOS_MAGAZINES_PLATFORM_NAME = 'DOS Magazines';

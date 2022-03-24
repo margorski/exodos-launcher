@@ -9,6 +9,8 @@ import { easterEgg, joinLibraryRoute } from '../Util';
 import { LangContext } from '../util/lang';
 import { GameOrder, GameOrderChangeEvent } from './GameOrder';
 import { OpenIcon } from './OpenIcon';
+import { ExodosStateData } from '@shared/back/types';
+import { EXODOS_GAMES_PLATFORM_NAME, EXODOS_MAGAZINES_PLATFORM_NAME } from '@shared/constants';
 
 type OwnProps = {
   /** The most recent search query. */
@@ -17,8 +19,7 @@ type OwnProps = {
   order: GameOrderChangeEvent;
   /** Array of library routes */
   libraries: string[];
-  /** Whether exodos is installed or not */
-  exodosInstalled: boolean;
+  exodosState: ExodosStateData;
   /** Called when a search is made. */
   onSearch: (text: string, redirect: boolean) => void;
   /** Called when any of the ordering parameters are changed (by the header or a sub-component). */
@@ -72,23 +73,34 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
     const strings = this.context.app;
     const {
       preferencesData: { browsePageShowLeftSidebar, browsePageShowRightSidebar, enableEditing, showDeveloperTab },
-      onOrderChange, onToggleLeftSidebarClick, onToggleRightSidebarClick, libraries
+      onOrderChange, libraries
     } = this.props;
     const { searchText } = this.state;
+    const gamesLibraryExists = libraries.includes(`${EXODOS_GAMES_PLATFORM_NAME}.xml`);
+    const magazinesLibraryExists = libraries.includes(`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`);
+
     return (
       <div className='header'>
         {/* Header Menu */}
         <div className='header__wrap'>
           <ul className='header__menu'>
             <MenuItem title={strings.home} link={Paths.HOME} />
-            { libraries.length > 0 && this.props.exodosInstalled ? (
-              libraries.map(library => (
+            {
+              this.props.exodosState.magazinesEnabled && magazinesLibraryExists ? (
                 <MenuItem
-                  key={library}
-                  title={getLibraryItemTitle(library, this.context.libraries)}
-                  link={joinLibraryRoute(library)} />
-              ))
-            ) : null }
+                key={`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`}
+                title={getLibraryItemTitle(`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`, this.context.libraries)}
+                link={joinLibraryRoute(`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`)} />
+              ) : null
+            }
+            {
+              this.props.exodosState.gamesEnabled && gamesLibraryExists ? (
+                <MenuItem
+                key={`${EXODOS_GAMES_PLATFORM_NAME}.xml`}
+                title={getLibraryItemTitle(`${EXODOS_GAMES_PLATFORM_NAME}.xml`, this.context.libraries)}
+                link={joinLibraryRoute(`${EXODOS_GAMES_PLATFORM_NAME}.xml`)} />
+              ) : null
+            }
             <MenuItem
               title={strings.logs}
               link={Paths.LOGS} />

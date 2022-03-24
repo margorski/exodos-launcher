@@ -2,9 +2,11 @@ import { LaunchExodosContentData } from '@shared/back/types';
 import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
 import { ExecMapping } from '@shared/interfaces';
 import { LangContainer } from '@shared/lang';
-import { fixSlashes, getFilename, padStart, stringifyArray } from '@shared/Util';
+import { fixSlashes, getFilename, padStart, stringifyArray, escapeShell } from '@shared/Util';
 import { ChildProcess, exec, execFile } from 'child_process';
 import { EventEmitter } from 'events';
+import { fstat } from 'fs-extra';
+import * as fs from 'fs';
 import * as path from 'path';
 import { LogFunc, OpenDialogFunc, OpenExternalFunc } from './types';
 
@@ -28,9 +30,40 @@ type LaunchBaseOpts = {
   openExternal: OpenExternalFunc;
 }
 
+type TerminalCommand = {
+  executableName: string,
+  needsQuotesAroundPath: boolean
+}
+
 export namespace GameLauncher {
+  const terminalEmulatorCommands:TerminalCommand[] = [
+    { executableName: `gnome-terminal`, needsQuotesAroundPath: true },
+    { executableName: `konsole`, needsQuotesAroundPath: false },
+    { executableName: `xfce4-terminal`, needsQuotesAroundPath: true },
+    { executableName: `xterm`, needsQuotesAroundPath: false },
+    { executableName: `uxterm`, needsQuotesAroundPath: false },
+    { executableName: `Eterm`, needsQuotesAroundPath: false },    
+    { executableName: `x-terminal-emulator`, needsQuotesAroundPath: false }
+  ]
+  const BIN_DIRECTORY = `/usr/bin/`;
   const logSource = 'Game Launcher';
   
+  let terminalEmulator:TerminalCommand;
+
+  function findAndSetExistingTerminalEmulator() {
+    console.log("Searching for existing terminal emulator...")
+    for (var te of terminalEmulatorCommands) {
+      if (fs.existsSync(`${BIN_DIRECTORY}${te.executableName}`)) {
+        console.log(`Found ${te.executableName}. Setting as default terminal-emulator.`)
+        terminalEmulator = te;
+        return;
+      }      
+    }
+    console.error(`Cannot find any terminal-emulator in system.`);
+    return '';
+  }
+  findAndSetExistingTerminalEmulator();
+
   export function launchCommand(appPath:string, appArgs:string, log:LogFunc):Promise<void> {
     const command = createCommand(appPath, appArgs);
     const proc = exec(
@@ -112,7 +145,18 @@ export namespace GameLauncher {
     let proc: ChildProcess;
     const gamePath: string = fixSlashes(path.join(opts.fpPath, getApplicationPath(opts.game.applicationPath, opts.execMappings, opts.native)));
     const gameArgs: string = opts.game.launchCommand;
-    const command: string = createCommand(gamePath, gameArgs);
+
+    let command: string;
+    try {
+      command = createCommand(gamePath, gameArgs);
+    }
+    catch (e) {
+      opts.log({
+        source: logSource,
+        content: `Launch Game "${opts.game.title}" Cannot find terminal-emulator, please install any from given list: ${terminalEmulatorCommands.map(te => te.executableName).join(', ')}.`
+      });  
+      return;
+    }
 
     proc = exec(command);
     logProcessOutput(proc, opts.log);
@@ -183,17 +227,18 @@ export namespace GameLauncher {
     return filePath;
   }
 
-  function createCommand(filename: string, args: string): string {
-    const linuxTerminalEmulatorCommand = filename.toLocaleLowerCase().endsWith('.sh') ? `x-terminal-emulator -e` : `xdg-open`;
-    let isLinux: boolean = process.platform == 'linux';
-    // Escape filename and args
-    let escFilename: string = filename;
-    let escArgs: string =  isLinux ? escapeLinuxArgs(args) : escapeWin(args);
-  
-      return `${isLinux ? linuxTerminalEmulatorCommand : ''}  "${escFilename}" ${escArgs}`;
-    }
+  function createCommand(filename: string, args: string): string {    
+    if (!terminalEmulator) throw "Terminal emulator command not set. Probably default emulator was not found on system.";
 
-    function logProcessOutput(proc: ChildProcess, log: LogFunc): void {
+    const linuxTerminalEmulatorCommand = filename.toLocaleLowerCase().endsWith('.sh') ? `${terminalEmulator.executableName} -e` : `xdg-open`;
+    // Escape filename and args    
+    let escFilename: string = escapeShell(filename);    
+    if (terminalEmulator.needsQuotesAroundPath) escFilename = `"${escFilename}"`;    
+    let escArgs: string = escapeLinuxArgs(args);
+      return `${linuxTerminalEmulatorCommand}  ${escFilename} ${escArgs}`;
+  }
+
+  function logProcessOutput(proc: ChildProcess, log: LogFunc): void {
       // Log for debugging purposes
     // (might be a bad idea to fill the console with junk?)
     const logStuff = (event: string, args: any[]): void => {

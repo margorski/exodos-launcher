@@ -231,7 +231,7 @@
     "noGameMatchedSearch": "Pröva att söka efter någonting mindre specifikt.",
     "play": "Play",
     "install": "Install",
-    "remove": "Remove",
+    "setup": "Setup",
     "open": "Open"
   },
   "curate": {

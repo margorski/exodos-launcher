@@ -71,7 +71,7 @@ export enum BackOut {
   PLAYLIST_UPDATE,
   PLAYLIST_REMOVE,
   IMPORT_CURATION_RESPONSE,
-  EXODOS_IS_INSTALLED,
+  EXODOS_STATE_UPDATE,
   QUIT,
 }
 
@@ -364,4 +364,9 @@ export type LaunchCurationAddAppData = {
   curationKey: string;
   curation: EditAddAppCuration;
   platform?: string;
+}
+
+export type ExodosStateData = {
+  gamesEnabled?: boolean;
+  magazinesEnabled?: boolean;
 }

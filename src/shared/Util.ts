@@ -421,3 +421,7 @@ export function canReadWrite(folder: string): Promise<boolean> {
     });
   });
 }
+
+export function escapeShell(cmd:string) {
+  return cmd.replace(/(["\s'$!()`\\])/g,'\\$1');
+};

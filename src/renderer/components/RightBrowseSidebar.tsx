@@ -2,7 +2,7 @@ import { Menu, MenuItemConstructorOptions, remote } from 'electron';
 import * as fs from 'fs';
 import * as React from 'react';
 import { BackIn, BackOut, DeleteImageData, ImageChangeData, LaunchAddAppData, LaunchGameData, SaveImageData, WrappedResponse } from '@shared/back/types';
-import { LOGOS, SCREENSHOTS } from '@shared/constants';
+import { EXODOS_GAMES_PLATFORM_NAME, LOGOS, SCREENSHOTS } from '@shared/constants';
 import { AdditionalApplicationInfo } from '@shared/game/AdditionalApplicationInfo';
 import { wrapSearchTerm } from '@shared/game/GameFilter';
 import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
@@ -157,7 +157,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
       const isPlaceholder = game.placeholder;
       const editDisabled = !preferencesData.enableEditing;
       const editable = !editDisabled && isEditing;
-      const isDosPlatform = game.platform === 'MS-DOS';
+      const isDosPlatform = game.platform === EXODOS_GAMES_PLATFORM_NAME;
       const playButtonLabel = isDosPlatform ? (isInstalled ? strings.play : strings.install) : strings.open;
       return (
         <div
@@ -186,7 +186,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
                     type='button'
                     className='simple-button'
                     disabled={!isInstalled}
-                    value={strings.remove}
+                    value={strings.setup}
                     onClick={() => window.External.back.send<LaunchGameData>(BackIn.LAUNCH_GAME_SETUP, { id: game.id })}
                     /> : null}
                 </div>

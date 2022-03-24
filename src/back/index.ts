@@ -1,6 +1,6 @@
-import { AddLogData, BackIn, BackInit, BackInitArgs, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, DeleteGameData, DeleteImageData, DeletePlaylistData, DuplicateGameData, ExportGameData, GetAllGamesResponseData, GetExecData, GetGameData, GetGameResponseData, GetGamesTotalResponseData, GetMainInitDataResponse, GetPlaylistResponse, GetRendererInitDataResponse, GetSuggestionsResponseData, ImageChangeData, ImportCurationData, ImportCurationResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchAddAppData, LaunchCurationAddAppData, LaunchCurationData, LaunchGameData, LocaleUpdateData, OpenDialogData, OpenDialogResponseData, OpenExternalData, OpenExternalResponseData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, RandomGamesData, RandomGamesResponseData, SaveGameData, SaveImageData, SavePlaylistData, ServiceActionData, SetLocaleData, ThemeChangeData, ThemeListChangeData, UpdateConfigData, ViewGame, WrappedRequest, WrappedResponse, LaunchExodosContentData } from '@shared/back/types';
+import { AddLogData, BackIn, BackInit, BackInitArgs, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, DeleteGameData, DeleteImageData, DeletePlaylistData, DuplicateGameData, ExportGameData, ExodosStateData, GetAllGamesResponseData, GetExecData, GetGameData, GetGameResponseData, GetGamesTotalResponseData, GetMainInitDataResponse, GetPlaylistResponse, GetRendererInitDataResponse, GetSuggestionsResponseData, ImageChangeData, ImportCurationData, ImportCurationResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchAddAppData, LaunchCurationAddAppData, LaunchCurationData, LaunchGameData, LocaleUpdateData, OpenDialogData, OpenDialogResponseData, OpenExternalData, OpenExternalResponseData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, RandomGamesData, RandomGamesResponseData, SaveGameData, SaveImageData, SavePlaylistData, ServiceActionData, SetLocaleData, ThemeChangeData, ThemeListChangeData, UpdateConfigData, ViewGame, WrappedRequest, WrappedResponse, LaunchExodosContentData } from '@shared/back/types';
 import { overwriteConfigData } from '@shared/config/util';
-import { LOGOS, SCREENSHOTS } from '@shared/constants';
+import { EXODOS_GAMES_PLATFORM_NAME, LOGOS, SCREENSHOTS } from '@shared/constants';
 import { findMostUsedApplicationPaths } from '@shared/curate/defaultValues';
 import { stringifyCurationFormat } from '@shared/curate/format/stringifier';
 import { convertToCurationMeta } from '@shared/curate/metaToMeta';
@@ -107,6 +107,147 @@ const servicesSource = 'Background Services';
 process.on('message', onProcessMessage);
 process.on('disconnect', () => { exit(); }); // (Exit when the main process does)
 
+function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
+  const dosPlatform = state.gameManager.platforms.find(p => p.name === EXODOS_GAMES_PLATFORM_NAME);
+  if (!dosPlatform) {
+    console.log("Cannot create installed game playlist. MS-DOS platform not loaded yet.");
+    return;
+  }
+
+  const gamesList = state.installedGames.map(gameName => { 
+    const gameInPlatform = dosPlatform.collection.games.find(
+      game => game.applicationPath.split('\\').includes(gameName)
+    );
+    if (gameInPlatform) return { id: gameInPlatform.id };
+    else return;
+  }).filter(g => g) as GamePlaylistEntry[];
+
+  const playlistDummyFilename = 'installedgamesdummyfile';
+  var existingPlaylistIndex = state.playlists.findIndex(p => p.filename === playlistDummyFilename);
+  if (existingPlaylistIndex !== -1) {
+    state.playlists[existingPlaylistIndex].games = gamesList;
+  }
+  else state.playlists.unshift({
+    title: 'Installed games',
+    description: 'A list of installed games.',
+    author: '',
+    icon: '',
+    library: `${EXODOS_GAMES_PLATFORM_NAME}.xml`,
+    filename: playlistDummyFilename,
+    games: gamesList
+  });
+
+  // Clear all query caches that uses this playlist
+  const hashes = Object.keys(state.queries);
+  for (let hash of hashes) {
+    const cache = state.queries[hash];
+    if (cache.query.playlistId === playlistDummyFilename) {
+      delete state.queries[hash]; // Clear query from cache
+    }
+  }
+  if (doBroadcast) {
+    broadcast<PlaylistUpdateData>({
+      id: '',
+      type: BackOut.PLAYLIST_UPDATE,
+      data: state.playlists[0],
+    });
+  }
+}
+
+function initExodosWatcher() {
+  console.log("Initialize eXoDOS watcher to check if is initialized...");
+  const exodosScript = path.resolve(path.join(state.config.exodosPath, "eXo/eXoDOS"));
+  const exodosWatcher = chokidar.watch(exodosScript, {persistent: true});
+  exodosWatcher
+    .on('add', path => {
+      console.log("Found exodos directory...");
+      initExodosGameScriptWatcher();
+      initExodosInstalledGamesWatcher();
+      initExodosMagazinesWatcher();
+      exodosWatcher.close();
+    });
+}
+
+function initExodosGameScriptWatcher() {
+  // checking if linux script exists for one game, if it exists we can assume that exodos for linux is installed
+  const anyGameLinuxScript = path.resolve(path.join(state.config.exodosPath, "eXo/eXoDOS/!dos/ZZTRev/ZZT's Revenge! (1992).sh"));
+  const exodosInstalledWatcher = chokidar.watch(anyGameLinuxScript, {persistent: true});
+  exodosInstalledWatcher
+    .on('add', path => {
+      console.log(`Found linux game script, exodos is installed`);
+      exodosInstalledWatcher.close();
+      broadcast<ExodosStateData>({
+        id: '',
+        type: BackOut.EXODOS_STATE_UPDATE,
+        data: {
+          gamesEnabled: true
+        }
+      });
+    });
+}
+
+function initExodosMagazinesWatcher() {
+  const magazinesPath = path.resolve(path.join(state.config.exodosPath, "eXo/Magazines"));
+  const magazinesWatcher = chokidar.watch(magazinesPath, {ignored: /^\./, persistent: true, depth: 0});
+  magazinesWatcher
+    .on('addDir', path => {
+      console.log(`Found magazines, enabling magazines`);
+      magazinesWatcher.close();
+      broadcast<ExodosStateData>({
+        id: '',
+        type: BackOut.EXODOS_STATE_UPDATE,
+        data: {
+          magazinesEnabled: true
+        }
+      });
+    });
+}
+
+function initExodosInstalledGamesWatcher() {
+  const gamesPath = path.resolve(path.join(state.config.exodosPath, 'eXo/eXoDOS/'));
+  // Init games watcher
+  var installedGamesWatcherInitialized = false;
+
+  const installedGamesWatcher = chokidar.watch(gamesPath, {ignored: /^\./, persistent: true, awaitWriteFinish: true, depth: 0});
+  installedGamesWatcher
+    .on('addDir', path => {
+      if (!installedGamesWatcherInitialized) return;
+      console.log(`Game ${path} added, rescan installed games.`);
+      rescanInstalledGamesAndBroadcast(gamesPath);
+    })
+    .on('unlinkDir', path => {
+      if (!installedGamesWatcherInitialized) return;
+      console.log(`Game ${path} has been removed, rescan installed games.`)
+      rescanInstalledGamesAndBroadcast(gamesPath);
+    })
+    .on('ready', () => {
+      installedGamesWatcherInitialized = true;
+      rescanInstalledGamesAndBroadcast(gamesPath);
+      console.log('Initial scan complete. Ready for changes');
+    })
+    .on('error', error => console.log(`Watcher error: ${error}`));
+}
+
+function rescanInstalledGamesAndBroadcast(gamesPath: string) {
+  state.installedGames = rescanInstalledGames(gamesPath);
+  addInstalledGamesPlaylist(true);
+}
+
+function rescanInstalledGames(gamesPath: string) {
+  console.log(`Scanning for new games in ${gamesPath}`);
+
+  if (!fs.existsSync(gamesPath)) {
+    console.error(`Directory ${gamesPath} doesn't exists, that could mean that exodos is not installed.`);  
+    return [];
+  }
+
+  const installedGames = fs.readdirSync(gamesPath, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .filter(dirent => dirent.name !== `!dos`)
+    .map(dirent => dirent.name);
+  return installedGames;
+}
+
 async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   if (state.isInit) { return; }
   state.isInit = true;
@@ -159,86 +300,6 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     }
   }
 
-  const gamesPath = path.resolve(path.join(state.config.exodosPath, 'eXo/eXoDOS/'));
-  console.log(`Scanning for new games in ${gamesPath}`);
-
-  function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
-    const dosPlatform = state.gameManager.platforms.find(p => p.name === 'MS-DOS');
-    if (!dosPlatform) {
-      console.log("Cannot create installed game playlist. MS-DOS platform not loaded yet.");
-      return;
-    }
-
-    const gamesList = state.installedGames.map(gameName => { 
-      const gameInPlatform = dosPlatform.collection.games.find(
-        game => game.applicationPath.split('\\').includes(gameName)
-      );
-      if (gameInPlatform) return { id: gameInPlatform.id };
-      else return;
-    }).filter(g => g) as GamePlaylistEntry[];
-
-    const playlistDummyFilename = 'installedgamesdummyfile';
-    var existingPlaylistIndex = state.playlists.findIndex(p => p.filename === playlistDummyFilename);
-    if (existingPlaylistIndex !== -1) {
-      state.playlists[existingPlaylistIndex].games = gamesList;
-    }
-    else state.playlists.unshift({
-      title: 'Installed games',
-      description: 'A list of installed games.',
-      author: '',
-      icon: '',
-      library: 'MS-DOS.xml',
-      filename: playlistDummyFilename,
-      games: gamesList
-    });
-
-    // Clear all query caches that uses this playlist
-    const hashes = Object.keys(state.queries);
-    for (let hash of hashes) {
-      const cache = state.queries[hash];
-      if (cache.query.playlistId === playlistDummyFilename) {
-        delete state.queries[hash]; // Clear query from cache
-      }
-    }
-    if (doBroadcast) {
-      broadcast<PlaylistUpdateData>({
-        id: '',
-        type: BackOut.PLAYLIST_UPDATE,
-        data: state.playlists[0],
-      });
-    }
-  }
-  function rescanInstalledGames() {
-    const installedGames = fs.readdirSync(gamesPath, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory())
-      .filter(dirent => dirent.name !== `!dos`)
-      .map(dirent => dirent.name);
-    return installedGames;
-  }
-
-  // Init games watcher
-  var installedGamesWatcherInitialized = false;
-  const installedGamesWatcher = chokidar.watch(gamesPath, {ignored: /^\./, persistent: true, awaitWriteFinish: true, depth: 0});
-  installedGamesWatcher
-    .on('addDir', path => {
-      if (!installedGamesWatcherInitialized) return;
-      console.log(`Game ${path} added, rescan installed games.`);
-      state.installedGames = rescanInstalledGames();
-      addInstalledGamesPlaylist(true);
-    })
-    .on('unlinkDir', path => {
-      if (!installedGamesWatcherInitialized) return;
-      console.log(`Game ${path} has been removed, rescan installed games.`)
-      state.installedGames = rescanInstalledGames();
-      addInstalledGamesPlaylist(true);
-    })
-    .on('ready', () => {
-      installedGamesWatcherInitialized = true;
-      state.installedGames = rescanInstalledGames();
-      console.log('Initial scan complete. Ready for changes');
-    })
-    .on('error', error => console.log(`Watcher error: ${error}`));
-    
   // Init language
   state.languageWatcher.on('ready', () => {
     // Add event listeners
@@ -726,21 +787,6 @@ async function onMessageWrap(event: WebSocket.MessageEvent) {
   }
 }
 
-function initExodosWatcher() {
-  // checking if linux script exists for one game, if it exists we can assume that exodos for linux is installed
-  const anyGameLinuxScript = path.resolve(path.join(state.config.exodosPath, "eXo/eXoDOS/!dos/ZZTRev/ZZT's Revenge! (1992).sh"));
-  const exodosInstalledWatcher = chokidar.watch(anyGameLinuxScript);
-  exodosInstalledWatcher
-    .on('add', path => {
-      console.log(`Found linux game script, exodos is installed`);
-      exodosInstalledWatcher.close();
-      broadcast<void>({
-        id: '',
-        type: BackOut.EXODOS_IS_INSTALLED
-      });
-    });
-}
-
 async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
   const [req, error] = parseWrappedRequest(event.data);
   if (error || !req) {
@@ -786,6 +832,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
       }
 
       initExodosWatcher();
+
       respond<GetRendererInitDataResponse>(event.target, {
         id: req.id,
         type: BackOut.GENERIC_RESPONSE,

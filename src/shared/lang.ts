@@ -241,7 +241,7 @@ const langTemplate = {
     'defaultLibrary',
     'play',
     'install',
-    'remove',
+    'setup',
     'open'
   ] as const,
   curate: [

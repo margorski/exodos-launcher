@@ -231,7 +231,7 @@
     "noGameMatchedSearch": "Try searching for something less restrictive.",
     "play": "Play",
     "install": "Install",
-    "remove": "Remove",
+    "setup": "Setup",
     "open": "Open"
   },
   "curate": {

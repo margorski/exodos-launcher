@@ -3,9 +3,9 @@ import { AppUpdater, UpdateInfo } from 'electron-updater';
 import * as path from 'path';
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router-dom';
-import { AddLogData, BackIn, BackInit, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, GetGamesTotalResponseData, GetPlaylistResponse, GetSuggestionsResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchGameData, LocaleUpdateData, LogEntryAddedData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, SaveGameData, SavePlaylistData, ServiceChangeData, ThemeChangeData, ThemeListChangeData, UpdateConfigData } from '@shared/back/types';
+import { AddLogData, BackIn, BackInit, BackOut, BrowseChangeData, BrowseViewIndexData, BrowseViewIndexResponseData, BrowseViewPageData, BrowseViewPageResponseData, ExodosStateData, GetGamesTotalResponseData, GetPlaylistResponse, GetSuggestionsResponseData, InitEventData, LanguageChangeData, LanguageListChangeData, LaunchGameData, LocaleUpdateData, LogEntryAddedData, PlaylistRemoveData, PlaylistUpdateData, QuickSearchData, QuickSearchResponseData, SaveGameData, SavePlaylistData, ServiceChangeData, ThemeChangeData, ThemeListChangeData, UpdateConfigData } from '@shared/back/types';
 import { BrowsePageLayout } from '@shared/BrowsePageLayout';
-import { APP_TITLE } from '@shared/constants';
+import { APP_TITLE, EXODOS_GAMES_PLATFORM_NAME } from '@shared/constants';
 import { IAdditionalApplicationInfo, IGameInfo, UNKNOWN_LIBRARY } from '@shared/game/interfaces';
 import { ExodosBackendInfo, GamePlaylist, GamePropSuggestions, ProcessState, WindowIPC } from '@shared/interfaces';
 import { LangContainer, LangFile } from '@shared/lang';
@@ -74,7 +74,7 @@ export type AppState = {
   themeList: Theme[];
   gamesTotal: number;
   localeCode: string;
-  exodosInstalled: boolean;
+  exodosState: ExodosStateData;
 
   /** Stop rendering to force component unmounts */
   stopRender: boolean;
@@ -157,7 +157,10 @@ export class App extends React.Component<AppProps, AppState> {
       wasNewGameClicked: false,
       updateInfo: undefined,
       order,
-      exodosInstalled: false,
+      exodosState: {
+        gamesEnabled: false,
+        magazinesEnabled: false
+      },
       exodosBackendInfo: undefined
     };
 
@@ -276,8 +279,15 @@ export class App extends React.Component<AppProps, AppState> {
           this.setState({ loaded });
         } break;
 
-        case BackOut.EXODOS_IS_INSTALLED: {
-          this.setState({ exodosInstalled: true })
+        case BackOut.EXODOS_STATE_UPDATE: {
+          const resData: ExodosStateData = res.data;
+          const exodosState: ExodosStateData = {
+            gamesEnabled: resData.gamesEnabled ? resData.gamesEnabled : this.state.exodosState.gamesEnabled,
+            magazinesEnabled: resData.magazinesEnabled ? resData.magazinesEnabled : this.state.exodosState.magazinesEnabled
+          }
+          this.setState({ 
+            exodosState: exodosState
+          })
         } break;
 
         case BackOut.LOG_ENTRY_ADDED: {
@@ -659,7 +669,7 @@ export class App extends React.Component<AppProps, AppState> {
               <>
                 {/* Header */}
                 <HeaderContainer
-                  exodosInstalled={this.state.exodosInstalled}
+                  exodosState={this.state.exodosState}
                   libraries={this.state.libraries}
                   onOrderChange={this.onOrderChange}
                   onToggleLeftSidebarClick={this.onToggleLeftSidebarClick}
@@ -959,7 +969,7 @@ export class App extends React.Component<AppProps, AppState> {
 
   orderAndFilterPlaylistsMemo = memoizeOne((playlists: GamePlaylist[], libraryPath:string) => {
     return (
-      libraryPath === 'MS-DOS.xml' ?
+      libraryPath === `${EXODOS_GAMES_PLATFORM_NAME}.xml` ?
       playlists
       // filter some old and deprecated playlist still existing in app
       .filter(p => p.title !== "Installed eXoDOS Games")
