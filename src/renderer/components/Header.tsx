@@ -76,9 +76,9 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
       onOrderChange, libraries
     } = this.props;
     const { searchText } = this.state;
-    const gamesLibraryExists = libraries.includes(`${EXODOS_GAMES_PLATFORM_NAME}.xml`);
-    const magazinesLibraryExists = libraries.includes(`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`);
-
+    const gamesTabEnabled = this.props.exodosState.gamesEnabled  && libraries.includes(`${EXODOS_GAMES_PLATFORM_NAME}.xml`);
+    const magazinesTabEnabled = this.props.exodosState.magazinesEnabled  && libraries.includes(`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`);
+   
     return (
       <div className='header'>
         {/* Header Menu */}
@@ -86,7 +86,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
           <ul className='header__menu'>
             <MenuItem title={strings.home} link={Paths.HOME} />
             {
-              this.props.exodosState.magazinesEnabled && magazinesLibraryExists ? (
+              magazinesTabEnabled ? (
                 <MenuItem
                 key={`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`}
                 title={getLibraryItemTitle(`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`, this.context.libraries)}
@@ -94,7 +94,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
               ) : null
             }
             {
-              this.props.exodosState.gamesEnabled && gamesLibraryExists ? (
+              gamesTabEnabled ? (
                 <MenuItem
                 key={`${EXODOS_GAMES_PLATFORM_NAME}.xml`}
                 title={getLibraryItemTitle(`${EXODOS_GAMES_PLATFORM_NAME}.xml`, this.context.libraries)}

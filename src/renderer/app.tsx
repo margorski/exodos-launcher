@@ -239,7 +239,8 @@ export class App extends React.Component<AppProps, AppState> {
       this.setState({ loaded: nextLoaded });
     });
 
-    window.External.back.on('message', res => {
+    window.External.back.on('message', res => { 
+      console.log(`Message from backend: ${BackOut[res.type]}`);
       switch (res.type) {
         case BackOut.INIT_EVENT: {
           const resData: InitEventData = res.data;

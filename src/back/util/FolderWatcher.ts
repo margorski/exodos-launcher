@@ -1,33 +1,54 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { eventAggregator } from './EventAggregator';
-import { EventQueue } from './EventQueue';
-import { WrappedEventEmitter } from './WrappedEventEmitter';
+import * as fs from "fs";
+import * as path from "path";
+import { openStdin } from "process";
+import { eventAggregator } from "./EventAggregator";
+import { EventQueue } from "./EventQueue";
+import { WrappedEventEmitter } from "./WrappedEventEmitter";
 
-type IMap<K extends string | number, V> = { [key in K]: V; };
+type IMap<K extends string | number, V> = { [key in K]: V };
 
 export type FolderWatcherOptions = {
   recursionDepth?: number;
-}
+  emitAfterReady?: boolean;
+  filterPaths?: Array<string>;
+};
 
 export interface FolderWatcher {
-  on  (event: string, listener: (...args: any[]) => void): this;
+  on(event: string, listener: (...args: any[]) => void): this;
   once(event: string, listener: (...args: any[]) => void): this;
   /** Emitted after the folder has been set and all filenames has been fetched (does NOT include contents of sub-folders). */
-  on  (event: 'ready', listener: () => void): this;
-  once(event: 'ready', listener: () => void): this;
+  on(event: "ready", listener: () => void): this;
+  once(event: "ready", listener: () => void): this;
   /** Emitted when a file has been changed (does NOT include "rename"). */
-  on  (event: 'change', listener: (filename: string, offsetPath: string) => void): this;
-  once(event: 'change', listener: (filename: string, offsetPath: string) => void): this;
+  on(
+    event: "change",
+    listener: (filename: string, offsetPath: string) => void
+  ): this;
+  once(
+    event: "change",
+    listener: (filename: string, offsetPath: string) => void
+  ): this;
   /** Emitted when an file is added (or renamed to this). */
-  on  (event: 'add', listener: (filename: string, offsetPath: string) => void): this;
-  once(event: 'add', listener: (filename: string, offsetPath: string) => void): this;
+  on(
+    event: "add",
+    listener: (filename: string, offsetPath: string) => void
+  ): this;
+  once(
+    event: "add",
+    listener: (filename: string, offsetPath: string) => void
+  ): this;
   /** Emitted when a file is removed (or renamed to something else). */
-  on  (event: 'remove', listener: (filename: string, stats: fs.Stats, offsetPath: string) => void): this;
-  once(event: 'remove', listener: (filename: string, stats: fs.Stats, offsetPath: string) => void): this;
+  on(
+    event: "remove",
+    listener: (filename: string, stats: fs.Stats, offsetPath: string) => void
+  ): this;
+  once(
+    event: "remove",
+    listener: (filename: string, stats: fs.Stats, offsetPath: string) => void
+  ): this;
   /** Emitted any time an uncaught error occurs. */
-  on  (event: 'error', listener: (error: Error) => void): this;
-  once(event: 'error', listener: (error: Error) => void): this;
+  on(event: "error", listener: (error: Error) => void): this;
+  once(event: "error", listener: (error: Error) => void): this;
 }
 
 /**
@@ -56,7 +77,11 @@ export class FolderWatcher extends WrappedEventEmitter {
   /** Watcher of the "parent" folder (undefined if this is the root watcher). */
   protected _parentWatcher: FolderWatcher | undefined = undefined;
   /** Relative path from the root's folder to this' folder. It's an empty string for the root folder. */
-  protected _pathOffset: string = '';
+  protected _pathOffset: string = "";
+  /** When flag is set watcher emits add event only after initial read */
+  protected _emitAfterReady: boolean = false;
+  /** Array of paths which will be ignored on watch */
+  protected _filterPaths: Array<string> = [];
 
   /** The file names of all files in the folder. */
   get filenames(): string[] {
@@ -89,7 +114,9 @@ export class FolderWatcher extends WrappedEventEmitter {
    */
   constructor(folderPath?: string, opts?: FolderWatcherOptions) {
     super();
-    if (folderPath !== undefined) { this.watch(folderPath, opts); }
+    if (folderPath !== undefined) {
+      this.watch(folderPath, opts);
+    }
   }
 
   /**
@@ -100,34 +127,50 @@ export class FolderWatcher extends WrappedEventEmitter {
    */
   watch(folderPath: string, opts?: FolderWatcherOptions): void {
     // Abort if already watching a folder.
-    if (this._isWatching) { return; }
+    if (this._isWatching) {
+      return;
+    }
     this._isWatching = true;
     // Set values
     this._folderPath = folderPath;
     if (opts) {
-      if (opts.recursionDepth !== undefined) { this._recursionDepth = opts.recursionDepth; }
+      if (opts.recursionDepth !== undefined) {
+        this._recursionDepth = opts.recursionDepth;
+      }
+      if (opts.emitAfterReady !== undefined) {
+        this._emitAfterReady = opts.emitAfterReady;
+      }
     }
     // Check if the folder exists
     fs.stat(folderPath, (error, stats) => {
       if (error) {
-        this.emit('error', error);
+        this.emit("error", error);
       } else if (this._folderPath === undefined) {
-        this.emit('error', new Error('Failed to setFolder. "folderPath" was unexpectedly set to undefined.'));
+        this.emit(
+          "error",
+          new Error(
+            'Failed to setFolder. "folderPath" was unexpectedly set to undefined.'
+          )
+        );
       } else {
         // Load the filenames of all files in the folder
         fs.readdir(this._folderPath, (error, files) => {
-          if (error) { this.emit('error', error); }
-          else { this.onWatchedFolderRead(files); }
+          if (error) {
+            this.emit("error", error);
+          } else {
+            this.onWatchedFolderRead(files);
+          }
         });
         // Watch folder for changes
         this._watcher = fs.watch(
-          this._folderPath, { persistent: false },
+          this._folderPath,
+          { persistent: false },
           eventAggregator(this.onWatcherChange.bind(this), { time: 25 })
         );
         fixFsWatcher(this._watcher); // (Fix a bug with node/electron)
         // Relay errors
-        this._watcher.on('error', (error: Error) => {
-          this.emit('error', error);
+        this._watcher.on("error", (error: Error) => {
+          this.emit("error", error);
         });
       }
     });
@@ -155,7 +198,9 @@ export class FolderWatcher extends WrappedEventEmitter {
     const length = filepath.length - 1;
     for (let i = 0; i < length; i++) {
       folder = folder._childWatchers[filepath[i]];
-      if (!folder) { return undefined; }
+      if (!folder) {
+        return undefined;
+      }
     }
     return folder._files[filepath[length]];
   }
@@ -179,7 +224,7 @@ export class FolderWatcher extends WrappedEventEmitter {
     for (let i = 0; i < filenames.length; i++) {
       const filename = filenames[i];
       if (curFilenames.indexOf(filename) === -1) {
-        this.addFile(filename);
+        this.addFile(filename, !this._emitAfterReady);
       }
     }
   }
@@ -189,21 +234,28 @@ export class FolderWatcher extends WrappedEventEmitter {
     // Set initial filenames
     this.setFilenames(files);
     // Emit event after all initial files as been added
-    this._queue.push(() => { this.emit('ready'); });
+    this._queue.push(() => {
+      this.emit("ready");
+    });
   }
 
   /** Called when a child file is changed. */
   protected onWatcherChange(eventType: string, filename: string): void {
+    const filePath = path.join(this._folderPath || "", filename);
+
     // Update filenames array
-    if (eventType === 'rename') {
+    if (eventType === "rename") {
       const index = this._filenames.indexOf(filename);
-      if (index === -1) { // (New file or existing file was renamed to this)
-        this.addFile(filename);
-      } else { // (Existing file was renamed from this)
+      if (index === -1) {
+        // (New file or existing file was renamed to this)
+        this.addFile(filename, true);
+      } else {
+        // (Existing file was renamed from this)
         this.removeFile(filename);
       }
-    } else { // (Change)
-      this.emit('change', filename, this._pathOffset);
+    } else {
+      // (Change)
+      this.emit("change", filename, this._pathOffset);
     }
   }
 
@@ -211,42 +263,48 @@ export class FolderWatcher extends WrappedEventEmitter {
    * Call this when a file has been added to the watched folder.
    * @param filename Filename of the added file.
    */
-  protected addFile(filename: string): void {
-    this._queue.push(new Promise<void>((resolve, reject) => {
-      // Get the stats of the file, then add it to the map
-      const filePath = path.join(this._folderPath || '', filename);
-      fs.stat(filePath, (error, stats) => {
-        if (error) {
-          reject(error); // @TODO Retry a few times, depending on the error?
-        } else {
-          // Try recursively watch the file
-          if (this._recursionDepth > 0 || this._recursionDepth === -1) {
-            if (stats.isDirectory()) {
-              // Create child watcher
-              const childWatcher = new FolderWatcher(
-                path.join(this._folderPath || '', filename), {
-                  // Set the child's recursion depth to one less than its parent's (unless its already 0 or below)
-                  recursionDepth: (this._recursionDepth <= 0) ? this._recursionDepth : (this._recursionDepth - 1)
-                }
-              );
-              FolderWatcher.setAsChildWatcher(this, childWatcher, filename);
-              // Relay it's events to this
-              childWatcher.on('add',    this.emit.bind(this, 'add'));
-              childWatcher.on('remove', this.emit.bind(this, 'remove'));
-              childWatcher.on('change', this.emit.bind(this, 'change'));
-              childWatcher.on('error',  this.emit.bind(this, 'error'));
-              // Add it to map
-              this._childWatchers[filename] = childWatcher;
+  protected addFile(filename: string, emitAddEvent: boolean): void {
+    this._queue.push(
+      new Promise<void>((resolve, reject) => {
+        // Get the stats of the file, then add it to the map
+        const filePath = path.join(this._folderPath || "", filename);
+        fs.stat(filePath, (error, stats) => {
+          if (error) {
+            reject(error); // @TODO Retry a few times, depending on the error?
+          } else {
+            // Try recursively watch the file
+            if (this._recursionDepth > 0 || this._recursionDepth === -1) {
+              if (stats.isDirectory()) {
+                // Create child watcher
+                const childWatcher = new FolderWatcher(
+                  path.join(this._folderPath || "", filename),
+                  {
+                    // Set the child's recursion depth to one less than its parent's (unless its already 0 or below)
+                    recursionDepth:
+                      this._recursionDepth <= 0
+                        ? this._recursionDepth
+                        : this._recursionDepth - 1,
+                  }
+                );
+                FolderWatcher.setAsChildWatcher(this, childWatcher, filename);
+                // Relay it's events to this
+                childWatcher.on("add", this.emit.bind(this, "add"));
+                childWatcher.on("remove", this.emit.bind(this, "remove"));
+                childWatcher.on("change", this.emit.bind(this, "change"));
+                childWatcher.on("error", this.emit.bind(this, "error"));
+                // Add it to map
+                this._childWatchers[filename] = childWatcher;
+              }
             }
+            // Add the file
+            this._filenames.push(filename);
+            this._files[filename] = stats;
+            if (emitAddEvent) this.emit("add", filename, this._pathOffset);
+            resolve();
           }
-          // Add the file
-          this._filenames.push(filename);
-          this._files[filename] = stats;
-          this.emit('add', filename, this._pathOffset);
-          resolve();
-        }
-      });
-    }));
+        });
+      })
+    );
   }
 
   /**
@@ -267,7 +325,7 @@ export class FolderWatcher extends WrappedEventEmitter {
         childWatcher.abort();
       }
       // Emit
-      this.emit('remove', filename, this._pathOffset);
+      this.emit("remove", filename, this._pathOffset);
     });
   }
 
@@ -277,7 +335,11 @@ export class FolderWatcher extends WrappedEventEmitter {
    * @param childWatcher Watcher of a folder inside the parent folder.
    * @param filename Filename of the folder the child watcher is watching.
    */
-  protected static setAsChildWatcher(parentWatcher: FolderWatcher, childWatcher: FolderWatcher, filename: string): void {
+  protected static setAsChildWatcher(
+    parentWatcher: FolderWatcher,
+    childWatcher: FolderWatcher,
+    filename: string
+  ): void {
     childWatcher._parentWatcher = parentWatcher;
     childWatcher._pathOffset = path.join(parentWatcher._pathOffset, filename);
   }
@@ -287,5 +349,7 @@ export class FolderWatcher extends WrappedEventEmitter {
 // Note: For some reason the "onchange" is busted because it incorrectly uses "this".
 //       Hopefully this is fixed in the newest version of node/electron.
 function fixFsWatcher(watcher: fs.FSWatcher) {
-  (watcher as any)._handle.onchange = (watcher as any)._handle.onchange.bind(watcher);
+  (watcher as any)._handle.onchange = (watcher as any)._handle.onchange.bind(
+    watcher
+  );
 }

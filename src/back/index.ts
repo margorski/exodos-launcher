@@ -122,7 +122,6 @@ import * as mime from "mime";
 import * as path from "path";
 import * as util from "util";
 import * as WebSocket from "ws";
-import * as chokidar from "chokidar";
 import { ConfigFile } from "./ConfigFile";
 import { loadExecMappingsFile } from "./Execs";
 import { GameManager } from "./game/GameManager";
@@ -212,10 +211,14 @@ process.on("disconnect", () => {
   exit();
 }); // (Exit when the main process does)
 
-function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
-  const dosPlatform = state.gameManager.platforms.find(
+function getDosPlatform() {
+  return state.gameManager.platforms.find(
     (p) => p.name === EXODOS_GAMES_PLATFORM_NAME
   );
+}
+
+function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
+  const dosPlatform = getDosPlatform();
   if (!dosPlatform) {
     console.log(
       "Cannot create installed game playlist. MS-DOS platform not loaded yet."
@@ -267,57 +270,19 @@ function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
   }
 }
 
-function initExodosWatcher() {
+const initExodosWatcher = () => {
   console.log("Initialize eXoDOS watcher to check if is initialized...");
-  const exodosScript = path.resolve(
-    path.join(state.config.exodosPath, "eXo/eXoDOS")
-  );
-  const exodosWatcher = chokidar.watch(exodosScript, { persistent: true });
-  exodosWatcher.on("add", (path) => {
-    console.log("Found exodos directory...");
-    initExodosGameScriptWatcher();
-    initExodosInstalledGamesWatcher();
-    initExodosMagazinesWatcher();
-    exodosWatcher.close();
-  });
-}
-
-function initExodosGameScriptWatcher() {
-  // checking if linux script exists for one game, if it exists we can assume that exodos for linux is installed
-  const anyGameLinuxScript = path.resolve(
-    path.join(
-      state.config.exodosPath,
-      "eXo/eXoDOS/!dos/ZZTRev/ZZT's Revenge! (1992).sh"
-    )
-  );
-  const exodosInstalledWatcher = chokidar.watch(anyGameLinuxScript, {
-    persistent: true,
-  });
-  exodosInstalledWatcher.on("add", (path) => {
-    console.log(`Found linux game script, exodos is installed`);
-    exodosInstalledWatcher.close();
-    broadcast<ExodosStateData>({
-      id: "",
-      type: BackOut.EXODOS_STATE_UPDATE,
-      data: {
-        gamesEnabled: true,
-      },
-    });
-  });
-}
+  initExodosInstalledGamesWatcher();
+  initExodosMagazinesWatcher();
+};
 
 function initExodosMagazinesWatcher() {
   const magazinesPath = path.resolve(
-    path.join(state.config.exodosPath, "eXo/Magazines")
+    path.join(state.config.exodosPath, "eXo/Magazines/")
   );
-  const magazinesWatcher = chokidar.watch(magazinesPath, {
-    ignored: /^\./,
-    persistent: true,
-    depth: 0,
-  });
-  magazinesWatcher.on("addDir", (path) => {
+  const magazinesPathExists = fs.existsSync(magazinesPath);
+  if (magazinesPathExists) {
     console.log(`Found magazines, enabling magazines`);
-    magazinesWatcher.close();
     broadcast<ExodosStateData>({
       id: "",
       type: BackOut.EXODOS_STATE_UPDATE,
@@ -325,37 +290,39 @@ function initExodosMagazinesWatcher() {
         magazinesEnabled: true,
       },
     });
-  });
+  }
 }
 
 function initExodosInstalledGamesWatcher() {
   const gamesPath = path.resolve(
     path.join(state.config.exodosPath, "eXo/eXoDOS/")
   );
-  // Init games watcher
-  var installedGamesWatcherInitialized = false;
 
-  const installedGamesWatcher = chokidar.watch(gamesPath, {
-    ignored: /^\./,
-    persistent: true,
-    awaitWriteFinish: true,
-    depth: 0,
+  const installedGamesWatcher = new FolderWatcher(gamesPath, {
+    recursionDepth: 0,
   });
+
   installedGamesWatcher
-    .on("addDir", (path) => {
-      if (!installedGamesWatcherInitialized) return;
-      console.log(`Game ${path} added, rescan installed games.`);
-      rescanInstalledGamesAndBroadcast(gamesPath);
-    })
-    .on("unlinkDir", (path) => {
-      if (!installedGamesWatcherInitialized) return;
-      console.log(`Game ${path} has been removed, rescan installed games.`);
-      rescanInstalledGamesAndBroadcast(gamesPath);
-    })
     .on("ready", () => {
-      installedGamesWatcherInitialized = true;
+      installedGamesWatcher
+        .on("add", (path) => {
+          console.log(`Game ${path} added, rescan installed games.`);
+          rescanInstalledGamesAndBroadcast(gamesPath);
+        })
+        .on("remove", (path) => {
+          console.log(`Game ${path} has been removed, rescan installed games.`);
+          rescanInstalledGamesAndBroadcast(gamesPath);
+        });
       rescanInstalledGamesAndBroadcast(gamesPath);
       console.log("Initial scan complete. Ready for changes");
+
+      broadcast<ExodosStateData>({
+        id: "",
+        type: BackOut.EXODOS_STATE_UPDATE,
+        data: {
+          gamesEnabled: true,
+        },
+      });
     })
     .on("error", (error) => console.log(`Watcher error: ${error}`));
 }
@@ -481,6 +448,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
       }
     );
     // Add initial files
+    console.log("Adding initial playlist files.");
     for (let filename of state.languageWatcher.filenames) {
       onLangAddOrChange(filename, "");
     }
@@ -623,6 +591,9 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
       offsetPath: string,
       doBroadcast: boolean = true
     ) {
+      console.log(
+        `Trying to add/update playlist: ${filename}, doBroadcast: ${doBroadcast}`
+      );
       state.themeQueue.push(async () => {
         const item = findOwner(filename, offsetPath);
         if (item) {
@@ -801,10 +772,12 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
         }
         // Add or update playlist
         if (playlist) {
+          console.log(`Playlist is valid`);
           const index = state.playlists.findIndex(
             (p) => p.filename === filename
           );
           if (index >= 0) {
+            console.log(`Playlist exists, updating.`);
             state.playlists[index] = playlist;
             // Clear all query caches that uses this playlist
             const hashes = Object.keys(state.queries);
@@ -815,6 +788,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
               }
             }
           } else {
+            console.log(`Adding new playlist: ${playlist.filename}`);
             state.playlists.push(playlist);
           }
           if (doBroadcast) {
@@ -861,6 +835,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     state.config.exodosPath,
     state.config.platformFolderPath
   );
+
   GameManager.loadPlatforms(state.gameManager)
     .then((errors) => {
       if (errors.length > 0) {
@@ -1152,8 +1127,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
           platforms[p.library].push(p.name);
         }
 
-        initExodosWatcher();
-
         respond<GetRendererInitDataResponse>(event.target, {
           id: req.id,
           type: BackOut.GENERIC_RESPONSE,
@@ -1176,6 +1149,9 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             localeCode: state.localeCode,
           },
         });
+        if (getDosPlatform()) {
+          initExodosWatcher();
+        }
       }
       break;
 
@@ -2358,6 +2334,7 @@ function broadcast<T>(response: WrappedResponse<T>): number {
     const message = JSON.stringify(response);
     state.server.clients.forEach((socket) => {
       if (socket.onmessage === onMessageWrap) {
+        console.log(`Broadcast: ${BackOut[response.type]}`);
         // (Check if authorized)
         socket.send(message);
         count += 1;
