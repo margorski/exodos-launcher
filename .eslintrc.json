@@ -63,7 +63,6 @@
     "no-useless-escape": "warn",
     "no-whitespace-before-property": "warn",
     "no-with": "warn",
-    "quotes": ["warn", "single"],
     //"require-atomic-updates": "warn", (requires restructuring of "recursiveDirectory()")
     "semi": ["warn", "always"],
     "space-before-blocks": "warn",
