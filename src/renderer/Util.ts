@@ -1,23 +1,24 @@
-import { remote } from 'electron';
-import * as fs from 'fs';
-import * as path from 'path';
-import { AddLogData, BackIn } from '@shared/back/types';
-import { htdocsPath } from '@shared/constants';
-import { IGameInfo } from '@shared/game/interfaces';
-import { getFileServerURL } from '@shared/Util';
-import { Paths } from './Paths';
+import { dialog } from "electron";
+import * as fs from "fs";
+import * as path from "path";
+import { AddLogData, BackIn } from "@shared/back/types";
+import { htdocsPath } from "@shared/constants";
+import { IGameInfo } from "@shared/game/interfaces";
+import { getFileServerURL } from "@shared/Util";
+import { Paths } from "./Paths";
 
-export const gameIdDataType: string = 'text/game-id';
+export const gameIdDataType: string = "text/game-id";
 
 /** How much the maximum/minimum game scale will scale the games up/down */
 export const gameScaleSpan = 0.6;
 
 export function easterEgg(search: string) {
-  if (search === '\x44\x61\x72\x6b\x4d\x6f\x65') {
+  if (search === "\x44\x61\x72\x6b\x4d\x6f\x65") {
     // spell-checker: disable
     window.External.back.send<any, AddLogData>(BackIn.ADD_LOG, {
-      source: '',
-      content: '\n    Y    O    U    W    I    L    L   N    E    V    E    R    F    I    N    D    H    I    M\nmmmmmmmmmmmmmmNNmmmmmNNNNNNNNNNNNNNNNNNNNNNNNmds+-``                                    `-+ydddddddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNms:.`                                          `-+hdddddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNms.`               `                               `-shdddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm/`           `.+y+-sh/`                              -oddmd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNo`          -++ohhyohNm:`                              -yddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNd.          `sNosdmd/yMNd:                              `+ddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNo           /mNyo+ymdNNd-                                .ydd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm-           :hNNNNNMmy+-`                                `sdd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNs`           ``.-:-:/-`                                   .ydd\nNNNNNNNNNNNNNNNNNNNNNNNMMMMMNNNNNNNNNN+                                                         .hdm\nNNNNNNNNNNNNNNNNNNNNNNNMMMMMNNNNNNNNNN:                                                         .hmm\nNNNNNNNNNNNNNNNNNMMNNNMMMMMMNNNNNNNNNN:                                                         :dmm\nNNNNNNNNNNNNNNNNNMMNNNMMMMMMNNNNNNNNNN:                                                         sdmm\nNNNNNNNNNNNNNNNNMMNNNNMMMNMMMNNNNNNNNN/                                                        `hmmm\nNNNNNNNNNNNNNNNNMMMMNNMMMMMMNNNNNNNNNNs`        ``......````````                               -dmmm\nNNNNNNNNNNNNNNNNMMNNNNNNNNNNNNNNNNNNNNd.      `-/+osooo+++/:---.```                            odmmm\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy.    `..-/+syysso+/:-.````                             /dmmm\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN+    -+:://ossss+/:-..```.`````                        -hmmm\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNo    ://:://ooo+::-..``...-.--..````                    +dmm\nmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm-    .-/-.../ys:..`````.-..``....```                    +dmm\nmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN+     -ss:``.oys:--..``:os:``````````                   `ydmm\nmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy`    `/+/-:+yhs+////++++o/.`........``                  `sdmm\nmmmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm-     :s+++shhs/:://++oo+/:-------:--.`                   :dmm\nmmmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNd.    .yyyyydhy+/:-::/+oooo+++++++//:-.`                  `sdmd\nmmmmmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy`    -yyyyhhs+/::---/ossyyyysso++/:-..`                  -ddmd\nmmmmmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm:     .yyyy+/-....---/syyyssso+//::-.```                  odmmd\nmmmmmmmmmmmmmmNNNNNNNmmNNNNNNNNNNNNm/ `     oyhhs-.`` `..-+yyysoo+/::--..```                   +dmmd\nmmmmmmmmmmmmmmmmmmmmmmmmNNNNNNNNNNmy`       +hhy/..````..:oyyso++/::--..````                   `yddd\nmmmmmmmmmmmmmmmmmmmmmmmmNmmmmmmNmNm:        :yo-.``````.:+osoo+//::--..````                     -hdd\nmmmmmmmmmmmmmmmmmmmmmmmmNmmmmmmmmmm.        ./-/:::-.```.-:////::--...````                       -hd\nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmh`        `.-:-----..````.----.....`````         `-`            :h\nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm+          .--.`  `````````.....````````         .++`            -\nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm-          `:///:---.```````..`````````         `.:+.             \nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd.           .:://:--..`````````````````         `.:/.             \nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd.          `...````````````     `` ````   `.::-``..`              \nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd:        `/+/`-.`   ``````          ````./ohy+-``                 \ndmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmy`       +::o`.-.```..```            ``//-.oo-`                   \ndddddddmmmmmmmmmmmmmmddmmmmmmmmmmmds. `    s:+/.`..``...``            `-//-.`:s.                    \ndddddddddddddmmmmmmmdddmmmmmmmmmmmmdhs+`//+y+ys+-```````             .//:..``+/                     \ndddddddddddddddddddddddddddmmmmmddddmh-sdhyysyoso.``               `-::-.``.++`                     \nddddddddddddddddddddddddddddddddddddd/-+/-.-hyo:`````..`          `-:-.`.`.o+`                      \ndddddddddhhyyhdddddddddddddddddddhy+:`..````+-```````+s:.`` `````.--...`.-+:                        \nddddhhhyooo+//hddddddddddddddhss+:..``````....`````.`:do:-.````.---.....++.      `````              \nyhhdys/.`....-sdddddddddddds+-.....` ````....`````..`-dho/--.-----....``.``   `````````````         \n++oo/:.`     `-+shhyhhhddy/.......````````..```````.`-dmdyo+/:----....`````````````````````         \n....`           `....-:+o-`......`` ``````````````..`-dmmdo//::/:-...````````````````               \n .-`            ```````````.....```` `````````````..`:mmmho+oydh/:/:.```````````````          ````  \n`/o:              `````````````.```` ``` `` `````...`/mmmhohmmmoyys-`````````````````````````````   \n-:-             ```.`.```-+y.````.:`     `    ```````/mmdyomNNNohs-````````````````````````````    `\n``          `````````````````````-.``        ````````+dmyshNNNmoy-```````````````````````````    ```\n           ````.oddy/````````````             ```````/ddhhmNNNh/-```````````````````    ````    ```` ',
+      source: "",
+      content:
+        "\n    Y    O    U    W    I    L    L   N    E    V    E    R    F    I    N    D    H    I    M\nmmmmmmmmmmmmmmNNmmmmmNNNNNNNNNNNNNNNNNNNNNNNNmds+-``                                    `-+ydddddddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNms:.`                                          `-+hdddddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNms.`               `                               `-shdddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm/`           `.+y+-sh/`                              -oddmd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNo`          -++ohhyohNm:`                              -yddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNd.          `sNosdmd/yMNd:                              `+ddd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNo           /mNyo+ymdNNd-                                .ydd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm-           :hNNNNNMmy+-`                                `sdd\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNs`           ``.-:-:/-`                                   .ydd\nNNNNNNNNNNNNNNNNNNNNNNNMMMMMNNNNNNNNNN+                                                         .hdm\nNNNNNNNNNNNNNNNNNNNNNNNMMMMMNNNNNNNNNN:                                                         .hmm\nNNNNNNNNNNNNNNNNNMMNNNMMMMMMNNNNNNNNNN:                                                         :dmm\nNNNNNNNNNNNNNNNNNMMNNNMMMMMMNNNNNNNNNN:                                                         sdmm\nNNNNNNNNNNNNNNNNMMNNNNMMMNMMMNNNNNNNNN/                                                        `hmmm\nNNNNNNNNNNNNNNNNMMMMNNMMMMMMNNNNNNNNNNs`        ``......````````                               -dmmm\nNNNNNNNNNNNNNNNNMMNNNNNNNNNNNNNNNNNNNNd.      `-/+osooo+++/:---.```                            odmmm\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy.    `..-/+syysso+/:-.````                             /dmmm\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN+    -+:://ossss+/:-..```.`````                        -hmmm\nNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNo    ://:://ooo+::-..``...-.--..````                    +dmm\nmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm-    .-/-.../ys:..`````.-..``....```                    +dmm\nmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN+     -ss:``.oys:--..``:os:``````````                   `ydmm\nmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy`    `/+/-:+yhs+////++++o/.`........``                  `sdmm\nmmmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm-     :s+++shhs/:://++oo+/:-------:--.`                   :dmm\nmmmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNd.    .yyyyydhy+/:-::/+oooo+++++++//:-.`                  `sdmd\nmmmmmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy`    -yyyyhhs+/::---/ossyyyysso++/:-..`                  -ddmd\nmmmmmmmNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm:     .yyyy+/-....---/syyyssso+//::-.```                  odmmd\nmmmmmmmmmmmmmmNNNNNNNmmNNNNNNNNNNNNm/ `     oyhhs-.`` `..-+yyysoo+/::--..```                   +dmmd\nmmmmmmmmmmmmmmmmmmmmmmmmNNNNNNNNNNmy`       +hhy/..````..:oyyso++/::--..````                   `yddd\nmmmmmmmmmmmmmmmmmmmmmmmmNmmmmmmNmNm:        :yo-.``````.:+osoo+//::--..````                     -hdd\nmmmmmmmmmmmmmmmmmmmmmmmmNmmmmmmmmmm.        ./-/:::-.```.-:////::--...````                       -hd\nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmh`        `.-:-----..````.----.....`````         `-`            :h\nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm+          .--.`  `````````.....````````         .++`            -\nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm-          `:///:---.```````..`````````         `.:+.             \nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd.           .:://:--..`````````````````         `.:/.             \nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd.          `...````````````     `` ````   `.::-``..`              \nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd:        `/+/`-.`   ``````          ````./ohy+-``                 \ndmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmy`       +::o`.-.```..```            ``//-.oo-`                   \ndddddddmmmmmmmmmmmmmmddmmmmmmmmmmmds. `    s:+/.`..``...``            `-//-.`:s.                    \ndddddddddddddmmmmmmmdddmmmmmmmmmmmmdhs+`//+y+ys+-```````             .//:..``+/                     \ndddddddddddddddddddddddddddmmmmmddddmh-sdhyysyoso.``               `-::-.``.++`                     \nddddddddddddddddddddddddddddddddddddd/-+/-.-hyo:`````..`          `-:-.`.`.o+`                      \ndddddddddhhyyhdddddddddddddddddddhy+:`..````+-```````+s:.`` `````.--...`.-+:                        \nddddhhhyooo+//hddddddddddddddhss+:..``````....`````.`:do:-.````.---.....++.      `````              \nyhhdys/.`....-sdddddddddddds+-.....` ````....`````..`-dho/--.-----....``.``   `````````````         \n++oo/:.`     `-+shhyhhhddy/.......````````..```````.`-dmdyo+/:----....`````````````````````         \n....`           `....-:+o-`......`` ``````````````..`-dmmdo//::/:-...````````````````               \n .-`            ```````````.....```` `````````````..`:mmmho+oydh/:/:.```````````````          ````  \n`/o:              `````````````.```` ``` `` `````...`/mmmhohmmmoyys-`````````````````````````````   \n-:-             ```.`.```-+y.````.:`     `    ```````/mmdyomNNNohs-````````````````````````````    `\n``          `````````````````````-.``        ````````+dmyshNNNmoy-```````````````````````````    ```\n           ````.oddy/````````````             ```````/ddhhmNNNh/-```````````````````    ````    ```` ",
     });
   }
 }
@@ -43,17 +44,15 @@ export function shuffle<T>(array: T[]): T[] {
  * @param route Library route
  */
 export function joinLibraryRoute(route: string): string {
-  let cleanRoute = (
-    route
-    .replace(/\//g, '')
-    .replace(/\\/g, '')
-  );
-  if (cleanRoute === '..') { cleanRoute = ''; }
+  let cleanRoute = route.replace(/\//g, "").replace(/\\/g, "");
+  if (cleanRoute === "..") {
+    cleanRoute = "";
+  }
   return path.posix.join(Paths.BROWSE, cleanRoute);
 }
 
 /** (HTML)Element but only with the "parentElement" property. */
-type ElementBase<T extends ElementBase<T>> = { parentElement: T | null; };
+type ElementBase<T extends ElementBase<T>> = { parentElement: T | null };
 
 /**
  * @param target Current target element for testing.
@@ -61,7 +60,11 @@ type ElementBase<T extends ElementBase<T>> = { parentElement: T | null; };
  * @param input The element the search started from.
  * @returns If the target element is the ancestor the function is looking for.
  */
-export type ElementAncestorFunction<T extends ElementBase<T>> = (target: T, count: number, input: T) => boolean;
+export type ElementAncestorFunction<T extends ElementBase<T>> = (
+  target: T,
+  count: number,
+  input: T
+) => boolean;
 
 /**
  * Find the first ancestor of an element where "fn" returns true (starting with the parent of the input element).
@@ -70,12 +73,20 @@ export type ElementAncestorFunction<T extends ElementBase<T>> = (target: T, coun
  * @param checkElement If the input element should also be checked. Defaults to false.
  * @returns The found ancestor, or undefined if "fn" returned false for all ancestors (or if the element has no ancestors).
  */
-export function findElementAncestor<T extends ElementBase<T>>(element: T, fn: ElementAncestorFunction<T>, checkElement: boolean = false): T | undefined {
+export function findElementAncestor<T extends ElementBase<T>>(
+  element: T,
+  fn: ElementAncestorFunction<T>,
+  checkElement: boolean = false
+): T | undefined {
   let current = checkElement ? element : element.parentElement;
   let count = 0;
   while (true) {
-    if (!current) { break; }
-    if (fn(current, count, element)) { return current; }
+    if (!current) {
+      break;
+    }
+    if (fn(current, count, element)) {
+      return current;
+    }
     current = current.parentElement;
     count += 1;
   }
@@ -88,42 +99,64 @@ export function findElementAncestor<T extends ElementBase<T>>(element: T, fn: El
  * @param target Element to find.
  * @returns If the "target" element was found.
  */
-export function checkIfAncestor(start: Element | null, target: Element | null): boolean {
+export function checkIfAncestor(
+  start: Element | null,
+  target: Element | null
+): boolean {
   let element: Element | null = start;
   while (element) {
-    if (element === target) { return true; }
+    if (element === target) {
+      return true;
+    }
     element = element.parentElement;
   }
   return false;
 }
 
-export function getGameTitleScreenshotUrl(platform: string, gameName: string): string {
-  return `${getFileServerURL()}/images/${platform}/Screenshot - Game Title/${gameName.replace(':', '_')}-01.png`;
+export function getGameTitleScreenshotUrl(
+  platform: string,
+  gameName: string
+): string {
+  return `${getFileServerURL()}/images/${platform}/Screenshot - Game Title/${gameName.replace(
+    ":",
+    "_"
+  )}-01.png`;
 }
 
 export function getPlatformIconURL(platform: string): string {
   return `${getFileServerURL()}/images/Platforms/${platform}/Clear Logo/${platform}.png`;
 }
-  
-export function getGameScreenshotImageURL(platform: string, gameName: string, idx: number = 1): string {
-  return `${getFileServerURL()}/images/${platform}/Screenshot - Gameplay/${gameName.replace(':', '_')}-0${idx}.png`;
+
+export function getGameScreenshotImageURL(
+  platform: string,
+  gameName: string,
+  idx: number = 1
+): string {
+  return `${getFileServerURL()}/images/${platform}/Screenshot - Gameplay/${gameName.replace(
+    ":",
+    "_"
+  )}-0${idx}.png`;
 }
 
 export async function resourceExists(url: string): Promise<boolean> {
   try {
-    var response = await fetch(url);    
-    return (response.status >= 200 && response.status < 300);
-  }
-  catch (e) {
+    var response = await fetch(url);
+    return response.status >= 200 && response.status < 300;
+  } catch (e) {
     console.error(e);
     return false;
   }
 }
 
-export function getGameScreenshotsUrls(platform: string, gameName: string): string[] {
+export function getGameScreenshotsUrls(
+  platform: string,
+  gameName: string
+): string[] {
   var screenshots = [];
   screenshots.push(getGameTitleScreenshotUrl(platform, gameName));
-  return screenshots.concat([1,2,3,4].map(x => getGameScreenshotImageURL(platform, gameName, x)));
+  return screenshots.concat(
+    [1, 2, 3, 4].map((x) => getGameScreenshotImageURL(platform, gameName, x))
+  );
 }
 
 export function getGameImagePath(folderName: string, gameId: string): string {
@@ -135,99 +168,137 @@ export function getGameImagePath(folderName: string, gameId: string): string {
   );
 }
 
-type IGamePathInfo = Pick<IGameInfo, 'platform' | 'launchCommand'>;
+type IGamePathInfo = Pick<IGameInfo, "platform" | "launchCommand">;
 
 /* istanbul ignore next */
-export function getGamePath(game: IGamePathInfo, fpPath: string): string | undefined {
+export function getGamePath(
+  game: IGamePathInfo,
+  fpPath: string
+): string | undefined {
   // @TODO Because some strings can be interpreted as different paths/URLs, maybe this should return an array
   //       of strings with all the possible paths of the "main" file?
   //       Example: Some web server files are stored in "Server/htdocs" while other are stored in "Server/cgi-bin".
-  const shockwavePath = 'FPSoftware/Shockwave/PJX'; // (Path to a shockwave executable)
-  const groovePath = 'FPSoftware/3DGrooveGX'; // (Path to the 3D Groove GZ executable)
+  const shockwavePath = "FPSoftware/Shockwave/PJX"; // (Path to a shockwave executable)
+  const groovePath = "FPSoftware/3DGrooveGX"; // (Path to the 3D Groove GZ executable)
   // Extract file path from the game's launch command
   const platform = game.platform.toLowerCase();
   switch (platform) {
     // Example: 5.x http://example.com/games/cool_game.html
-    case 'unity': {
-      // Extract the URL (get the content after the first space, or the whole string if there is no space)
-      let str: string | undefined = undefined;
-      const index = game.launchCommand.indexOf(' ');
-      if (index >= 0) { str = game.launchCommand.substring(index + 1); }
-      else            { str = game.launchCommand; }
-      // Create URL
-      const url = toForcedURL(str);
-      if (url) { return path.join(fpPath, htdocsPath, urlToFilePath(url)); }
-    } break;
+    case "unity":
+      {
+        // Extract the URL (get the content after the first space, or the whole string if there is no space)
+        let str: string | undefined = undefined;
+        const index = game.launchCommand.indexOf(" ");
+        if (index >= 0) {
+          str = game.launchCommand.substring(index + 1);
+        } else {
+          str = game.launchCommand;
+        }
+        // Create URL
+        const url = toForcedURL(str);
+        if (url) {
+          return path.join(fpPath, htdocsPath, urlToFilePath(url));
+        }
+      }
+      break;
     // Relative path to a ".ini" file
     // Example: game.ini
-    case '3d groove gx':
+    case "3d groove gx":
       return path.join(fpPath, groovePath, game.launchCommand);
     // Examples: -J-Dfile.encoding=UTF8 -J-Duser.language=ja -J-Duser.country=JP http://www.example.jp/game.html
     //           http://www.example.com/game.html
     //           "http://www.example.com/game.html"
-    case 'java': {
-      // Extract the path/url from the launch command
-      let str: string | undefined = undefined;
-      if (game.launchCommand[0] === '"') { // (URL wrappen in quotation marks)
-        // Get the contents between the first pair of quotation marks
-        const index = game.launchCommand.indexOf('"', 1);
-        if (index >= 0) { str = game.launchCommand.substring(1, index); }
-      } else {
-        // Get the content after the last space (or the while string if there is no space)
-        const index = game.launchCommand.lastIndexOf(' ');
-        if (index >= 0) { str = game.launchCommand.substring(index); }
-        else            { str = game.launchCommand; }
+    case "java":
+      {
+        // Extract the path/url from the launch command
+        let str: string | undefined = undefined;
+        if (game.launchCommand[0] === '"') {
+          // (URL wrappen in quotation marks)
+          // Get the contents between the first pair of quotation marks
+          const index = game.launchCommand.indexOf('"', 1);
+          if (index >= 0) {
+            str = game.launchCommand.substring(1, index);
+          }
+        } else {
+          // Get the content after the last space (or the while string if there is no space)
+          const index = game.launchCommand.lastIndexOf(" ");
+          if (index >= 0) {
+            str = game.launchCommand.substring(index);
+          } else {
+            str = game.launchCommand;
+          }
+        }
+        // Create a full path from the extracted url
+        if (str !== undefined) {
+          const url = toForcedURL(str);
+          if (url) {
+            return path.join(fpPath, htdocsPath, urlToFilePath(url));
+          }
+        }
       }
-      // Create a full path from the extracted url
-      if (str !== undefined) {
-        const url = toForcedURL(str);
-        if (url) { return path.join(fpPath, htdocsPath, urlToFilePath(url)); }
-      }
-    } break;
+      break;
     // Examples: http://example.com/game.dcr --forceTheExitLock 0
     //           "http://example.com/game.dcr" --do "member('gameUrl').text = 'http://example.com/other_thing.dcr'"
     //           ..\Games\game_folder\game_file.dcr
-    case 'shockwave': {
-      // Extract the path/url from the launch command
-      let str: string | undefined = undefined;
-      if (game.launchCommand[0] === '"') { // (Path/URL wrappen in quotation marks)
-        // Get the contents between the first pair of quotation marks
-        const index = game.launchCommand.indexOf('"', 1);
-        if (index >= 0) { str = game.launchCommand.substring(1, index); }
-      } else {
-        // Get the content before the first space (or the while string if there is no space)
-        const index = game.launchCommand.indexOf(' ');
-        if (index >= 0) { str = game.launchCommand.substring(0, index); }
-        else            { str = game.launchCommand; }
+    case "shockwave":
+      {
+        // Extract the path/url from the launch command
+        let str: string | undefined = undefined;
+        if (game.launchCommand[0] === '"') {
+          // (Path/URL wrappen in quotation marks)
+          // Get the contents between the first pair of quotation marks
+          const index = game.launchCommand.indexOf('"', 1);
+          if (index >= 0) {
+            str = game.launchCommand.substring(1, index);
+          }
+        } else {
+          // Get the content before the first space (or the while string if there is no space)
+          const index = game.launchCommand.indexOf(" ");
+          if (index >= 0) {
+            str = game.launchCommand.substring(0, index);
+          } else {
+            str = game.launchCommand;
+          }
+        }
+        // Create a full path from the extracted path/url
+        if (str !== undefined) {
+          // Note: Because some strings could either be a path or URL ("localflash/game.swf" for example), this will assume that
+          //       all URLs start with a protocol ("http://"). This will probably make this function not work for some games.
+          const url = toURL(str);
+          if (url) {
+            return path.join(fpPath, htdocsPath, urlToFilePath(url));
+          } else {
+            return path.join(fpPath, shockwavePath, str);
+          }
+        }
       }
-      // Create a full path from the extracted path/url
-      if (str !== undefined) {
-        // Note: Because some strings could either be a path or URL ("localflash/game.swf" for example), this will assume that
-        //       all URLs start with a protocol ("http://"). This will probably make this function not work for some games.
-        const url = toURL(str);
-        if (url) { return path.join(fpPath, htdocsPath, urlToFilePath(url)); }
-        else     { return path.join(fpPath, shockwavePath, str); }
-      }
-    } break;
+      break;
     // Launch Command contains
     // Example: http://www.example.com/game.html example\game.dll
-    case 'activex': {
-      // Extract everything before the first space
-      let str: string | undefined = undefined;
-      const index = game.launchCommand.lastIndexOf(' ');
-      if (index >= 0) { str = game.launchCommand.substring(0, index); }
-      else            { str = game.launchCommand; }
-      // Create a full path from the extracted url
-      const url = toForcedURL(str);
-      if (url) { return path.join(fpPath, htdocsPath, urlToFilePath(url)); }
-    } break;
+    case "activex":
+      {
+        // Extract everything before the first space
+        let str: string | undefined = undefined;
+        const index = game.launchCommand.lastIndexOf(" ");
+        if (index >= 0) {
+          str = game.launchCommand.substring(0, index);
+        } else {
+          str = game.launchCommand;
+        }
+        // Create a full path from the extracted url
+        const url = toForcedURL(str);
+        if (url) {
+          return path.join(fpPath, htdocsPath, urlToFilePath(url));
+        }
+      }
+      break;
     // Launch Commands that only contain a URL
     // Example: http://example.com/games/cool_game.html
-    case '3dvia player':
-    case 'flash':
-    case 'html5':
-    case 'popcap plugin':
-    case 'silverlight':
+    case "3dvia player":
+    case "flash":
+    case "html5":
+    case "popcap plugin":
+    case "silverlight":
     default: {
       const urlObj = toForcedURL(game.launchCommand);
       return urlObj
@@ -244,30 +315,46 @@ function urlToFilePath(url: URL): string {
 
 /** Try to create a URL object (both with the unedited string and a protocol). */
 export function toForcedURL(str: string): URL | undefined {
-  return toURL(str) || toURL('http://'+str);
+  return toURL(str) || toURL("http://" + str);
 }
 
 /** Try to create a URL object (returns undefined if the string is not valid). */
 export function toURL(str: string): URL | undefined {
-  try { return new URL(str); }
-  catch { return undefined; }
+  try {
+    return new URL(str);
+  } catch {
+    return undefined;
+  }
 }
 
 /** Open a confirmation box, returning true if Yes, false if No, throwing if Cancelled. */
-export async function openConfirmDialog(title: string, message: string, cancel: boolean = false): Promise<boolean> {
-  const buttons = ['Yes', 'No'];
-  if (cancel) { buttons.push('Cancel'); }
-  const res = await remote.dialog.showMessageBox({
+export async function openConfirmDialog(
+  title: string,
+  message: string,
+  cancel: boolean = false
+): Promise<boolean> {
+  const buttons = ["Yes", "No"];
+  if (cancel) {
+    buttons.push("Cancel");
+  }
+  const res = await dialog.showMessageBox({
     title: title,
     message: message,
-    buttons: buttons
+    buttons: buttons,
   });
-  if (res.response === 0) { return true; }
-  if (res.response === 1) { return false; }
-  else { throw 'Cancelled'; }
+  if (res.response === 0) {
+    return true;
+  }
+  if (res.response === 1) {
+    return false;
+  } else {
+    throw "Cancelled";
+  }
 }
 
 // @TODO Move this to the back process
 export function isExodosValidCheck(exodosPath: string): Promise<boolean> {
-  return new Promise(resolve => fs.stat(path.join(exodosPath, 'Data/Platforms'), error => resolve(!error)));
+  return new Promise((resolve) =>
+    fs.stat(path.join(exodosPath, "Data/Platforms"), (error) => resolve(!error))
+  );
 }

@@ -1,4 +1,3 @@
-import { remote } from 'electron';
 import * as React from 'react';
 import { WithPreferencesProps } from '@renderer/containers/withPreferences';
 import { AddLogData, BackIn, UpdateConfigData } from '@shared/back/types';

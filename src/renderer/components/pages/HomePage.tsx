@@ -1,4 +1,4 @@
-import { remote } from 'electron';
+import { app } from 'electron';
 import { AppUpdater, UpdateInfo } from 'electron-updater';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
@@ -23,7 +23,6 @@ type OwnProps = {
   /** Whether an update is available to the Launcher */
   updateInfo: UpdateInfo | undefined;
   /** Callback to initiate the update */
-  autoUpdater: AppUpdater;
   exodosBackendInfo: ExodosBackendInfo | undefined;
 };
 
@@ -140,7 +139,7 @@ export function HomePage(props: HomePageProps) {
         <div className=''>
           <div><h1>eXoDOS v5</h1></div> 
           <div><h4>{`backend: ${props.exodosBackendInfo ? props.exodosBackendInfo.version : ''}`}</h4></div>
-          <div><h4>{`exogui: ${remote.app.getVersion()}`}</h4></div>
+          <div><h4>{`exogui: ${process.env.npm_package_version}`}</h4></div>
         </div>
         <div className='home-page__subheader'>
           {link('Website', 'https://www.retro-exo.com/exodos.html')}

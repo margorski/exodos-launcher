@@ -1,4 +1,4 @@
-import { Menu, MenuItemConstructorOptions, remote } from 'electron';
+import { BrowserWindow, Menu, MenuItemConstructorOptions, shell } from 'electron';
 import * as fs from 'fs';
 import * as React from 'react';
 import { BackIn, BackOut, DeleteImageData, ImageChangeData, LaunchAddAppData, LaunchGameData, SaveImageData, WrappedResponse } from '@shared/back/types';
@@ -18,6 +18,7 @@ import { ImagePreview } from './ImagePreview';
 import { InputField } from './InputField';
 import { RightBrowseSidebarAddApp } from './RightBrowseSidebarAddApp';
 import { getFileServerURL } from '@shared/Util';
+import { openContextMenu } from '@main/Util';
 
 type OwnProps = {
   /** Currently selected game (if any) */
@@ -425,12 +426,12 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
     if (currentGame) {
       template.push({
         label: this.context.menu.viewThumbnailInFolder,
-        click: () => { remote.shell.showItemInFolder(getGameImagePath(LOGOS, currentGame.id).replace(/\//g, '\\')); },
+        click: () => { shell.showItemInFolder(getGameImagePath(LOGOS, currentGame.id).replace(/\//g, '\\')); },
         enabled: true
       });
       template.push({
         label: this.context.menu.viewScreenshotInFolder,
-        click: () => { remote.shell.showItemInFolder(getGameImagePath(SCREENSHOTS, currentGame.id).replace(/\//g, '\\')); },
+        click: () => { shell.showItemInFolder(getGameImagePath(SCREENSHOTS, currentGame.id).replace(/\//g, '\\')); },
         enabled: true
       });
     }
@@ -528,7 +529,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
     if (isHtml) {
       let url = `${getFileServerURL()}/${addApp.applicationPath.replace('\\', '/')}`;
       console.log(`Got HTML additional application, running in new browser window. ${url}`)
-      let win = new remote.BrowserWindow(
+      let win = new BrowserWindow(
         { 
           show: false, 
           title: addApp.name,
@@ -629,11 +630,4 @@ function filterSuggestions(suggestions?: string[]): string[] {
   if (!suggestions) { return []; }
   // if (suggestions.length > 25) { return suggestions.slice(0, 25); }
   return suggestions;
-}
-
-/** Open a context menu, built from the specified template. */
-function openContextMenu(template: MenuItemConstructorOptions[]): Menu {
-  const menu = remote.Menu.buildFromTemplate(template);
-  menu.popup({ window: remote.getCurrentWindow() });
-  return menu;
 }

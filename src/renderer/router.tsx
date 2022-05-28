@@ -45,7 +45,6 @@ export type AppRouterProps = {
   themeList: Theme[];
   languages: LangFile[];
   updateInfo: UpdateInfo | undefined,
-  autoUpdater: AppUpdater,
   exodosBackendInfo: ExodosBackendInfo | undefined
 };
 
@@ -58,7 +57,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
       onSelectPlaylist: this.props.onSelectPlaylist,
       onLaunchGame: this.props.onLaunchGame,
       updateInfo: this.props.updateInfo,
-      autoUpdater: this.props.autoUpdater
     };
     const browseProps: ConnectedBrowsePageProps = {
       games: this.props.games,

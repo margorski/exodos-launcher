@@ -1,4 +1,4 @@
-import { remote } from 'electron';
+import { dialog } from 'electron';
 import * as React from 'react';
 import { setInterval } from 'timers';
 import { BackIn, ServiceActionData } from '@shared/back/types';
@@ -129,7 +129,7 @@ function generateStatusText(service: IService, lang: LangContainer['developer'])
  * @param info Info to display.
  */
 function displayDetails(info: IBackProcessInfo): void {
-  remote.dialog.showMessageBox({
+  dialog.showMessageBox({
     type: 'info',
     title: 'Service Details',
     message: `Path: ${info.path}\n`+

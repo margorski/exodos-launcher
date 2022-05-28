@@ -1,4 +1,4 @@
-import { ipcRenderer, remote } from 'electron';
+import { app, dialog, ipcRenderer } from 'electron';
 import { AppUpdater, UpdateInfo } from 'electron-updater';
 import * as path from 'path';
 import * as React from 'react';
@@ -29,10 +29,8 @@ import { SearchQuery } from './store/search';
 import { joinLibraryRoute } from './Util';
 import { LangContext } from './util/lang';
 import { debounce } from '@shared/utils/debounce';
-
 // Auto updater works only with .appImage distribution. We are using .tar.gz
 // so it will just fail silently. Code is left for future.
-const autoUpdater: AppUpdater = remote.require('electron-updater').autoUpdater;
 
 const VIEW_PAGE_SIZE = 250;
 
@@ -192,7 +190,7 @@ export class App extends React.Component<AppProps, AppState> {
         let stillDownloading = false;
         if (askBeforeClosing && stillDownloading) {
           event.returnValue = 1; // (Prevent closing the window)
-          remote.dialog.showMessageBox({
+          dialog.showMessageBox({
             type: 'warning',
             title: 'Exit Launcher?',
             message: 'All progress on downloading or installing the upgrade will be lost.\n'+
@@ -498,25 +496,7 @@ export class App extends React.Component<AppProps, AppState> {
     // Load Upgrades
     const folderPath = window.External.isDev
         ? process.cwd()
-        : path.dirname(remote.app.getPath('exe'));
-  
-    // Updater code - DO NOT run in development environment!
-    if (!window.External.isDev) {
-      autoUpdater.autoDownload = true;
-      autoUpdater.on('error', (error: Error) => {
-        console.error(error);
-      });
-      autoUpdater.on('update-available', (info) => {
-        log(`Update Available - ${info.version}`);
-        this.setState({
-          updateInfo: info
-        });
-      });
-      autoUpdater.on('update-downloaded', onUpdateDownloaded);
-      autoUpdater.checkForUpdates()
-      .catch((error) => { log(`Error Fetching Update Info - ${error.message}`); });
-      console.log('Checking for updates...');
-    }
+        : path.dirname(app.getPath('exe'));
   }
 
   componentDidUpdate(prevProps: AppProps, prevState: AppState) {
@@ -648,8 +628,7 @@ export class App extends React.Component<AppProps, AppState> {
       themeList: this.state.themeList,
       languages: this.state.langList,
       updateInfo: this.state.updateInfo,
-      autoUpdater: autoUpdater,
-      exodosBackendInfo: this.state.exodosBackendInfo
+      exodosBackendInfo: this.state.exodosBackendInfo,
     };
     // Render
     return (
@@ -663,7 +642,7 @@ export class App extends React.Component<AppProps, AppState> {
               miscLoaded={this.state.loaded[BackInit.EXEC]} />
             {/* Title-bar (if enabled) */}
             { window.External.config.data.useCustomTitlebar ? (
-              <TitleBar title={`${APP_TITLE} (${remote.app.getVersion()})`} />
+              <TitleBar title={`${APP_TITLE} (${app.getVersion()})`} />
             ) : undefined }
             {/* "Content" */}
             { loaded ? (
@@ -1004,7 +983,7 @@ export class App extends React.Component<AppProps, AppState> {
 /** Get the "library route" of a url (returns empty string if URL is not a valid "sub-browse path") */
 function getBrowseSubPath(urlPath: string): string {
   if (urlPath.startsWith(Paths.BROWSE)) {
-    let str = urlPath.substr(Paths.BROWSE.length);
+    let str = urlPath.substring(Paths.BROWSE.length);
     if (str[0] === '/') { str = str.substring(1); }
     return str;
   }
@@ -1015,17 +994,6 @@ async function cacheIcon(icon: string): Promise<string> {
   const r = await fetch(icon);
   const blob = await r.blob();
   return `url(${URL.createObjectURL(blob)})`;
-}
-
-function onUpdateDownloaded() {
-  remote.dialog.showMessageBox({
-    title: 'Installing Update',
-    message: 'The Launcher will restart to install the update now.',
-    buttons: ['OK']
-  })
-  .then(() => {
-    setImmediate(() => autoUpdater.quitAndInstall());
-  });
 }
 
 function log(content: string): void {

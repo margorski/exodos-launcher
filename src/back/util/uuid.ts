@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { randomBytes } from "crypto";
 
 // Work around synchronously seeding of random buffer in the v1
 // version of uuid by explicitly only requiring v4. As far as I'm
@@ -7,7 +7,7 @@ import { randomBytes } from 'crypto';
 //
 // See
 //  https://github.com/kelektiv/node-uuid/issues/189
-const guid = require('uuid/v4') as (options?: { random?: Buffer }) => string;
+const guid = require("uuid/v4") as (options?: { random?: Buffer }) => string;
 
 /**
  * Wrapper function over uuid's v4 method that attempts to source

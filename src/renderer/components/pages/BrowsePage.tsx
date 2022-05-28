@@ -1,4 +1,4 @@
-import { Menu, MenuItemConstructorOptions, remote } from 'electron';
+import { BrowserWindow, dialog, Menu, MenuItemConstructorOptions, shell } from 'electron';
 import * as fs from 'fs';
 import * as React from 'react';
 import { BackIn, DeleteGameData, DeletePlaylistData, DuplicateGameData, ExportGameData, GetGameData, GetGameResponseData, LaunchGameData, SavePlaylistData } from '@shared/back/types';
@@ -22,6 +22,7 @@ import { GameList } from '../GameList';
 import { GameOrderChangeEvent } from '../GameOrder';
 import { InputElement } from '../InputField';
 import { ResizableSidebar, SidebarResizeEvent } from '../ResizableSidebar';
+import { openContextMenu } from '@main/Util';
 
 type Pick<T, K extends keyof T> = { [P in K]: T[P]; };
 type StateCallback1 = Pick<BrowsePageState, 'currentGame'|'currentAddApps'|'isEditingGame'|'isNewGame'|'currentPlaylistNotes'>;
@@ -343,7 +344,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
                 const gamePath = getGamePath(res.data.game, window.External.config.fullExodosPath);
                 if (gamePath) {
                   fs.stat(gamePath, error => {
-                    if (!error) { remote.shell.showItemInFolder(gamePath); }
+                    if (!error) { shell.showItemInFolder(gamePath); }
                     else {
                       const opts: Electron.MessageBoxOptions = {
                         type: 'warning',
@@ -357,7 +358,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
                         `Error: ${error}\n`
                       );
                       opts.message += `Path: "${gamePath}"\n\nNote: If the path is too long, some portion will be replaced with three dots ("...").`;
-                      remote.dialog.showMessageBox(opts);
+                      dialog.showMessageBox(opts);
                     }
                   });
                 }
@@ -379,7 +380,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
           label: strings.menu.exportMetaOnly,
           enabled: !window.External.isBackRemote, // (Local "back" only)
           click: () => {
-            const filePath = remote.dialog.showSaveDialogSync({
+            const filePath = dialog.showSaveDialogSync({
               title: strings.dialog.selectFileToExportMeta,
               defaultPath: 'meta',
               filters: [{
@@ -851,12 +852,6 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
 
 function calcScale(defHeight: number, scale: number): number {
   return (defHeight + (scale - 0.5) * 2 * defHeight * gameScaleSpan) | 0;
-}
-
-function openContextMenu(template: MenuItemConstructorOptions[]): Menu {
-  const menu = remote.Menu.buildFromTemplate(template);
-  menu.popup({ window: remote.getCurrentWindow() });
-  return menu;
 }
 
 type FileReaderResult = typeof FileReader['prototype']['result'];

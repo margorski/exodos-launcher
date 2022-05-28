@@ -1,12 +1,21 @@
-import * as electron from 'electron';
-import { OpenDialogOptions } from 'electron';
-import * as path from 'path';
-import { SharedSocket } from '@shared/back/SharedSocket';
-import { BackIn, BackOut, GetRendererInitDataResponse, OpenDialogData, OpenDialogResponseData, OpenExternalData, OpenExternalResponseData, WrappedResponse } from '@shared/back/types';
-import { InitRendererChannel, InitRendererData } from '@shared/IPC';
-import { setTheme } from '@shared/Theme';
-import { createErrorProxy } from '@shared/Util';
-import { isDev } from './Util';
+import * as electron from "electron";
+import { OpenDialogOptions } from "electron";
+import * as path from "path";
+import { SharedSocket } from "@shared/back/SharedSocket";
+import {
+  BackIn,
+  BackOut,
+  GetRendererInitDataResponse,
+  OpenDialogData,
+  OpenDialogResponseData,
+  OpenExternalData,
+  OpenExternalResponseData,
+  WrappedResponse,
+} from "@shared/back/types";
+import { InitRendererChannel, InitRendererData } from "@shared/IPC";
+import { setTheme } from "@shared/Theme";
+import { createErrorProxy } from "@shared/Util";
+import { isDev } from "./Util";
 
 /**
  * Object with functions that bridge between this and the Main processes
@@ -14,85 +23,88 @@ import { isDev } from './Util';
  *        It might be a good idea to move this to the Renderer?)
  */
 window.External = {
-  installed: createErrorProxy('installed'),
+  installed: createErrorProxy("installed"),
 
-  version: createErrorProxy('version'),
+  version: createErrorProxy("version"),
 
-  platform: electron.remote.process.platform+'' as NodeJS.Platform, // (Coerce to string to make sure its not a remote object)
+  platform: (process.platform + "") as NodeJS.Platform, // (Coerce to string to make sure its not a remote object)
 
   minimize() {
-    const currentWindow = electron.remote.getCurrentWindow();
-    currentWindow.minimize();
+    const currentWindow = electron.BrowserWindow.getFocusedWindow();
+    currentWindow?.minimize();
   },
 
   maximize() {
-    const currentWindow = electron.remote.getCurrentWindow();
-    if (currentWindow.isMaximized()) {
+    const currentWindow = electron.BrowserWindow.getFocusedWindow();
+    if (currentWindow?.isMaximized()) {
       currentWindow.unmaximize();
     } else {
-      currentWindow.maximize();
+      currentWindow?.maximize();
     }
   },
 
   close() {
-    const currentWindow = electron.remote.getCurrentWindow();
-    currentWindow.close();
+    const currentWindow = electron.BrowserWindow.getFocusedWindow();
+    currentWindow?.close();
   },
 
   restart() {
-    electron.remote.app.relaunch();
-    electron.remote.app.quit();
+    electron.app.relaunch();
+    electron.app.quit();
   },
 
   showOpenDialogSync(options: OpenDialogOptions): string[] | undefined {
     // @HACK: Electron set the incorrect return type for "showOpenDialogSync".
-    return electron.remote.dialog.showOpenDialogSync(options) as any;
+    return electron.dialog.showOpenDialogSync(options) as any;
   },
 
   toggleDevtools(): void {
-    electron.remote.getCurrentWindow().webContents.toggleDevTools();
+    electron.BrowserWindow.getFocusedWindow()?.webContents.toggleDevTools();
   },
 
   preferences: {
-    data: createErrorProxy('preferences.data'),
+    data: createErrorProxy("preferences.data"),
     onUpdate: undefined,
   },
 
-  config: createErrorProxy('config'),
+  config: createErrorProxy("config"),
 
   log: {
     entries: [],
     offset: 0,
   },
 
-  services: createErrorProxy('services'),
+  services: createErrorProxy("services"),
 
   isDev,
 
-  isBackRemote: createErrorProxy('isBackRemote'),
+  isBackRemote: createErrorProxy("isBackRemote"),
 
   back: new SharedSocket(WebSocket),
 
   fileServerPort: -1,
 
-  backUrl: createErrorProxy('backUrl'),
+  backUrl: createErrorProxy("backUrl"),
 
-  initialLang: createErrorProxy('initialLang'),
-  initialLangList: createErrorProxy('initialLangList'),
-  initialThemes: createErrorProxy('initialThemes'),
-  initialPlaylists: createErrorProxy('initialPlaylists'),
-  initialPlatforms: createErrorProxy('initialPlatforms'),
-  initialLocaleCode: createErrorProxy('initialLocaleCode'),
+  initialLang: createErrorProxy("initialLang"),
+  initialLangList: createErrorProxy("initialLangList"),
+  initialThemes: createErrorProxy("initialThemes"),
+  initialPlaylists: createErrorProxy("initialPlaylists"),
+  initialPlatforms: createErrorProxy("initialPlatforms"),
+  initialLocaleCode: createErrorProxy("initialLocaleCode"),
 
   waitUntilInitialized() {
-    if (!isInitDone) { return onInit; }
-  }
+    if (!isInitDone) {
+      return onInit;
+    }
+  },
 };
 
 let isInitDone: boolean = false;
 const onInit = (async () => {
   // Fetch data from main process
-  const data: InitRendererData = electron.ipcRenderer.sendSync(InitRendererChannel);
+  const data: InitRendererData =
+    electron.ipcRenderer.sendSync(InitRendererChannel);
   // Store value(s)
   window.External.installed = data.installed;
   window.External.version = data.version;
@@ -104,71 +116,97 @@ const onInit = (async () => {
   window.External.back.secret = data.secret;
   window.External.back.setSocket(socket);
 })()
-.then(() => new Promise((resolve, reject) => {
-  window.External.back.on('message', onMessage);
-  // Fetch the config and preferences
-  window.External.back.send<GetRendererInitDataResponse>(BackIn.GET_RENDERER_INIT_DATA, undefined, response => {
-    if (response.data) {
-      window.External.preferences.data = response.data.preferences;
-      window.External.config = {
-        data: response.data.config,
-        // @FIXTHIS This should take if this is installed into account
-        fullExodosPath: path.resolve(response.data.config.exodosPath),
-        fullJsonFolderPath: path.resolve(response.data.config.exodosPath, response.data.config.jsonFolderPath),
-      };
-      window.External.fileServerPort = response.data.fileServerPort;
-      window.External.log.entries = response.data.log;
-      window.External.services = response.data.services;
-      window.External.initialLang = response.data.language;
-      window.External.initialLangList = response.data.languages;
-      window.External.initialThemes = response.data.themes;
-      window.External.initialPlaylists = response.data.playlists;
-      window.External.initialPlatforms = response.data.platforms;
-      window.External.initialLocaleCode = response.data.localeCode;
-      if (window.External.preferences.data.currentTheme) { setTheme(window.External.preferences.data.currentTheme); }
-      resolve();
-    } else { reject(new Error('"Get Renderer Init Data" response does not contain any data.')); }
+  .then(
+    () =>
+      new Promise((resolve, reject) => {
+        window.External.back.on("message", onMessage);
+        // Fetch the config and preferences
+        window.External.back.send<GetRendererInitDataResponse>(
+          BackIn.GET_RENDERER_INIT_DATA,
+          undefined,
+          (response) => {
+            if (response.data) {
+              window.External.preferences.data = response.data.preferences;
+              window.External.config = {
+                data: response.data.config,
+                // @FIXTHIS This should take if this is installed into account
+                fullExodosPath: path.resolve(response.data.config.exodosPath),
+                fullJsonFolderPath: path.resolve(
+                  response.data.config.exodosPath,
+                  response.data.config.jsonFolderPath
+                ),
+              };
+              window.External.fileServerPort = response.data.fileServerPort;
+              window.External.log.entries = response.data.log;
+              window.External.services = response.data.services;
+              window.External.initialLang = response.data.language;
+              window.External.initialLangList = response.data.languages;
+              window.External.initialThemes = response.data.themes;
+              window.External.initialPlaylists = response.data.playlists;
+              window.External.initialPlatforms = response.data.platforms;
+              window.External.initialLocaleCode = response.data.localeCode;
+              if (window.External.preferences.data.currentTheme) {
+                setTheme(window.External.preferences.data.currentTheme);
+              }
+              resolve(null);
+            } else {
+              reject(
+                new Error(
+                  '"Get Renderer Init Data" response does not contain any data.'
+                )
+              );
+            }
+          }
+        );
+      })
+  )
+  .then(() => {
+    isInitDone = true;
   });
-}))
-.then(() => { isInitDone = true; });
 
 function onMessage(this: WebSocket, res: WrappedResponse): void {
   switch (res.type) {
-    case BackOut.UPDATE_PREFERENCES_RESPONSE: {
-      window.External.preferences.data = res.data;
-    } break;
+    case BackOut.UPDATE_PREFERENCES_RESPONSE:
+      {
+        window.External.preferences.data = res.data;
+      }
+      break;
 
-    case BackOut.OPEN_DIALOG: {
-      const resData: OpenDialogData = res.data;
+    case BackOut.OPEN_DIALOG:
+      {
+        const resData: OpenDialogData = res.data;
 
-      electron.remote.dialog.showMessageBox(resData)
-      .then(r => {
-        window.External.back.sendReq<any, OpenDialogResponseData>({
-          id: res.id,
-          type: BackIn.GENERIC_RESPONSE,
-          data: r.response,
+        electron.dialog.showMessageBox(resData).then((r) => {
+          window.External.back.sendReq<any, OpenDialogResponseData>({
+            id: res.id,
+            type: BackIn.GENERIC_RESPONSE,
+            data: r.response,
+          });
         });
-      });
-    } break;
+      }
+      break;
 
-    case BackOut.OPEN_EXTERNAL: {
-      const resData: OpenExternalData = res.data;
+    case BackOut.OPEN_EXTERNAL:
+      {
+        const resData: OpenExternalData = res.data;
 
-      electron.remote.shell.openExternal(resData.url, resData.options)
-      .then(() => {
-        window.External.back.sendReq<OpenExternalResponseData>({
-          id: res.id,
-          type: BackIn.GENERIC_RESPONSE,
-          data: {},
-        });
-      })
-      .catch(error => {
-        window.External.back.sendReq<OpenExternalResponseData>({
-          id: res.id,
-          type: BackIn.GENERIC_RESPONSE,
-          data: { error },
-        });
-      });
-    } break;
+        electron.shell
+          .openExternal(resData.url, resData.options)
+          .then(() => {
+            window.External.back.sendReq<OpenExternalResponseData>({
+              id: res.id,
+              type: BackIn.GENERIC_RESPONSE,
+              data: {},
+            });
+          })
+          .catch((error) => {
+            window.External.back.sendReq<OpenExternalResponseData>({
+              id: res.id,
+              type: BackIn.GENERIC_RESPONSE,
+              data: { error },
+            });
+          });
+      }
+      break;
   }
 }
