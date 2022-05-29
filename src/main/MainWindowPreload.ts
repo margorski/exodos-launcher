@@ -16,6 +16,7 @@ import { InitRendererChannel, InitRendererData } from "@shared/IPC";
 import { setTheme } from "@shared/Theme";
 import { createErrorProxy } from "@shared/Util";
 import { isDev } from "./Util";
+import { app, BrowserWindow, dialog, shell } from "@electron/remote";
 
 /**
  * Object with functions that bridge between this and the Main processes
@@ -30,12 +31,12 @@ window.External = {
   platform: (process.platform + "") as NodeJS.Platform, // (Coerce to string to make sure its not a remote object)
 
   minimize() {
-    const currentWindow = electron.BrowserWindow.getFocusedWindow();
+    const currentWindow = BrowserWindow.getFocusedWindow();
     currentWindow?.minimize();
   },
 
   maximize() {
-    const currentWindow = electron.BrowserWindow.getFocusedWindow();
+    const currentWindow = BrowserWindow.getFocusedWindow();
     if (currentWindow?.isMaximized()) {
       currentWindow.unmaximize();
     } else {
@@ -44,22 +45,22 @@ window.External = {
   },
 
   close() {
-    const currentWindow = electron.BrowserWindow.getFocusedWindow();
+    const currentWindow = BrowserWindow.getFocusedWindow();
     currentWindow?.close();
   },
 
   restart() {
-    electron.app.relaunch();
-    electron.app.quit();
+    app.relaunch();
+    app.quit();
   },
 
   showOpenDialogSync(options: OpenDialogOptions): string[] | undefined {
     // @HACK: Electron set the incorrect return type for "showOpenDialogSync".
-    return electron.dialog.showOpenDialogSync(options) as any;
+    return dialog.showOpenDialogSync(options) as any;
   },
 
   toggleDevtools(): void {
-    electron.BrowserWindow.getFocusedWindow()?.webContents.toggleDevTools();
+    BrowserWindow.getFocusedWindow()?.webContents.toggleDevTools();
   },
 
   preferences: {
@@ -175,8 +176,7 @@ function onMessage(this: WebSocket, res: WrappedResponse): void {
     case BackOut.OPEN_DIALOG:
       {
         const resData: OpenDialogData = res.data;
-
-        electron.dialog.showMessageBox(resData).then((r) => {
+        dialog.showMessageBox(resData).then((r) => {
           window.External.back.sendReq<any, OpenDialogResponseData>({
             id: res.id,
             type: BackIn.GENERIC_RESPONSE,
@@ -190,7 +190,7 @@ function onMessage(this: WebSocket, res: WrappedResponse): void {
       {
         const resData: OpenExternalData = res.data;
 
-        electron.shell
+        shell
           .openExternal(resData.url, resData.options)
           .then(() => {
             window.External.back.sendReq<OpenExternalResponseData>({

@@ -1,12 +1,19 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { parseVariableString } from './utils/VariableString';
+import * as fs from "fs";
+import * as path from "path";
+import { parseVariableString } from "./utils/VariableString";
 
 export function getFileServerURL() {
   return `http://${window.External.backUrl.hostname}:${window.External.fileServerPort}`;
 }
 
-type ReadFileOptions = { encoding?: string | null; flag?: string; } | string | undefined | null;
+type ReadFileOptions =
+  | { encoding?: null; flag?: string }
+  | undefined
+  | BufferEncoding
+  | null;
+
+// Argument of type 'ReadFileOptions' is not assignable to parameter of type '{ encoding?: null | undefined; flag?: string | undefined; } | null | undefined'.
+//     Type 'string' has no properties in common with type '{ encoding?: null | undefined; flag?: string | undefined; }'.
 
 /**
  * Read and parse a JSON file asynchronously.
@@ -14,11 +21,16 @@ type ReadFileOptions = { encoding?: string | null; flag?: string; } | string | u
  * @param path Path of the JSON file.
  * @param options Options for reading the file.
  */
-export function readJsonFile(path: string, options?: ReadFileOptions): Promise<any> {
+export function readJsonFile(
+  path: string,
+  options?: ReadFileOptions
+): Promise<any> {
   return new Promise<any>((resolve, reject) => {
-    fs.readFile(path, options, (error, data) => {
+    fs.readFile(path, options, (error: any, data: any) => {
       // Check if reading file failed
-      if (error) { return reject(error); }
+      if (error) {
+        return reject(error);
+      }
       // Try to parse json (and callback error if it fails)
       try {
         const jsonData = JSON.parse(data as string);
@@ -38,7 +50,7 @@ export function readJsonFile(path: string, options?: ReadFileOptions): Promise<a
  * @param options Options for reading the file.
  */
 export function readJsonFileSync(path: string, options?: ReadFileOptions): any {
-  return JSON.parse(fs.readFileSync(path, options) as string);
+  return JSON.parse(fs.readFileSync(path, options).toString());
 }
 
 /**
@@ -46,16 +58,18 @@ export function readJsonFileSync(path: string, options?: ReadFileOptions): any {
  * (Remove everything after the last dot, including the dot)
  */
 export function removeFileExtension(filename: string): string {
-  const lastDotIndex = filename.lastIndexOf('.');
-  if (lastDotIndex === -1) { return filename; }
+  const lastDotIndex = filename.lastIndexOf(".");
+  if (lastDotIndex === -1) {
+    return filename;
+  }
   return filename.substr(0, lastDotIndex);
 }
 
 export function getFilePathExtension(filepath: string): string {
-  const lastDotIndex = filepath.lastIndexOf('.');
+  const lastDotIndex = filepath.lastIndexOf(".");
   if (lastDotIndex < -1) return "";
 
-  const splittedFilepath = filepath.split('.');
+  const splittedFilepath = filepath.split(".");
   return splittedFilepath[splittedFilepath.length - 1];
 }
 
@@ -65,7 +79,9 @@ export function getFilePathExtension(filepath: string): string {
  * @param filePath Path to get filename from
  */
 export function getFilename(filePath: string): string {
-  return filePath.substr(Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\')) + 1);
+  return filePath.substr(
+    Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")) + 1
+  );
 }
 
 /**
@@ -75,9 +91,9 @@ export function getFilename(filePath: string): string {
  * @returns String padded with spaces
  *          (or the original string if it's length is equal or longer than the specified length)
  */
-export function padEnd(str: string|number, length: number): string {
-  str = str + ''; // (Coerce to string)
-  return str + ' '.repeat(Math.max(0, length - str.length));
+export function padEnd(str: string | number, length: number): string {
+  str = str + ""; // (Coerce to string)
+  return str + " ".repeat(Math.max(0, length - str.length));
 }
 
 /**
@@ -87,9 +103,9 @@ export function padEnd(str: string|number, length: number): string {
  * @returns String padded with spaces
  *          (or the original string if it's length is equal or longer than the specified length)
  */
-export function padStart(str: string|number, length: number): string {
-  str = str + ''; // (Coerce to string)
-  return ' '.repeat(Math.max(0, length - str.length)) + str;
+export function padStart(str: string | number, length: number): string {
+  str = str + ""; // (Coerce to string)
+  return " ".repeat(Math.max(0, length - str.length)) + str;
 }
 
 export type StringifyArrayOpts = {
@@ -103,18 +119,25 @@ export type StringifyArrayOpts = {
  * @param array Array to "stringify"
  * @returns Readable text representation of the array
  */
-export function stringifyArray(array: Array<any>, opts?: StringifyArrayOpts): string {
-  const trimStrings = opts && opts.trimStrings || false;
+export function stringifyArray(
+  array: Array<any>,
+  opts?: StringifyArrayOpts
+): string {
+  const trimStrings = (opts && opts.trimStrings) || false;
   // Build string
-  let str = '[ ';
+  let str = "[ ";
   for (let i = 0; i < array.length; i++) {
     let element = array[i];
     if (isString(element)) {
       str += `"${trimStrings ? trim(element) : element}"`;
-    } else { str += element; }
-    if (i !== array.length - 1) { str += ', '; }
+    } else {
+      str += element;
+    }
+    if (i !== array.length - 1) {
+      str += ", ";
+    }
   }
-  str += ' ]';
+  str += " ]";
   return str;
 }
 
@@ -132,7 +155,7 @@ function trim(str: string): string {
   // Find the last non-space non-new-line character
   for (let i = str.length - 1; i >= first; i--) {
     if (!isSpaceOrNewLine(str[i])) {
-      last = i+1;
+      last = i + 1;
       break;
     }
   }
@@ -142,14 +165,16 @@ function trim(str: string): string {
 
 function isSpaceOrNewLine(char: string): boolean {
   switch (char) {
-    case ' ':
-    case '\n': return true;
-    default:   return false;
+    case " ":
+    case "\n":
+      return true;
+    default:
+      return false;
   }
 }
 // (Pads the beginning of a string with "0"s until it reaches a specified length)
-function pad(str: string|number, len: number): string {
-  return '0'.repeat(Math.max(0, len - (str+'').length)) + str;
+function pad(str: string | number, len: number): string {
+  return "0".repeat(Math.max(0, len - (str + "").length)) + str;
 }
 
 /**
@@ -158,7 +183,7 @@ function pad(str: string|number, len: number): string {
  * @returns JSON string of given data
  */
 export function stringifyJsonDataFile(data: any): string {
-  return JSON.stringify(data, null, 2).replace(/\n/g, '\r\n');
+  return JSON.stringify(data, null, 2).replace(/\n/g, "\r\n");
 }
 
 /**
@@ -189,14 +214,16 @@ export function shallowStrictEquals(first: any, second: any): boolean {
  */
 export function recursiveReplace<T = any>(target: T, source: any): T {
   // Skip if source is missing
-  if (!source) { return target; }
+  if (!source) {
+    return target;
+  }
   // Go through all properties of target
   for (let key in source) {
     // Check if data has a property of the same name
     if (key in target) {
       const val = source[key];
       // If the value is an object
-      if (val !== null && typeof val === 'object') {
+      if (val !== null && typeof val === "object") {
         // Go one object deeper and continue copying
         recursiveReplace((target as any)[key], val);
       } else {
@@ -218,7 +245,7 @@ export function deepCopy<T>(source: T): T {
   const copy: any = Array.isArray(source) ? [] : {};
   for (let key in source) {
     let val = source[key];
-    if (val !== null && typeof val === 'object') {
+    if (val !== null && typeof val === "object") {
       val = deepCopy(val);
     }
     copy[key] = val;
@@ -231,50 +258,74 @@ export function deepCopy<T>(source: T): T {
  * @param options Various options (a shallow copy of this is accessible from the callback)
  * @returns A promise that resolves when either all files have been called back for or recursion is aborted
  */
-export async function recursiveDirectory(options: IRecursiveDirectoryOptions): Promise<void> {
+export async function recursiveDirectory(
+  options: IRecursiveDirectoryOptions
+): Promise<void> {
   const shared: IRecursiveDirectorySharedObject = {
     options: Object.assign({}, options), // (Shallow Copy)
     abort: false,
   };
-  return innerRecursiveDirectory(shared, '');
+  return innerRecursiveDirectory(shared, "");
 }
 
-async function innerRecursiveDirectory(shared: IRecursiveDirectorySharedObject, dirPath: string): Promise<void> {
-  return new Promise<void>(async function(resolve, reject) {
+async function innerRecursiveDirectory(
+  shared: IRecursiveDirectorySharedObject,
+  dirPath: string
+): Promise<void> {
+  return new Promise<void>(async function (resolve, reject) {
     // Full path to the current folder
-    const fullDirPath: string = path.join(shared.options.directoryPath, dirPath);
+    const fullDirPath: string = path.join(
+      shared.options.directoryPath,
+      dirPath
+    );
     // Get the names of all files and sub-folders
     fs.readdir(fullDirPath, function (err, files): void {
-      if (shared.abort) { return resolve(); } // (Abort exit point)
-      if (err) { reject(err); }
-      else {
+      if (shared.abort) {
+        return resolve();
+      } // (Abort exit point)
+      if (err) {
+        reject(err);
+      } else {
         // Resolve if folder is empty
-        if (files.length === 0) { return resolve(); }
+        if (files.length === 0) {
+          return resolve();
+        }
         // Get the stats of each folder/file to verify if they are a folder or file
         // (And wait for every single one to complete before resolving the promise)
         let filesOrFoldersLeft: number = files.length;
         for (let i = files.length - 1; i >= 0; i--) {
           const filename = files[i];
-          fs.stat(path.join(fullDirPath, filename), async function(err, stats) {
-            if (shared.abort) { return resolve(); } // (Abort exit point)
-            if (err) { reject(err); }
-            else {
-              if (stats.isFile()) {
-                const p = shared.options.fileCallback({
-                  shared: shared,
-                  filename: filename,
-                  relativePath: dirPath,
-                });
-                if (p) { await p; }
+          fs.stat(
+            path.join(fullDirPath, filename),
+            async function (err, stats) {
+              if (shared.abort) {
+                return resolve();
+              } // (Abort exit point)
+              if (err) {
+                reject(err);
               } else {
-                await innerRecursiveDirectory(shared, path.join(dirPath, filename)).catch(reject);
+                if (stats.isFile()) {
+                  const p = shared.options.fileCallback({
+                    shared: shared,
+                    filename: filename,
+                    relativePath: dirPath,
+                  });
+                  if (p) {
+                    await p;
+                  }
+                } else {
+                  await innerRecursiveDirectory(
+                    shared,
+                    path.join(dirPath, filename)
+                  ).catch(reject);
+                }
+              }
+              filesOrFoldersLeft -= 1;
+              if (filesOrFoldersLeft === 0) {
+                resolve();
               }
             }
-            filesOrFoldersLeft -= 1;
-            if (filesOrFoldersLeft === 0) {
-              resolve();
-            }
-          });
+          );
         }
       }
     });
@@ -285,7 +336,7 @@ export interface IRecursiveDirectoryOptions {
   /** Folder to start recursion in */
   directoryPath: string;
   /** Called for each file encountered */
-  fileCallback: (obj: IRecursiveDirectoryObject) => Promise<void>|void;
+  fileCallback: (obj: IRecursiveDirectoryObject) => Promise<void> | void;
 }
 
 export interface IRecursiveDirectoryObject {
@@ -310,13 +361,11 @@ export interface IRecursiveDirectorySharedObject {
  * @returns The same string but with the BOM removed (or the same string if no BOM was found).
  */
 export function stripBOM(str: string): string {
-  return str.charCodeAt(0) === 0xFEFF
-    ? str.substring(1)
-    : str;
+  return str.charCodeAt(0) === 0xfeff ? str.substring(1) : str;
 }
 
 function isString(obj: any): boolean {
-  return typeof obj === 'string' || obj instanceof String;
+  return typeof obj === "string" || obj instanceof String;
 }
 
 /**
@@ -324,14 +373,22 @@ function isString(obj: any): boolean {
  * @param version Launcher version number.
  */
 export function versionNumberToText(version: number): string {
-  if (version >= 0) { // (Version number)
+  if (version >= 0) {
+    // (Version number)
     const d = new Date(version);
-    return `${pad(d.getFullYear(), 4)}-${pad(d.getMonth()+1, 2)}-${pad(d.getDate(), 2)}`;
-  } else { // (Error code)
+    return `${pad(d.getFullYear(), 4)}-${pad(d.getMonth() + 1, 2)}-${pad(
+      d.getDate(),
+      2
+    )}`;
+  } else {
+    // (Error code)
     switch (version) {
-      case -1: return 'version not found';
-      case -2: return 'version not loaded';
-      default: return 'unknown version error';
+      case -1:
+        return "version not found";
+      case -2:
+        return "version not loaded";
+      default:
+        return "unknown version error";
     }
   }
 }
@@ -343,7 +400,9 @@ export function versionNumberToText(version: number): string {
 export function clearArray<T>(array: Array<T | undefined>): Array<T> {
   const clear: T[] = [];
   for (let val of array) {
-    if (val !== undefined) { clear.push(val); }
+    if (val !== undefined) {
+      clear.push(val);
+    }
   }
   return clear;
 }
@@ -357,31 +416,42 @@ export function clearArray<T>(array: Array<T | undefined>): Array<T> {
 export function parseVarStr(str: string) {
   return parseVariableString(str, (name) => {
     switch (name) {
-      default: return '';
-      case 'cwd': return fixSlashes(process.cwd());
+      default:
+        return "";
+      case "cwd":
+        return fixSlashes(process.cwd());
     }
   });
 }
 
-const errorProxySymbol = Symbol('Error Proxy');
+const errorProxySymbol = Symbol("Error Proxy");
 const errorProxyValue = {}; // Unique pointer
 
 /** Create a proxy that throws an error when you try to use it. */
 export function createErrorProxy(title: string): any {
-  return new Proxy({}, {
-    // @TODO Make it throw errors for all(?) cases (delete, construct etc.)
-    get: (target, p, receiver) => {
-      if (p === errorProxySymbol) { return errorProxyValue; }
-      throw new Error(`You must not get a value from ${title} before it is initialzed (property: "${p.toString()}").`);
-    },
-    set: (target, p, value, receiver) => {
-      throw new Error(`You must not set a value from ${title} before it is initialzed (property: "${p.toString()}").`);
-    },
-  });
+  return new Proxy(
+    {},
+    {
+      // @TODO Make it throw errors for all(?) cases (delete, construct etc.)
+      get: (target, p, receiver) => {
+        if (p === errorProxySymbol) {
+          return errorProxyValue;
+        }
+        throw new Error(
+          `You must not get a value from ${title} before it is initialzed (property: "${p.toString()}").`
+        );
+      },
+      set: (target, p, value, receiver) => {
+        throw new Error(
+          `You must not set a value from ${title} before it is initialzed (property: "${p.toString()}").`
+        );
+      },
+    }
+  );
 }
 
 export function isErrorProxy(object: any) {
-  return (object[errorProxySymbol] === errorProxyValue);
+  return object[errorProxySymbol] === errorProxyValue;
 }
 
 /**
@@ -390,15 +460,21 @@ export function isErrorProxy(object: any) {
  * @returns Size, but in a more human readable format.
  */
 export function sizeToString(size: number, precision: number = 3): string {
-  if (size < 1000)       { return `${size}B`; }
-  if (size < 1000000)    { return `${(size / 1000).toPrecision(precision)}KB`; }
-  if (size < 1000000000) { return `${(size / 1000000).toPrecision(precision)}MB`; }
+  if (size < 1000) {
+    return `${size}B`;
+  }
+  if (size < 1000000) {
+    return `${(size / 1000).toPrecision(precision)}KB`;
+  }
+  if (size < 1000000000) {
+    return `${(size / 1000000).toPrecision(precision)}MB`;
+  }
   return `${(size / 1000000000).toPrecision(precision)}GB`;
 }
 
 /** Replace all back-slashes with forward-slashes. */
 export function fixSlashes(str: string): string {
-  return str.replace(/\\/g, '/');
+  return str.replace(/\\/g, "/");
 }
 
 /**
@@ -407,8 +483,8 @@ export function fixSlashes(str: string): string {
  */
 export function canReadWrite(folder: string): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
-    const testPath = path.join(folder, 'test');
-    fs.open(testPath, 'w', (err, fd) => {
+    const testPath = path.join(folder, "test");
+    fs.open(testPath, "w", (err, fd) => {
       if (err) {
         resolve(false);
         return;
@@ -422,6 +498,6 @@ export function canReadWrite(folder: string): Promise<boolean> {
   });
 }
 
-export function escapeShell(cmd:string) {
-  return cmd.replace(/(["\s'$!()`\\])/g,'\\$1');
-};
+export function escapeShell(cmd: string) {
+  return cmd.replace(/(["\s'$!()`\\])/g, "\\$1");
+}

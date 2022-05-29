@@ -1,4 +1,5 @@
 import { SharedSocket } from "@shared/back/SharedSocket";
+import * as remoteMain from "@electron/remote/main";
 import {
   BackIn,
   BackInitArgs,
@@ -154,7 +155,7 @@ export function main(init: Init): void {
             // Wait for process to initialize
             state.backProc.once("message", (port) => {
               if (port >= 0) {
-                state.backHost.port = port;
+                state.backHost.port = port.toString();
                 resolve();
               } else {
                 reject(
@@ -410,6 +411,7 @@ export function main(init: Init): void {
       width += 8; // Add the width of the window-grab-things,
       height += 8; // they are 4 pixels wide each (at least for me @TBubba)
     }
+    remoteMain.initialize();
     const window = new BrowserWindow({
       title: APP_TITLE,
       x: mw.x,
@@ -422,8 +424,10 @@ export function main(init: Init): void {
         preload: path.resolve(__dirname, "./MainWindowPreload.js"),
         nodeIntegration: true,
         contextIsolation: false,
+        webSecurity: false,
       },
     });
+    remoteMain.enable(window.webContents);
     // Remove the menu bar
     window.setMenuBarVisibility(false);
     // and load the index.html of the app.
