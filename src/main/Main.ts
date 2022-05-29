@@ -424,7 +424,6 @@ export function main(init: Init): void {
         preload: path.resolve(__dirname, "./MainWindowPreload.js"),
         nodeIntegration: true,
         contextIsolation: false,
-        webSecurity: false,
       },
     });
     remoteMain.enable(window.webContents);

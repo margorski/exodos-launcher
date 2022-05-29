@@ -303,17 +303,17 @@ export namespace GameLauncher {
   }
 
   function createCommand(filename: string, args: string): string {
-    if (!terminalEmulator)
+    if (!terminalEmulator) {
       throw "Terminal emulator command not set. Probably default emulator was not found on system.";
+    }
 
-    const linuxTerminalEmulatorCommand = filename
-      .toLocaleLowerCase()
-      .endsWith(".sh")
+    const isBashFile = filename.toLocaleLowerCase().endsWith(".sh");
+    const linuxTerminalEmulatorCommand = isBashFile
       ? `${terminalEmulator.executableName} -e`
       : `xdg-open`;
     // Escape filename and args
     let escFilename: string = escapeShell(filename);
-    if (terminalEmulator.needsQuotesAroundPath)
+    if (isBashFile && terminalEmulator.needsQuotesAroundPath)
       escFilename = `"${escFilename}"`;
     let escArgs: string = escapeLinuxArgs(args);
     return `${linuxTerminalEmulatorCommand}  ${escFilename} ${escArgs}`;

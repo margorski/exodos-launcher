@@ -21,7 +21,6 @@
   ],
   "root": true,
   "rules": {
-    "curly": ["warn", "all"],
     "for-direction": "warn",
     "getter-return": "warn",
     "keyword-spacing": "warn",
