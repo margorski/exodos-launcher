@@ -1,17 +1,15 @@
-import { app } from 'electron';
-import { AppUpdater, UpdateInfo } from 'electron-updater';
+import { UpdateInfo } from 'electron-updater';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ExodosBackendInfo, GamePlaylist } from '@shared/interfaces';
-import { LangContainer } from '@shared/lang';
 import { WithPreferencesProps } from '../../containers/withPreferences';
 import { WithSearchProps } from '../../containers/withSearch';
-import { UpgradeStage } from '../../upgrade/types';
 import { LangContext } from '../../util/lang';
 import { OpenIcon, OpenIconType } from '../OpenIcon';
 import { RandomGames } from '../RandomGames';
 import { SizeProvider } from '../SizeProvider';
 import { BackIn, LaunchExodosContentData } from '@shared/back/types';
+import { app } from '@electron/remote';
 
 type OwnProps = {
   platforms: Record<string, string[]>;
@@ -139,7 +137,7 @@ export function HomePage(props: HomePageProps) {
         <div className=''>
           <div><h1>eXoDOS v5</h1></div> 
           <div><h4>{`backend: ${props.exodosBackendInfo ? props.exodosBackendInfo.version : ''}`}</h4></div>
-          <div><h4>{`exogui: ${process.env.npm_package_version}`}</h4></div>
+          <div><h4>{`exogui: ${app.getVersion()}`}</h4></div>
         </div>
         <div className='home-page__subheader'>
           {link('Website', 'https://www.retro-exo.com/exodos.html')}

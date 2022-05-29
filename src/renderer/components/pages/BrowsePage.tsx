@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, Menu, MenuItemConstructorOptions, shell } from 'electron';
+import { dialog, shell } from '@electron/remote';
 import * as fs from 'fs';
 import * as React from 'react';
 import { BackIn, DeleteGameData, DeletePlaylistData, DuplicateGameData, ExportGameData, GetGameData, GetGameResponseData, LaunchGameData, SavePlaylistData } from '@shared/back/types';

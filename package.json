@@ -35,6 +35,7 @@
   "author": "mgo",
   "license": "MIT",
   "dependencies": {
+    "@electron/remote": "2.0.8",
     "connected-react-router": "6.5.2",
     "electron-updater": "4.2.0",
     "fast-xml-parser": "3.12.19",

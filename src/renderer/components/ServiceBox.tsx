@@ -1,4 +1,4 @@
-import { dialog } from 'electron';
+import { dialog } from '@electron/remote';
 import * as React from 'react';
 import { setInterval } from 'timers';
 import { BackIn, ServiceActionData } from '@shared/back/types';

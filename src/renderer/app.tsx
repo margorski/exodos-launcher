@@ -1,5 +1,6 @@
-import { app, dialog, ipcRenderer } from 'electron';
-import { AppUpdater, UpdateInfo } from 'electron-updater';
+import { ipcRenderer } from 'electron';
+import { app, dialog } from '@electron/remote';
+import { UpdateInfo } from 'electron-updater';
 import * as path from 'path';
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router-dom';

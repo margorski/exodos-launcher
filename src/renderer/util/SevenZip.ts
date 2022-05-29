@@ -1,4 +1,4 @@
-import { app } from "electron";
+import { app } from "@electron/remote";
 import * as path from "path";
 
 function get7zExec(): string {

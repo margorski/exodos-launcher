@@ -1,7 +1,8 @@
-import { BrowserWindow, Menu, MenuItemConstructorOptions, shell } from 'electron';
+import { MenuItemConstructorOptions } from 'electron';
+import { BrowserWindow, shell } from '@electron/remote';
 import * as fs from 'fs';
 import * as React from 'react';
-import { BackIn, BackOut, DeleteImageData, ImageChangeData, LaunchAddAppData, LaunchGameData, SaveImageData, WrappedResponse } from '@shared/back/types';
+import { BackIn, DeleteImageData, LaunchAddAppData, LaunchGameData, SaveImageData } from '@shared/back/types';
 import { EXODOS_GAMES_PLATFORM_NAME, LOGOS, SCREENSHOTS } from '@shared/constants';
 import { AdditionalApplicationInfo } from '@shared/game/AdditionalApplicationInfo';
 import { wrapSearchTerm } from '@shared/game/GameFilter';
