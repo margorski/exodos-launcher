@@ -1414,19 +1414,24 @@ body {
 }
 .game-list-header-column--title,
 .game-list-item__field--title {
-  max-width: 40%;
+  max-width: 37%;
 }
 .game-list-header-column--tags,
 .game-list-item__field--tags {
-  max-width: 15%;
+  max-width: 22%;
 }
 .game-list-header-column--developer,
 .game-list-item__field--developer {
-  max-width: 22.5%;
+  max-width: 19%;
 }
 .game-list-header-column--publisher,
 .game-list-item__field--publisher {
-  max-width: 22.5%;
+  max-width: 19%;
+}
+
+.game-list-header-column--releaseYear,
+.game-list-item__field--releaseYear {
+  max-width: 3%;
 }
 
 /* GameGrid */

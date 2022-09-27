@@ -2618,6 +2618,7 @@ function queryGames(query: BackQuery): BackQueryChache {
       genre: g.tags,
       developer: g.developer,
       publisher: g.publisher,
+      releaseDate: g.releaseDate,
     };
   }
 

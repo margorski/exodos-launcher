@@ -10,12 +10,12 @@ export type GameListHeaderProps = {};
 export function GameListHeader(props: GameListHeaderProps) {
   return useMemo(() => (
     <div className='game-list-header'>
-      <Column modifier='icon' hideDivider={true} />
       <div className='game-list-header__right'>
         <Column title='Title'     modifier='title'     hideDivider={true} />
-        <Column title='Tags'      modifier='tags'                         />
+        <Column title='Year'      modifier='releaseYear'                  />
         <Column title='Developer' modifier='developer'                    />
         <Column title='Publisher' modifier='publisher'                    />
+        <Column title='Tags'      modifier='tags'                         />
       </div>
       <div className='game-list-header__scroll-fill' />
     </div>

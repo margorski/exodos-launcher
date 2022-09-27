@@ -117,14 +117,14 @@ export function getGameTitleScreenshotUrl(
   platform: string,
   gameName: string
 ): string {
-  return `${getFileServerURL()}/images/${platform}/Screenshot - Game Title/${gameName.replace(
+  return `${getFileServerURL()}/Images/${platform}/Screenshot - Game Title/${gameName.replace(
     ":",
     "_"
   )}-01.png`;
 }
 
 export function getPlatformIconURL(platform: string): string {
-  return `${getFileServerURL()}/images/Platforms/${platform}/Clear Logo/${platform}.png`;
+  return `${getFileServerURL()}/Images/Platforms/${platform}/Clear Logo/${platform}.png`;
 }
 
 export function getGameScreenshotImageURL(
@@ -132,7 +132,7 @@ export function getGameScreenshotImageURL(
   gameName: string,
   idx: number = 1
 ): string {
-  return `${getFileServerURL()}/images/${platform}/Screenshot - Gameplay/${gameName.replace(
+  return `${getFileServerURL()}/Images/${platform}/Screenshot - Gameplay/${gameName.replace(
     ":",
     "_"
   )}-0${idx}.png`;

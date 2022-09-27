@@ -9,6 +9,7 @@ export type GameListItemProps = ListRowProps & {
   tags: string;
   developer: string;
   publisher: string;
+  releaseYear: string;
   /** If the row can be dragged (defaults to false). */
   isDraggable?: boolean;
   /** If the row is selected. */
@@ -18,7 +19,7 @@ export type GameListItemProps = ListRowProps & {
 };
 
 export function GameListItem(props: GameListItemProps) {
-  const { id, title, platform, tags: tags, developer, publisher, isDraggable, isSelected, isDragged, index, style } = props;
+  const { id, title, platform, tags: tags, developer, publisher, releaseYear, isDraggable, isSelected, isDragged, index, style } = props;
   // Get the platform icon path
   const platformIcon = React.useMemo(() => (
     getPlatformIconURL(platform)
@@ -43,9 +44,6 @@ export function GameListItem(props: GameListItemProps) {
         className={className}
         draggable={isDraggable}
         { ...attributes }>
-        <div
-          className='game-list-item__icon'
-          style={{ backgroundImage: `url("${platformIcon}")` }} />
         <div className='game-list-item__right'>
           <div
             className='game-list-item__field game-list-item__field--title'
@@ -53,9 +51,9 @@ export function GameListItem(props: GameListItemProps) {
             {title}
           </div>
           <div
-            className='game-list-item__field game-list-item__field--tags'
-            title={tags}>
-            {tags}
+            className='game-list-item__field game-list-item__field--releaseYear'
+            title={releaseYear}>
+            {releaseYear}
           </div>
           <div
             className='game-list-item__field game-list-item__field--developer'
@@ -66,6 +64,11 @@ export function GameListItem(props: GameListItemProps) {
             className='game-list-item__field game-list-item__field--publisher'
             title={publisher}>
             {publisher}
+          </div>
+          <div
+            className='game-list-item__field game-list-item__field--tags'
+            title={tags}>
+            {tags}
           </div>
         </div>
       </li>

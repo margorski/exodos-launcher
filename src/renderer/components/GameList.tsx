@@ -139,6 +139,7 @@ export class GameList extends React.Component<GameListProps> {
         tags={game.genre}
         developer={game.developer}
         publisher={game.publisher}
+        releaseYear={(new Date(game.releaseDate)).getFullYear().toString()}
         isDraggable={true}
         isSelected={game.id === selectedGameId}
         isDragged={game.id === draggedGameId} />
