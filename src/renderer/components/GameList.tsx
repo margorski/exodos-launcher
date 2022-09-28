@@ -139,11 +139,16 @@ export class GameList extends React.Component<GameListProps> {
         tags={game.genre}
         developer={game.developer}
         publisher={game.publisher}
-        releaseYear={(new Date(game.releaseDate)).getFullYear().toString()}
+        releaseYear={this.getPrintableYearFromDateString(game.releaseDate)}
         isDraggable={true}
         isSelected={game.id === selectedGameId}
         isDragged={game.id === draggedGameId} />
     ) : <div key={props.key} style={props.style} />;
+  }
+
+  getPrintableYearFromDateString(dateString:string) {
+    const year = new Date(dateString).getFullYear();
+    return isNaN(year) ? '' : year.toString();
   }
 
   onScroll = (params: ScrollParams) => {

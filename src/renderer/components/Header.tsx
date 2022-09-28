@@ -5,12 +5,13 @@ import { getLibraryItemTitle } from '@shared/library/util';
 import { WithPreferencesProps } from '../containers/withPreferences';
 import { Paths } from '../Paths';
 import { SearchQuery } from '../store/search';
-import { easterEgg, joinLibraryRoute } from '../Util';
+import { joinLibraryRoute } from '../Util';
 import { LangContext } from '../util/lang';
 import { GameOrder, GameOrderChangeEvent } from './GameOrder';
 import { OpenIcon } from './OpenIcon';
 import { ExodosStateData } from '@shared/back/types';
 import { EXODOS_GAMES_PLATFORM_NAME, EXODOS_MAGAZINES_PLATFORM_NAME } from '@shared/constants';
+import { DefaultGameOrderBy, DefaultGameOrderReverse } from '@shared/order/interfaces';
 
 type OwnProps = {
   /** The most recent search query. */
@@ -78,7 +79,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
     const { searchText } = this.state;
     const gamesTabEnabled = this.props.exodosState.gamesEnabled  && libraries.includes(`${EXODOS_GAMES_PLATFORM_NAME}.xml`);
     const magazinesTabEnabled = this.props.exodosState.magazinesEnabled  && libraries.includes(`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`);
-   
+
     return (
       <div className='header'>
         {/* Header Menu */}
@@ -140,8 +141,20 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
               orderReverse={this.props.order.orderReverse} />
           </div>
         </div>
+        <div className='header__wrap'>
+            <div className="simple-button" onClick={() => this.onReset(onOrderChange)}>{strings.reset}</div>
+        </div>
       </div>
     );
+  }
+
+  onReset = (onOrderChange:((event: GameOrderChangeEvent) => void) | undefined) => {
+    if (onOrderChange)
+      onOrderChange({
+        orderBy: DefaultGameOrderBy,
+        orderReverse: DefaultGameOrderReverse
+      });
+    setTimeout(this.onClearClick, 0);
   }
 
   onSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {

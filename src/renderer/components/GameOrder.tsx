@@ -36,13 +36,11 @@ export class GameOrder extends React.Component<GameOrderProps> {
           className='simple-selector'
           value={this.props.orderBy}
           onChange={this.onOrderByChange}>
-          <option value='dateAdded'>{strings.dateAdded}</option>
-          <option value='tags'>{strings.tags}</option>
-          <option value='platform'>{strings.platform}</option>
-          <option value='series'>{strings.series}</option>
           <option value='title'>{strings.title}</option>
+          <option value='releaseDate'>{strings.releaseDate}</option>
           <option value='developer'>{strings.developer}</option>
           <option value='publisher'>{strings.publisher}</option>
+          <option value='tags'>{strings.tags}</option>
         </select>
         {/* Order Reverse */}
         <select
@@ -87,6 +85,7 @@ export class GameOrder extends React.Component<GameOrderProps> {
  */
 function validateOrderBy(value: string): GameOrderBy {
   switch (value) {
+    case 'releaseDate': return 'releaseDate';
     case 'dateAdded': return 'dateAdded';
     case 'tags':      return 'tags';
     case 'platform':  return 'platform';

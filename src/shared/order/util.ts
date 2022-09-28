@@ -1,7 +1,19 @@
-import { GameOrderBy, GameOrderReverse } from './interfaces';
+import { GameOrderBy, GameOrderReverse } from "./interfaces";
 
 /** An array with all valid values of GameOrderBy */
-export const gameOrderByOptions: GameOrderBy[] = [ 'dateAdded', 'tags', 'platform', 'series', 'title', 'developer', 'publisher' ];
+export const gameOrderByOptions: GameOrderBy[] = [
+  "dateAdded",
+  "tags",
+  "platform",
+  "series",
+  "title",
+  "developer",
+  "publisher",
+  "releaseDate",
+];
 
 /** An array with all valid values of GameOrderReverse */
-export const gameOrderReverseOptions: GameOrderReverse[] = [ 'ascending', 'descending' ];
+export const gameOrderReverseOptions: GameOrderReverse[] = [
+  "ascending",
+  "descending",
+];

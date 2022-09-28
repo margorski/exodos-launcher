@@ -173,14 +173,14 @@ export class App extends React.Component<AppProps, AppState> {
 
     const versionRequest = await fetch(`${getFileServerURL()}/eXo/Update/ver/ver_linux.txt`);
     const version = await versionRequest.text();
-    
+
     this.setState({
       ...this.state,
       exodosBackendInfo: {
         changelog: changelog,
         version: version.split(' ')[1]
       }
-    })
+    });
   }
 
   init() {
@@ -238,7 +238,7 @@ export class App extends React.Component<AppProps, AppState> {
       this.setState({ loaded: nextLoaded });
     });
 
-    window.External.back.on('message', res => { 
+    window.External.back.on('message', res => {
       console.log(`Message from backend: ${BackOut[res.type]}`);
       switch (res.type) {
         case BackOut.INIT_EVENT: {
@@ -284,10 +284,10 @@ export class App extends React.Component<AppProps, AppState> {
           const exodosState: ExodosStateData = {
             gamesEnabled: resData.gamesEnabled ? resData.gamesEnabled : this.state.exodosState.gamesEnabled,
             magazinesEnabled: resData.magazinesEnabled ? resData.magazinesEnabled : this.state.exodosState.magazinesEnabled
-          }
-          this.setState({ 
+          };
+          this.setState({
             exodosState: exodosState
-          })
+          });
         } break;
 
         case BackOut.LOG_ENTRY_ADDED: {

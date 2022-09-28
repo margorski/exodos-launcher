@@ -92,7 +92,8 @@
     "newGame": "New Game",
     "list": "List",
     "grid": "Grid",
-    "searchResults": "Search Results"
+    "searchResults": "Search Results",
+    "reset": "Reset"
   },
   "filter": {
     "dateAdded": "Date Added",
@@ -103,7 +104,8 @@
     "developer": "Developer",
     "publisher": "Publisher",
     "ascending": "Ascending",
-    "descending": "Descending"
+    "descending": "Descending",
+    "releaseDate": "Release Date"
   },
   "developer": {
     "developerHeader": "Developer",
