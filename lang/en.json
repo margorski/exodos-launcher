@@ -159,6 +159,7 @@
   "browse": {
     "noTitle": "No Title",
     "by": "by",
+    "developer": "Developer",
     "noDeveloper": "No Developer",
     "alternateTitles": "Alternate Titles",
     "noAlternateTitles": "No Alternate Titles",

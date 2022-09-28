@@ -237,6 +237,17 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
                     onKeyDown={this.onInputKeyDown} />
                 </div>
                 <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
+                  <p>{strings.developer}: </p>
+                  <InputField
+                    text={game.developer}
+                    placeholder={strings.noDeveloper}
+                    className='browse-right-sidebar__searchable'
+                    onChange={this.onDeveloperChange}
+                    editable={editable}
+                    onClick={this.onDeveloperClick}
+                    onKeyDown={this.onInputKeyDown} />
+                </div>
+                <div className='browse-right-sidebar__row browse-right-sidebar__row--one-line'>
                   <p>{strings.publisher}: </p>
                   <InputField
                     text={game.publisher}

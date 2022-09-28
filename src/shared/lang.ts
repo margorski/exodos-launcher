@@ -162,6 +162,7 @@ const langTemplate = {
   browse: [
     "noTitle",
     "by",
+    "developer",
     "noDeveloper",
     "alternateTitles",
     "noAlternateTitles",
