@@ -130,8 +130,8 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
 
     if (this.props.playlists !== prevProps.playlists) {
       updatePreferencesData({ browsePageShowLeftSidebar: !!this.props.playlists.length });
-    } 
-    
+    }
+
     // Update current game and add-apps if the selected game changes
     if (selectedGameId && selectedGameId !== prevProps.selectedGameId) {
       this.updateCurrentGameAndAddApps();
@@ -250,6 +250,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
               return (
                 <GameList
                   games={games}
+                  installedGameIds={this.props.playlists.length > 0 ? this.props.playlists[0].games.map((g) => g.id) : []}
                   gamesTotal={this.props.gamesTotal}
                   selectedGameId={selectedGameId}
                   draggedGameId={draggedGameId}
@@ -284,7 +285,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
             gamePlaylistEntry={gamePlaylistEntry}
             isEditing={this.state.isEditingGame}
             isNewGame={this.state.isNewGame}
-            isInstalled={this.isGameInstalled()}
+            isInstalled={this.isCurrentGameInstalled()}
             onEditClick={this.onStartEditClick}
             onDiscardClick={this.onDiscardEditClick}
             onSaveGame={this.onSaveEditClick}
@@ -294,13 +295,15 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
     );
   }
 
-  private isGameInstalled = () => {
+  private isCurrentGameInstalled = () => {
     if (this.props.playlists.length === 0 || !this.state.currentGame) return false;
     const gameId = this.state.currentGame.id;
 
-    return this.props.playlists[0].games.findIndex(g => g.id === gameId) !== -1;
-    // this.props.playlists[0].games.find(g => g.id === this.state.currentGame?.id) !== undefined;
+    return this.isGameInstalled(gameId);
   }
+
+  private isGameInstalled = (gameId:string) => this.props.playlists[0].games.findIndex(g => g.id === gameId) !== -1;
+
   private noRowsRendererMemo = memoizeOne((strings: LangContainer['browse']) => {
     return () => (
       <div className='game-list__no-games'>

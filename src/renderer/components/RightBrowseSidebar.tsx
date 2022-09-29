@@ -59,7 +59,7 @@ export type RightBrowseSidebarProps = OwnProps & WithPreferencesProps & WithSear
 type RightBrowseSidebarState = {
   /** If a preview of the current game's screenshot should be shown. */
   screenshotPreviewUrl: string;
-  screenshots: string[];  
+  screenshots: string[];
 };
 
 export interface RightBrowseSidebar {
@@ -138,13 +138,13 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
         this.getExistingScreenshotsList(this.props.currentGame).then(screenshots => {
           this.setState({
             screenshots: screenshots
-          })
+          });
         });
       }
       else {
         this.setState({
           screenshots: []
-        })
+        });
       }
     }
   }
@@ -312,7 +312,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
           ) }
           {/* -- Screenshot -- */}
           <div className='browse-right-sidebar__section'>
-          { this.state.screenshots.map((s, idx) => 
+          { this.state.screenshots.map((s, idx) =>
             <div className='browse-right-sidebar__row' key={`screenshot-row-div-${idx}`}>
               <div
                 className='browse-right-sidebar__row__screenshot'
@@ -393,7 +393,7 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
               )) }
             </div>
           ) : undefined }
-        
+
           {/* -- Screenshot Preview -- */}
           { this.state.screenshotPreviewUrl ? (
             <ImagePreview
@@ -536,25 +536,25 @@ export class RightBrowseSidebar extends React.Component<RightBrowseSidebarProps,
   }
 
   onAddAppLaunch(addApp: IAdditionalApplicationInfo): void {
-    const isHtml = addApp.applicationPath.toLocaleLowerCase().endsWith('.html') || 
+    const isHtml = addApp.applicationPath.toLocaleLowerCase().endsWith('.html') ||
                    addApp.applicationPath.toLocaleLowerCase().endsWith('.htm');
     if (isHtml) {
       let url = `${getFileServerURL()}/${addApp.applicationPath.replace('\\', '/')}`;
-      console.log(`Got HTML additional application, running in new browser window. ${url}`)
+      console.log(`Got HTML additional application, running in new browser window. ${url}`);
       let win = new BrowserWindow(
-        { 
-          show: false, 
+        {
+          show: false,
           title: addApp.name,
           resizable: false,
           width: 1100,
           height: 962
-        })
+        });
       win.setMenuBarVisibility(false);
       win.loadURL(url);
       win.once('ready-to-show', () => {
           win.show();
           win.focus();
-      })
+      });
     }
     else {
       window.External.back.send<any, LaunchAddAppData>(BackIn.LAUNCH_ADDAPP, { id: addApp.id });

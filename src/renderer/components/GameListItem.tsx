@@ -16,10 +16,12 @@ export type GameListItemProps = ListRowProps & {
   isSelected: boolean;
   /** If the row is being dragged. */
   isDragged: boolean;
+  /** If game is installed */
+  isInstalled: boolean;
 };
 
 export function GameListItem(props: GameListItemProps) {
-  const { id, title, platform, tags: tags, developer, publisher, releaseYear, isDraggable, isSelected, isDragged, index, style } = props;
+  const { id, title, platform, tags: tags, developer, publisher, releaseYear, isDraggable, isSelected, isDragged, isInstalled, index, style } = props;
   // Get the platform icon path
   const platformIcon = React.useMemo(() => (
     getPlatformIconURL(platform)
@@ -30,8 +32,9 @@ export function GameListItem(props: GameListItemProps) {
     if (index % 2 === 0) { className += ' game-list-item--even';     }
     if (isSelected)      { className += ' game-list-item--selected'; }
     if (isDragged)       { className += ' game-list-item--dragged';  }
+    if (isInstalled)     { className += ' game-list-item--installed'; }
     return className;
-  }, [index, isSelected, isDragged]);
+  }, [index, isSelected, isDragged, isInstalled]);
   // Memoize render
   return React.useMemo(() => {
     // Set element attributes

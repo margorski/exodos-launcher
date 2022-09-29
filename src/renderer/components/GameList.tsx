@@ -17,6 +17,8 @@ export type GameListProps = {
   onRequestGames: (start: number, end: number) => void;
   /** All games that will be shown in the list. */
   games?: GAMES;
+  /** Array of installed games */
+  installedGameIds: Array<string>;
   /** Total number of games there are. */
   gamesTotal: number;
   /** Currently selected game (if any). */
@@ -142,7 +144,8 @@ export class GameList extends React.Component<GameListProps> {
         releaseYear={this.getPrintableYearFromDateString(game.releaseDate)}
         isDraggable={true}
         isSelected={game.id === selectedGameId}
-        isDragged={game.id === draggedGameId} />
+        isDragged={game.id === draggedGameId}
+        isInstalled={this.props.installedGameIds.includes(game.id)} />
     ) : <div key={props.key} style={props.style} />;
   }
 
