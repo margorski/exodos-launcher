@@ -97,6 +97,7 @@ const langTemplate = {
     "grid",
     "searchResults",
     "reset",
+    "random",
   ] as const,
   filter: [
     "dateAdded",

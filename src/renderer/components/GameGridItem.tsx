@@ -1,3 +1,5 @@
+import { isInstalled } from '@main/Util';
+import { getFileServerURL } from '@shared/Util';
 import * as React from 'react';
 import { GridCellProps } from 'react-virtualized';
 import { getPlatformIconURL } from '../Util';
@@ -14,11 +16,13 @@ export type GameGridItemProps = Partial<GridCellProps> & {
   isSelected: boolean;
   /** If the cell is being dragged. */
   isDragged: boolean;
+  /** If is installed */
+  isInstalled: boolean;
 };
 
 /** Displays a single game. Meant to be rendered inside a grid. */
 export function GameGridItem(props: GameGridItemProps) {
-  const { id, title, platform, thumbnail, isDraggable, isSelected, isDragged, style } = props;
+  const { id, title, platform, thumbnail, isDraggable, isSelected, isDragged, isInstalled, style } = props;
   // Get the platform icon path
   const platformIcon = React.useMemo(() => (
     getPlatformIconURL(platform)
@@ -35,7 +39,19 @@ export function GameGridItem(props: GameGridItemProps) {
     // Set element attributes
     const attributes: any = {};
     attributes[GameGridItem.idAttribute] = id;
-    // Render
+      
+    const msdosIcon = `${getFileServerURL()}/Images/Platforms/MS-DOS/Clear Logo/MS-DOS.png`;
+    const haveThumbnail = thumbnail.trim().length > 0;
+    const displayThumbnail = haveThumbnail ? thumbnail : msdosIcon;
+    const thumbnailStyle:React.CSSProperties = { backgroundImage: `url('${displayThumbnail}')` };
+    if (!haveThumbnail) {
+      thumbnailStyle.WebkitFilter = 'grayscale(100%)';
+      thumbnailStyle.opacity = '0.1';
+    }
+    if (isInstalled) {
+      thumbnailStyle.borderColor = '#56565c !important';
+    }
+
     return (
       <li
         style={style}
@@ -45,7 +61,7 @@ export function GameGridItem(props: GameGridItemProps) {
         <div className='game-grid-item__thumb'>
           <div
             className='game-grid-item__thumb__image'
-            style={{ backgroundImage: `url('${thumbnail}')` }}>
+            style={thumbnailStyle}>
             <div className='game-grid-item__thumb__icons'>
               {(platformIcon) ? (
                 <div

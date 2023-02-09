@@ -93,7 +93,8 @@
     "list": "List",
     "grid": "Grid",
     "searchResults": "Search Results",
-    "reset": "Reset"
+    "reset": "Reset",
+    "random": "Random game"
   },
   "filter": {
     "dateAdded": "Date Added",

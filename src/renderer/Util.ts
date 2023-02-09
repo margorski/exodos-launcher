@@ -1,7 +1,7 @@
 import { dialog } from "@electron/remote";
 import * as fs from "fs";
 import * as path from "path";
-import { AddLogData, BackIn } from "@shared/back/types";
+import { AddLogData, BackIn, ViewGame } from "@shared/back/types";
 import { htdocsPath } from "@shared/constants";
 import { IGameInfo } from "@shared/game/interfaces";
 import { getFileServerURL } from "@shared/Util";
@@ -111,6 +111,11 @@ export function checkIfAncestor(
     element = element.parentElement;
   }
   return false;
+}
+
+export function getGameThumbnailUrl(thumbnailPath: string): string {
+  if (!thumbnailPath) return "";
+  return `${getFileServerURL()}/${thumbnailPath}`;
 }
 
 export function getGameTitleScreenshotUrl(

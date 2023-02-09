@@ -85,10 +85,13 @@ export class ImagePreview extends React.Component<ImagePreviewProps, ImagePrevie
 
   /** Calculate the size the image should have, depending on the current state. */
   calculateSize(): { width: number, height: number } {
+    const fixedScale = 2.0;
     const { scaleUp, imageWidth, imageHeight, borderWidth, borderHeight } = this.state;
-    let width = imageWidth;
-    let height = imageHeight;
-    const scale = Math.min(borderWidth / imageWidth, borderHeight / imageHeight);
+    
+    let width = imageWidth * fixedScale;
+    let height = imageHeight * fixedScale;
+
+    const scale = Math.min(borderWidth / width, borderHeight / height);
     if (scaleUp || scale < 1) {
       width *= scale;
       height *= scale;

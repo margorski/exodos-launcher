@@ -1,7 +1,7 @@
-import { GamePlaylist } from '../interfaces';
-import { OrderGamesOpts } from './GameFilter';
+import { GamePlaylist } from "../interfaces";
+import { OrderGamesOpts } from "./GameFilter";
 
-export const UNKNOWN_LIBRARY = 'unknown';
+export const UNKNOWN_LIBRARY = "unknown";
 
 /** Represents a collection of games */
 export interface IGameCollection {
@@ -72,6 +72,8 @@ export interface IGameInfo extends IPureGameInfo {
   manualPath: string;
   /** Path to music played in menu */
   musicPath: string;
+  /** Thumbnail path to be displayed in game list in grid mode*/
+  thumbnailPath: string;
 }
 
 /** Represents the meta data for a single additional application */
@@ -104,13 +106,13 @@ export type ServerResponse = {
   error?: Error;
   /** Response (if any) empty if unsuccessful */
   result?: any;
-}
+};
 
 /** Client Request - Fetch a game */
 export type FetchGameRequest = {
   /** Id of the game */
   id: string;
-}
+};
 
 /** Server Response - Return a requested game with its addApps */
 export type FetchGameResponse = {
@@ -118,25 +120,25 @@ export type FetchGameResponse = {
   game: IGameInfo;
   /** Additional applications of the game found */
   addApps: IAdditionalApplicationInfo[];
-}
+};
 
 /** Client Request - Remove a game or additional application */
 export type GameAppDeleteRequest = {
   /** ID of the game or addapp to remove */
   id: string;
-}
+};
 
 /** Client Request - Add a game */
 export type GameAddRequest = {
   /** Metadata of the game to add */
   meta: IPureGameInfo;
-}
+};
 
 /** Client Request - Add an additional application */
 export type AppAddRequest = {
   /** Metadata of the additional application to add */
   meta: IAdditionalApplicationInfo;
-}
+};
 
 /** Client Request - Information needed to make a search */
 export type SearchRequest = {
@@ -152,7 +154,7 @@ export type SearchRequest = {
   library?: string;
   /** Playlist to filter by (if any) */
   playlist?: GamePlaylist;
-}
+};
 
 /** Server Response - List of games from a search */
 export type SearchResults = SearchRequest & {
@@ -160,4 +162,4 @@ export type SearchResults = SearchRequest & {
   total: number;
   /** Games returned from a search query */
   results: IGameInfo[];
-}
+};

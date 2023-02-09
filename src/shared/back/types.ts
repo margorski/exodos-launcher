@@ -306,6 +306,7 @@ export type ViewGame = {
   developer: string;
   publisher: string;
   releaseDate: string;
+  thumbnailPath: string;
 };
 
 export type BrowseChangeData = {

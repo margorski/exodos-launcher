@@ -1358,7 +1358,7 @@ body {
 .game-list-item__field {
   display: inline-block;
   width: 100%;
-  font-size: calc(0.8 * 1px * var(--height));
+  font-size: calc(0.85 * 1px * var(--height));
   vertical-align: top;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -1392,6 +1392,7 @@ body {
   width: 100%;
 }
 .game-list-header-column__title {
+  font-size: calc(0.8 * 1px * var(--height));
   flex: 1 1 auto;
   overflow: hidden;
   user-select: none;
@@ -1401,14 +1402,9 @@ body {
   width: 2px;
   height: auto;
 }
-/* GameList Item & GameList Header Column (Size) */
-.game-list-header-column--icon {
-  flex: 1 0 auto;
-  width: calc(1px * var(--height));
-}
 .game-list-header-column--title,
 .game-list-item__field--title {
-  max-width: 37%;
+  max-width: 35%;
 }
 .game-list-header-column--tags,
 .game-list-item__field--tags {
@@ -1425,7 +1421,7 @@ body {
 
 .game-list-header-column--releaseYear,
 .game-list-item__field--releaseYear {
-  max-width: 3%;
+  max-width: 5%;
 }
 
 /* GameGrid */
@@ -1445,7 +1441,7 @@ body {
 .game-grid-item__thumb {
   padding: calc(var(--width) * 0.0025rem);
   width: calc(var(--width) * 1px);
-  height: calc(var(--width) * 1px);
+  height: calc(var(--height) * 0.8px);
 }
 .game-grid-item__thumb__image {
   width: 100%;
@@ -1456,6 +1452,14 @@ body {
   background-position: center;
   border: 1px solid;
 }
+
+.game-grid-item__thumb__image--installed {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-color: #56565c !important;
+}
+
 .game-grid-item__thumb__icons {
   width: 100%;
   padding: calc(0.001rem * var(--width));
@@ -1482,7 +1486,7 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: calc((16 / 188) * var(--height) * 1px);
+  font-size: calc((10 / 188) * var(--height) * 1px);
   line-height: 1.2;
   word-break: break-word;
   /* Pimp */
@@ -1919,7 +1923,7 @@ body {
   /* Keep the mask's aspect ratio */
   --zoom: 1800%;
   width: var(--size);
-  height: calc(var(--size) * 0.9);
+  height: calc(var(--size) * 0.8);
 }
 .fp-logo {
   width: 100%;

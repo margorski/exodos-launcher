@@ -223,13 +223,15 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
           className='game-browser__center'
           onKeyDown={this.onCenterKeyDown}>
           {(() => {
+            const installedGameIds = this.props.playlists.length > 0 ? this.props.playlists[0].games.map((g) => g.id) : [];
             if (this.props.gameLayout === BrowsePageLayout.grid) {
               // (These are kind of "magic numbers" and the CSS styles are designed to fit with them)
               const height: number = calcScale(350, this.props.gameScale);
-              const width: number = (height * 0.666) | 0;
+              const width: number = (height * 0.7) | 0;
               return (
                 <GameGrid
                   games={games}
+                  installedGameIds={installedGameIds}
                   gamesTotal={this.props.gamesTotal}
                   selectedGameId={selectedGameId}
                   draggedGameId={draggedGameId}
@@ -250,7 +252,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
               return (
                 <GameList
                   games={games}
-                  installedGameIds={this.props.playlists.length > 0 ? this.props.playlists[0].games.map((g) => g.id) : []}
+                  installedGameIds={installedGameIds}
                   gamesTotal={this.props.gamesTotal}
                   selectedGameId={selectedGameId}
                   draggedGameId={draggedGameId}
@@ -638,7 +640,8 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
           orderTitle: '',
           placeholder: false,
           manualPath: '',
-          musicPath: ''
+          musicPath: '',
+          thumbnailPath: ''
         },
         currentAddApps: [],
         isEditingGame: true,

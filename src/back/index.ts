@@ -91,6 +91,7 @@ import {
 } from "@shared/lang";
 import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
+import { IThumbnailsInfo } from "@shared/platform/interfaces";
 import { PreferencesFile } from "@shared/preferences/PreferencesFile";
 import {
   defaultPreferencesData,
@@ -138,7 +139,7 @@ import { getSuggestions } from "./suggestions";
 import { BackQuery, BackQueryChache, BackState } from "./types";
 import { EventQueue } from "./util/EventQueue";
 import { FolderWatcher } from "./util/FolderWatcher";
-import { copyError, pathExists } from "./util/misc";
+import { copyError, pathExists, walkSync } from "./util/misc";
 import { sanitizeFilename } from "./util/sanitizeFilename";
 import { uuid } from "./util/uuid";
 
@@ -271,7 +272,7 @@ function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
 }
 
 const initExodosWatcher = () => {
-  console.log("Initialize eXoDOS watcher to check if is initialized...");
+  console.log("Initialize eXoDOS watchers...");
   initExodosInstalledGamesWatcher();
   initExodosMagazinesWatcher();
 };
@@ -802,6 +803,24 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
       });
     }
   });
+
+  const boxImagesPath = path.join(
+    state.config.exodosPath,
+    "Images/MS-DOS/Box - Front"
+  );
+
+  const thumbnails: IThumbnailsInfo[] = [];
+  for (const s of walkSync(boxImagesPath)) {
+    // filename to id
+    const coverPath = s.path.replace("../", "");
+    thumbnails.push({
+      GameName: s.filename.replace("_", ":").split("-0")[0],
+      BoxThumbnail: coverPath,
+      Box3dThumbnail: "",
+      TitleThumbnail: "",
+    });
+  }
+
   const playlistFolder = path.join(
     state.config.exodosPath,
     state.config.playlistFolderPath
@@ -836,7 +855,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     state.config.platformFolderPath
   );
 
-  GameManager.loadPlatforms(state.gameManager)
+  GameManager.loadPlatforms(state.gameManager, thumbnails)
     .then((errors) => {
       if (errors.length > 0) {
         console.error(`${errors.length} platform(s) failed to load. Errors:`);
@@ -2619,6 +2638,7 @@ function queryGames(query: BackQuery): BackQueryChache {
       developer: g.developer,
       publisher: g.publisher,
       releaseDate: g.releaseDate,
+      thumbnailPath: g.thumbnailPath,
     };
   }
 

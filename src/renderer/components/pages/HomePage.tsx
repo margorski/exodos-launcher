@@ -186,7 +186,7 @@ export function HomePage(props: HomePageProps) {
           {/* Quick Start */}
           { renderedSetupSection }
           {/* Extras */}
-          { renderedDocs }    
+          { renderedDocs }
         </div>
         { renderedChangelog }
       </div>

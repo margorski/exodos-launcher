@@ -5,7 +5,7 @@ import { BackOut, ImageChangeData, ViewGame, WrappedResponse } from '@shared/bac
 import { LOGOS } from '@shared/constants';
 import { GameOrderBy, GameOrderReverse } from '@shared/order/interfaces';
 import { GAMES } from '../interfaces';
-import { findElementAncestor, getGameTitleScreenshotUrl } from '../Util';
+import { findElementAncestor, getGameThumbnailUrl, getGameTitleScreenshotUrl } from '../Util';
 import { GameGridItem } from './GameGridItem';
 import { GameItemContainer } from './GameItemContainer';
 
@@ -25,6 +25,8 @@ export type GameGridProps = {
   onGameLaunch: (gameId: string) => void;
   /** All games that will be shown in the grid (filter it before passing it here). */
   games?: GAMES;
+  /** Array of installed games */
+  installedGameIds: Array<string>;
   /** Total number of games there are. */
   gamesTotal: number;
   /** Currently selected game (if any). */
@@ -168,6 +170,7 @@ export class GameGrid extends React.Component<GameGridProps> {
     if (!games) { throw new Error('Trying to render a cell in game grid, but no games are found?'); }
     const index: number = props.rowIndex * this.columns + props.columnIndex;
     const game = games[index];
+    
     return game ? (
       <GameGridItem
         { ...props }
@@ -175,10 +178,11 @@ export class GameGrid extends React.Component<GameGridProps> {
         id={game.id}
         title={game.convertedTitle}
         platform={game.platform}
-        thumbnail={getGameTitleScreenshotUrl(game.platform, game.title)}
+        thumbnail={getGameThumbnailUrl(game.thumbnailPath)}
         isDraggable={true}
         isSelected={game.id === selectedGameId}
-        isDragged={game.id === draggedGameId} />
+        isDragged={game.id === draggedGameId}
+        isInstalled={this.props.installedGameIds.includes(game.id)} />
     ) : <div key={props.key} style={props.style} />;
   }
 

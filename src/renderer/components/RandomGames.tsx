@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { BackIn, RandomGamesData, RandomGamesResponseData } from '@shared/back/types';
 import { LOGOS } from '@shared/constants';
 import { IGameInfo } from '@shared/game/interfaces';
-import { findElementAncestor, getGameTitleScreenshotUrl } from '../Util';
+import { findElementAncestor, getGameThumbnailUrl } from '../Util';
 import { GameGridItem } from './GameGridItem';
 import { GameItemContainer } from './GameItemContainer';
 
@@ -21,7 +21,7 @@ export function RandomGames(props: RandomGamesProps) {
     window.External.back.send<RandomGamesResponseData, RandomGamesData>(
       BackIn.RANDOM_GAMES,
       {
-        count: 6,
+        count: 5,
         broken: props.broken,
         extreme: props.extreme,
       },
@@ -40,9 +40,10 @@ export function RandomGames(props: RandomGamesProps) {
         id={game.id}
         title={game.title}
         platform={game.platform}
-        thumbnail={getGameTitleScreenshotUrl(game.platform, game.title)}
+        thumbnail={getGameThumbnailUrl(game.thumbnailPath)}
         isSelected={false}
-        isDragged={false} />
+        isDragged={false} 
+        isInstalled={false} />
     ))
   ), [games]);
 

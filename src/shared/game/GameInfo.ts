@@ -1,36 +1,37 @@
-import { shallowStrictEquals } from '../Util';
-import { IGameInfo } from './interfaces';
+import { shallowStrictEquals } from "../Util";
+import { IGameInfo } from "./interfaces";
 
 export class GameInfo {
   public static create(): IGameInfo {
     return {
-      id: '',
-      title: '',
-      convertedTitle: '',
-      alternateTitles: '',
-      series: '',
-      developer: '',
-      publisher: '',
-      platform: '',
-      dateAdded: '',
+      id: "",
+      title: "",
+      convertedTitle: "",
+      alternateTitles: "",
+      series: "",
+      developer: "",
+      publisher: "",
+      platform: "",
+      dateAdded: "",
       broken: false,
       extreme: false,
-      playMode: '',
-      status: '',
-      notes: '',
-      tags: '',
-      source: '',
-      applicationPath: '',
-      launchCommand: '',
-      releaseDate: '',
-      version: '',
-      originalDescription: '',
-      language: '',
-      library: '',
-      orderTitle: '',
+      playMode: "",
+      status: "",
+      notes: "",
+      tags: "",
+      source: "",
+      applicationPath: "",
+      launchCommand: "",
+      releaseDate: "",
+      version: "",
+      originalDescription: "",
+      language: "",
+      library: "",
+      orderTitle: "",
       placeholder: false,
-      manualPath: '',
-      musicPath: ''
+      manualPath: "",
+      musicPath: "",
+      thumbnailPath: "",
     };
   }
 

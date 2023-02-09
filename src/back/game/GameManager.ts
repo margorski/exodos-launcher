@@ -1,12 +1,22 @@
-import { GameParser } from '@shared/game/GameParser';
-import { IGameCollection, IGameInfo } from '@shared/game/interfaces';
-import { GamePlatform, IRawPlatformFile } from '@shared/platform/interfaces';
-import * as fastXmlParser from 'fast-xml-parser';
-import * as fs from 'fs';
-import * as path from 'path';
-import { promisify } from 'util';
-import { copyError } from '../util/misc';
-import { GameManagerState, LoadPlatformError, RemoveGameResult, UpdateMetaOptions, UpdateMetaResult } from './types';
+import { GameParser } from "@shared/game/GameParser";
+import { IGameCollection, IGameInfo } from "@shared/game/interfaces";
+import {
+  GamePlatform,
+  IRawPlatformFile,
+  IThumbnailsInfo,
+} from "@shared/platform/interfaces";
+import * as fastXmlParser from "fast-xml-parser";
+import * as fs from "fs";
+import * as path from "path";
+import { promisify } from "util";
+import { copyError, walkSync } from "../util/misc";
+import {
+  GameManagerState,
+  LoadPlatformError,
+  RemoveGameResult,
+  UpdateMetaOptions,
+  UpdateMetaResult,
+} from "./types";
 
 const mkdir = promisify(fs.mkdir);
 const readdir = promisify(fs.readdir);
@@ -14,11 +24,14 @@ const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
 const writeFile = promisify(fs.writeFile);
 
-const UNKNOWN_LIBRARY = 'unknown';
-const UNKNOWN_PLATFORM = 'unknown';
+const UNKNOWN_LIBRARY = "unknown";
+const UNKNOWN_PLATFORM = "unknown";
 
 export namespace GameManager {
-  export async function loadPlatforms(state: GameManagerState): Promise<LoadPlatformError[]> {
+  export async function loadPlatforms(
+    state: GameManagerState,
+    images: IThumbnailsInfo[]
+  ): Promise<LoadPlatformError[]> {
     // Find the paths of all platform files
     const platforms: GamePlatform[] = [];
     try {
@@ -26,9 +39,12 @@ export namespace GameManager {
       for (let libraryName of libraryNames) {
         // Check each library for platforms
         try {
-          const platformFile = path.join(state.platformsPath, libraryName);          
+          const platformFile = path.join(state.platformsPath, libraryName);
           const platformFileExt = path.extname(platformFile);
-          if (platformFileExt.toLowerCase().endsWith('.xml') && (await stat(platformFile)).isFile()) {
+          if (
+            platformFileExt.toLowerCase().endsWith(".xml") &&
+            (await stat(platformFile)).isFile()
+          ) {
             platforms.push({
               name: path.basename(platformFile, platformFileExt),
               filePath: platformFile,
@@ -44,48 +60,67 @@ export namespace GameManager {
                 additionalApplications: [],
               },
             });
-          }          
-        } catch (e) { console.error(e); }
+          }
+        } catch (e) {
+          console.error(e);
+        }
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
 
     // Read and parse all platform files
     const errors: LoadPlatformError[] = [];
-    await Promise.all(platforms.map(async (platform) => {
-      try {
-        const content = await readFile(platform.filePath);
-        const data: any | undefined = fastXmlParser.parse(content.toString(), {
-          ignoreAttributes: true,
-          ignoreNameSpace: true,
-          parseNodeValue: true,
-          parseAttributeValue: false,
-          parseTrueNumberOnly: true,
-          // @TODO Look into which settings are most appropriate
-        });
-        if (!LaunchBox.formatPlatformFileData(data)) { throw new Error(`Failed to parse XML file: ${platform.filePath}`); }
+    await Promise.all(
+      platforms.map(async (platform) => {
+        try {
+          const content = await readFile(platform.filePath);
+          const data: any | undefined = fastXmlParser.parse(
+            content.toString(),
+            {
+              ignoreAttributes: true,
+              ignoreNameSpace: true,
+              parseNodeValue: true,
+              parseAttributeValue: false,
+              parseTrueNumberOnly: true,
+              // @TODO Look into which settings are most appropriate
+            }
+          );
+          if (!LaunchBox.formatPlatformFileData(data)) {
+            throw new Error(`Failed to parse XML file: ${platform.filePath}`);
+          }
 
-        // Populate platform
-        platform.data = data;
-        platform.collection = GameParser.parse(data, platform.library);
-
-        // Success!
-        state.platforms.push(platform);
-      } catch (e) {
-        errors.push({
-          ...copyError(e),
-          filePath: platform.filePath,
-        });
-      }
-    }));
+          // Populate platform
+          platform.data = data;
+          platform.collection = GameParser.parse(data, platform.library);
+          platform.collection.games.forEach((g) => {
+            const imagesForGame = images.find((i) => i.GameName == g.title);
+            if (imagesForGame) g.thumbnailPath = imagesForGame.BoxThumbnail;
+          });
+          // Success!
+          state.platforms.push(platform);
+        } catch (e) {
+          errors.push({
+            ...copyError(e),
+            filePath: platform.filePath,
+          });
+        }
+      })
+    );
 
     return errors;
   }
 
   /** (Similar to Array.find(), but it looks through all platforms) */
-  export function findGame(platforms: GamePlatform[], predicate: (this: undefined, game: IGameInfo, index: number) => boolean): IGameInfo | undefined {
+  export function findGame(
+    platforms: GamePlatform[],
+    predicate: (this: undefined, game: IGameInfo, index: number) => boolean
+  ): IGameInfo | undefined {
     for (let i = 0; i < platforms.length; i++) {
       const game = platforms[i].collection.games.find(predicate);
-      if (game) { return game; }
+      if (game) {
+        return game;
+      }
     }
   }
 
@@ -97,7 +132,10 @@ export namespace GameManager {
    * - New games and add-apps will be pushed to the end of their platform
    * - Existing games and add-apps will retain their position in the platform file
    */
-  export function updateMeta(state: GameManagerState, opts: UpdateMetaOptions): UpdateMetaResult {
+  export function updateMeta(
+    state: GameManagerState,
+    opts: UpdateMetaOptions
+  ): UpdateMetaResult {
     const edited: GamePlatform[] = []; // All platforms that were edited and need to be saved
 
     // Delete all games with the same ID and the add-apps that belongs to them
@@ -108,40 +146,58 @@ export namespace GameManager {
     const libraryName = opts.game.library || UNKNOWN_LIBRARY;
     const platformName = opts.game.platform || UNKNOWN_PLATFORM;
 
-    const platformIndex = state.platforms.findIndex(p => p.name === platformName && p.library === libraryName);
+    const platformIndex = state.platforms.findIndex(
+      (p) => p.name === platformName && p.library === libraryName
+    );
     const platform = state.platforms[platformIndex];
     if (platform) {
       // Get game index
       let gameIndex = result.gameIndices[platformIndex][0];
-      if (typeof gameIndex !== 'number') {
+      if (typeof gameIndex !== "number") {
         gameIndex = platform.collection.games.length;
       }
       // Insert game
-      state.log(`Insert Game (ID: "${opts.game.id}", index: ${gameIndex}, platform: "${platform.name}", library: "${platform.library}")`);
+      state.log(
+        `Insert Game (ID: "${opts.game.id}", index: ${gameIndex}, platform: "${platform.name}", library: "${platform.library}")`
+      );
       platform.collection.games.splice(gameIndex, 0, opts.game);
-      platform.data.LaunchBox.Game.splice(gameIndex, 0, GameParser.reverseParseGame(opts.game));
+      platform.data.LaunchBox.Game.splice(
+        gameIndex,
+        0,
+        GameParser.reverseParseGame(opts.game)
+      );
 
       // Insert app-apps
       for (let addApp of opts.addApps) {
         // Get app-app index
         let index = result.addAppIndices[platformIndex][addApp.id];
-        if (typeof index !== 'number') {
+        if (typeof index !== "number") {
           index = platform.collection.additionalApplications.length;
         }
         // Insert app-app
-        state.log(`Insert AddApp (ID: "${addApp.id}", index: ${index}, platform: "${platform.name}", library: "${platform.library}")`);
+        state.log(
+          `Insert AddApp (ID: "${addApp.id}", index: ${index}, platform: "${platform.name}", library: "${platform.library}")`
+        );
         platform.collection.additionalApplications.splice(index, 0, addApp);
-        platform.data.LaunchBox.AdditionalApplication.splice(index, 0, GameParser.reverseParseAdditionalApplication(addApp));
+        platform.data.LaunchBox.AdditionalApplication.splice(
+          index,
+          0,
+          GameParser.reverseParseAdditionalApplication(addApp)
+        );
       }
 
       edited.push(platform);
     } else {
       const newCollection: IGameCollection = {
-        games: [ opts.game ],
-        additionalApplications: [ ...opts.addApps ],
+        games: [opts.game],
+        additionalApplications: [...opts.addApps],
       };
       const platform: GamePlatform = {
-        filePath: path.join(state.platformsPath, libraryName, platformName + '.xml'),
+        filePath: path.join(
+          state.platformsPath,
+          libraryName,
+          platformName + ".xml"
+        ),
         name: platformName,
         library: libraryName,
         collection: newCollection,
@@ -161,7 +217,10 @@ export namespace GameManager {
    * @param state State to remove games and add-apps from.
    * @param opts ID of the game to remove.
    */
-  export function removeGameAndAddApps(state: GameManagerState, gameId: string): RemoveGameResult {
+  export function removeGameAndAddApps(
+    state: GameManagerState,
+    gameId: string
+  ): RemoveGameResult {
     const edited: GamePlatform[] = []; // All platforms that were edited and need to be saved
     const gameIndices: number[][] = [];
     const addAppIndices: Record<string, number>[] = [];
@@ -174,7 +233,9 @@ export namespace GameManager {
       const games = platform.collection.games;
       for (let j = games.length - 1; j >= 0; j--) {
         if (games[j].id === gameId) {
-          state.log(`Remove Game (ID: "${gameId}", index: ${j}, platform: "${platform.name}", library: "${platform.library}")`);
+          state.log(
+            `Remove Game (ID: "${gameId}", index: ${j}, platform: "${platform.name}", library: "${platform.library}")`
+          );
           changed = true;
           games.splice(j, 1);
         }
@@ -183,7 +244,9 @@ export namespace GameManager {
       const addApps = platform.collection.additionalApplications;
       for (let j = addApps.length - 1; j >= 0; j--) {
         if (addApps[j].gameId === gameId) {
-          state.log(`Remove AddApp (ID: "${addApps[j].id}", index: ${j}, platform: "${platform.name}", library: "${platform.library}")`);
+          state.log(
+            `Remove AddApp (ID: "${addApps[j].id}", index: ${j}, platform: "${platform.name}", library: "${platform.library}")`
+          );
           changed = true;
           addApps.splice(j, 1);
         }
@@ -191,13 +254,19 @@ export namespace GameManager {
 
       const gameInd = LaunchBox.removeGame(platform.data, gameId);
       gameIndices.push(gameInd);
-      if (gameInd.length > 0) { changed = true; }
+      if (gameInd.length > 0) {
+        changed = true;
+      }
 
       const addAppInd = LaunchBox.removeAddAppsOfGame(platform.data, gameId);
       addAppIndices.push(addAppInd);
-      if (addAppInd.length > 0) { changed = true; }
+      if (addAppInd.length > 0) {
+        changed = true;
+      }
 
-      if (changed) { edited.push(platform); }
+      if (changed) {
+        edited.push(platform);
+      }
     }
 
     return {
@@ -214,16 +283,24 @@ export namespace GameManager {
    * @param state State that the platforms belongs to.
    * @param platform Platforms to save.
    */
-  export function savePlatforms(state: GameManagerState, platforms: GamePlatform[]): Promise<void> {
-    return Promise.all(platforms.map(p => savePlatformToFile(state, p))).then(() => undefined);
+  export function savePlatforms(
+    state: GameManagerState,
+    platforms: GamePlatform[]
+  ): Promise<void> {
+    return Promise.all(platforms.map((p) => savePlatformToFile(state, p))).then(
+      () => undefined
+    );
   }
 
-  function savePlatformToFile(state: GameManagerState, platform: GamePlatform): Promise<void> {
+  function savePlatformToFile(
+    state: GameManagerState,
+    platform: GamePlatform
+  ): Promise<void> {
     // Parse data into XML
     const parser = new fastXmlParser.j2xParser({
       ignoreAttributes: true, // Attributes are never used, this might increase performance?
       supressEmptyNode: true, // Empty tags are self closed ("<Tag />" instead of "<Tag></Tag>")
-      format: true,           // Breaks XML into multiple lines and indents it
+      format: true, // Breaks XML into multiple lines and indents it
     });
     const parsedData = parser.parse(platform.data);
     // Save data to the platform's file
@@ -242,11 +319,15 @@ export namespace GameManager {
   }
 
   /** Create a new raw platform with the same data as a parsed platform */
-  function createRawFromCollection(collection: IGameCollection): IRawPlatformFile {
+  function createRawFromCollection(
+    collection: IGameCollection
+  ): IRawPlatformFile {
     return {
       LaunchBox: {
-        Game: collection.games.map(game => GameParser.reverseParseGame(game)),
-        AdditionalApplication: collection.additionalApplications.map(addApp => GameParser.reverseParseAdditionalApplication(addApp)),
+        Game: collection.games.map((game) => GameParser.reverseParseGame(game)),
+        AdditionalApplication: collection.additionalApplications.map((addApp) =>
+          GameParser.reverseParseAdditionalApplication(addApp)
+        ),
       },
     };
   }
@@ -259,7 +340,9 @@ export namespace LaunchBox {
    * @param data Object to format.
    */
   export function formatPlatformFileData(data: any): data is IRawPlatformFile {
-    if (!isObject(data)) { return false; }
+    if (!isObject(data)) {
+      return false;
+    }
 
     // If there are multiple "LaunchBox" elements, remove all but the first (There should never be more than one!)
     if (Array.isArray(data.LaunchBox)) {
@@ -270,21 +353,26 @@ export namespace LaunchBox {
       data.LaunchBox = {};
     }
 
-    data.LaunchBox.Game                  = convertEntitiesToArray(data.LaunchBox.Game);
-    data.LaunchBox.AdditionalApplication = convertEntitiesToArray(data.LaunchBox.AdditionalApplication);
+    data.LaunchBox.Game = convertEntitiesToArray(data.LaunchBox.Game);
+    data.LaunchBox.AdditionalApplication = convertEntitiesToArray(
+      data.LaunchBox.AdditionalApplication
+    );
 
     return true;
 
     function isObject(obj: any): boolean {
-      return (typeof obj === 'object') && (data.LaunchBox !== null);
+      return typeof obj === "object" && data.LaunchBox !== null;
     }
 
     function convertEntitiesToArray(entries: any | any[] | undefined): any[] {
-      if (Array.isArray(entries)) { // Multiple entries
+      if (Array.isArray(entries)) {
+        // Multiple entries
         return entries;
-      } else if (entries) { // One entry
-        return [ entries ];
-      } else { // No entries
+      } else if (entries) {
+        // One entry
+        return [entries];
+      } else {
+        // No entries
         return [];
       }
     }
@@ -314,7 +402,10 @@ export namespace LaunchBox {
    * @param gameId ID of the game the add-apps belong to.
    * @returns Indices of all removed add-apps (result[addapp_id] = addapp_index).
    */
-  export function removeAddAppsOfGame(data: IRawPlatformFile, gameId: string): Record<string, number> {
+  export function removeAddAppsOfGame(
+    data: IRawPlatformFile,
+    gameId: string
+  ): Record<string, number> {
     const indices: Record<string, number> = {};
     const addApps = data.LaunchBox.AdditionalApplication;
     for (let i = addApps.length - 1; i >= 0; i--) {
@@ -338,8 +429,11 @@ function removeDupes<T>(array: T[]): T[] {
     const a = result[i];
     let j = i + 1;
     while (j < result.length) {
-      if (result[j] === a) { result.splice(j, 1); }
-      else { j++; }
+      if (result[j] === a) {
+        result.splice(j, 1);
+      } else {
+        j++;
+      }
     }
   }
   return result;

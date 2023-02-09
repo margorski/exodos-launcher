@@ -1,15 +1,15 @@
-import { OpenDialogOptions } from 'electron';
-import { SharedSocket } from './back/SharedSocket';
-import { IAppConfigData } from './config/interfaces';
-import { LangContainer, LangFile } from './lang';
-import { ILogEntry } from './Log/interface';
-import { IAppPreferencesData } from './preferences/interfaces';
-import { Theme } from './ThemeFile';
+import { OpenDialogOptions } from "electron";
+import { SharedSocket } from "./back/SharedSocket";
+import { IAppConfigData } from "./config/interfaces";
+import { LangContainer, LangFile } from "./lang";
+import { ILogEntry } from "./Log/interface";
+import { IAppPreferencesData } from "./preferences/interfaces";
+import { Theme } from "./ThemeFile";
 
 /** Recursively set all properties as optional. */
 export type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
-}
+};
 
 /** Subtract the properties of U from T. */
 export type Subtract<T, U extends object> = Pick<T, Exclude<keyof T, keyof U>>;
@@ -23,7 +23,7 @@ export interface IMainWindowExternal {
 
   /** The type of OS this is running on. */
   platform: NodeJS.Platform;
-  
+
   /** Minimize the window */
   minimize(): void;
 
@@ -62,7 +62,7 @@ export interface IMainWindowExternal {
   log: {
     entries: ILogEntry[];
     offset: number;
-  }
+  };
 
   /** Current status of the services. */
   services: IService[];
@@ -97,20 +97,33 @@ export interface IMainWindowExternal {
 }
 
 /** Callback for Electron.dialog.showOpenDialog */
-export type ElectronOpenDialogCallback = (filePaths?: string[], bookmarks?: string[]) => void;
+export type ElectronOpenDialogCallback = (
+  filePaths?: string[],
+  bookmarks?: string[]
+) => void;
 
 /** Obtain the return type of a function */
-export type ReturnTypeOf<T extends AnyFunction> = T extends (...args: ArgumentTypesOf<T>) => infer R ? R : any;
+export type ReturnTypeOf<T extends AnyFunction> = T extends (
+  ...args: ArgumentTypesOf<T>
+) => infer R
+  ? R
+  : any;
 
 /** Obtain the argument types of a function */
-export type ArgumentTypesOf<F extends AnyFunction> = F extends (...args: infer A) => any ? A : never;
+export type ArgumentTypesOf<F extends AnyFunction> = F extends (
+  ...args: infer A
+) => any
+  ? A
+  : never;
 
 /** Any function. */
 export type AnyFunction = (...args: any[]) => any;
 
 export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
-export interface IObjectMap<T> { [key: string]: T|undefined; }
+export interface IObjectMap<T> {
+  [key: string]: T | undefined;
+}
 
 /** Make all properties optional recursively. */
 export type RecursivePartial<T> = {
@@ -119,17 +132,17 @@ export type RecursivePartial<T> = {
 
 /** From T, pick a set of properties whose values are assignable to U. */
 export type PickType<T, U> = {
-  [P in keyof T]: T[P] extends U ? P : never
+  [P in keyof T]: T[P] extends U ? P : never;
 }[keyof T];
 
 /** IPC channels used to relay window events from main to renderer. */
 export enum WindowIPC {
   /** Sent whenever the windows "maximize" status changes. (main -> renderer). */
-  WINDOW_MAXIMIZE = 'window-maximize',
+  WINDOW_MAXIMIZE = "window-maximize",
   /** Sent whenever the windows position changes. (main -> renderer). */
-  WINDOW_MOVE     = 'window-move',
+  WINDOW_MOVE = "window-move",
   /** Sent whenever the windows size changes. (main -> renderer). */
-  WINDOW_RESIZE   = 'window-resize',
+  WINDOW_RESIZE = "window-resize",
 }
 
 /** IPC channels used to relay game manager events from  */
@@ -155,7 +168,7 @@ export enum ProcessState {
   /** The process is running. */
   RUNNING,
   /** The process is being killed (it has been requested to terminate, but it hasn't been terminated yet). */
-  KILLING
+  KILLING,
 }
 
 /** Actions that can be performed on a service. */
@@ -165,7 +178,7 @@ export enum ProcessAction {
   /** Stop the process if it is running */
   STOP,
   /** Stop the process if it is running, then start the process */
-  RESTART
+  RESTART,
 }
 
 /** Object describing the state of a service. */
@@ -176,12 +189,12 @@ export type IService = {
   pid: number;
   startTime: number;
   info: IBackProcessInfo;
-}
+};
 
 export type GamePlaylist = GamePlaylistContent & {
   /** Filename of the playlist (unique for each playlist). */
   filename: string;
-}
+};
 
 /** Data contained inside a Playlist file. */
 export type GamePlaylistContent = {
@@ -197,7 +210,7 @@ export type GamePlaylistContent = {
   icon?: string;
   /** Route of the library this playlist is for. */
   library?: string;
-}
+};
 
 /** An entry inside a Playlist file. */
 export type GamePlaylistEntry = {
@@ -205,7 +218,7 @@ export type GamePlaylistEntry = {
   id: string;
   /* Optional notes related to the game (probably about why the game is in the playlist). */
   notes?: string;
-}
+};
 
 export type ExecMapping = {
   /** Windows path */
@@ -214,18 +227,16 @@ export type ExecMapping = {
   linux?: string;
   /** Mac path (if exists) */
   darwin?: string;
-}
-
+};
 
 /** Game properties that will have suggestions gathered and displayed. */
-export type SuggestionProps = (
-    'tags'
-  | 'platform'
-  | 'playMode'
-  | 'status'
-  | 'applicationPath'
-  | 'library'
-)
+export type SuggestionProps =
+  | "tags"
+  | "platform"
+  | "playMode"
+  | "status"
+  | "applicationPath"
+  | "library";
 
 /** Temporarily used to store the suggestions for performance reasons. */
 export type GamePropSuggestionsMap = {
@@ -233,15 +244,15 @@ export type GamePropSuggestionsMap = {
   [P in SuggestionProps]: {
     /** The key is the suggestion value. */
     [key: string]: true; // (Some arbitrary true-y value, it is only used to confirm that the key exists)
-  }
-}
+  };
+};
 
 /** Suggestions for game properties organized by property. */
 export type GamePropSuggestions = {
   [P in SuggestionProps]: string[];
-}
+};
 
 export type ExodosBackendInfo = {
   changelog: string;
   version: string;
-}
+};
