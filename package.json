@@ -82,7 +82,7 @@
     "@typescript-eslint/parser": "1.13.0",
     "coveralls": "3.0.9",
     "cross-env": "5.2.0",
-    "electron": "19.0.1",
+    "electron": "22.3.21",
     "electron-builder": "21.2.0",
     "enzyme": "3.11.0",
     "enzyme-adapter-react-16": "1.15.5",
