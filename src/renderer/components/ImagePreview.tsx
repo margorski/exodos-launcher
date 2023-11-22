@@ -87,7 +87,7 @@ export class ImagePreview extends React.Component<ImagePreviewProps, ImagePrevie
   calculateSize(): { width: number, height: number } {
     const fixedScale = 2.0;
     const { scaleUp, imageWidth, imageHeight, borderWidth, borderHeight } = this.state;
-    
+
     let width = imageWidth * fixedScale;
     let height = imageHeight * fixedScale;
 

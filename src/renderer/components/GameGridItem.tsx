@@ -39,7 +39,7 @@ export function GameGridItem(props: GameGridItemProps) {
     // Set element attributes
     const attributes: any = {};
     attributes[GameGridItem.idAttribute] = id;
-      
+
     const msdosIcon = `${getFileServerURL()}/Images/Platforms/MS-DOS/Clear Logo/MS-DOS.png`;
     const haveThumbnail = thumbnail.trim().length > 0;
     const displayThumbnail = haveThumbnail ? thumbnail : msdosIcon;

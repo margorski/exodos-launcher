@@ -170,7 +170,7 @@ export class GameGrid extends React.Component<GameGridProps> {
     if (!games) { throw new Error('Trying to render a cell in game grid, but no games are found?'); }
     const index: number = props.rowIndex * this.columns + props.columnIndex;
     const game = games[index];
-    
+
     return game ? (
       <GameGridItem
         { ...props }

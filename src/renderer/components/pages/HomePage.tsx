@@ -51,21 +51,21 @@ export function HomePage(props: HomePageProps) {
         <QuickStartItem icon='wrench'>
           <Link
             to='#'
-            onClick={() => onLaunchCommand('install_linux_dependencies.sh')}>
+            onClick={() => onLaunchCommand('install_linux_dependencies.bsh')}>
             Install dependencies
           </Link>
         </QuickStartItem>
         <QuickStartItem icon='cog'>
           <Link
             to='#'
-            onClick={() => onLaunchCommand('Setup.sh')}>
+            onClick={() => onLaunchCommand('Setup.bsh')}>
             eXoDOS Setup
           </Link>
         </QuickStartItem>
         <QuickStartItem icon='data-transfer-download'>
           <Link
             to='#'
-            onClick={() => onLaunchCommand('eXo/Update/update.sh')}>
+            onClick={() => onLaunchCommand('eXo/Update/update.bsh')}>
             Check for updates
           </Link>
         </QuickStartItem>
@@ -135,7 +135,7 @@ export function HomePage(props: HomePageProps) {
     <div className='home-page__two_columns_container'>
       <div className='home-page__header'>
         <div className=''>
-          <div><h1>eXoDOS v5</h1></div> 
+          <div><h1>eXoDOS v5/v6</h1></div> 
           <div><h4>{`backend: ${props.exodosBackendInfo ? props.exodosBackendInfo.version : ''}`}</h4></div>
           <div><h4>{`exogui: ${app.getVersion()}`}</h4></div>
         </div>

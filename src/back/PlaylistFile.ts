@@ -23,8 +23,8 @@ export namespace PlaylistFile {
           reject(error);
         } else {
           let parsed: any;
-          try { 
-          //  parsed = JSON.parse(data.toString()); 
+          try {
+          //  parsed = JSON.parse(data.toString());
           parsed = fastXmlParser.parse(data.toString(), {
                     ignoreAttributes: true,
                     ignoreNameSpace: true,
@@ -110,8 +110,8 @@ export namespace PlaylistFile {
       author: '',
       icon: '',
       library: '',
-      games: playlistGames.map((game:any) => { 
-          return { id: game.GameId, notes: '' }
+      games: playlistGames.map((game:any) => {
+          return { id: game.GameId, notes: '' };
         })
     };
 

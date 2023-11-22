@@ -33,7 +33,7 @@ export const isDev: boolean = (function () {
     ? getFromEnv
     : process.defaultApp ||
         /node_modules[\\/]electron[\\/]/.test(process.execPath);
-})();
+}());
 
 /**
  * Get the path of the folder containing the config and preferences files.

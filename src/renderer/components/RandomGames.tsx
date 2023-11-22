@@ -42,7 +42,7 @@ export function RandomGames(props: RandomGamesProps) {
         platform={game.platform}
         thumbnail={getGameThumbnailUrl(game.thumbnailPath)}
         isSelected={false}
-        isDragged={false} 
+        isDragged={false}
         isInstalled={false} />
     ))
   ), [games]);

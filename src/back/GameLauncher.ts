@@ -215,7 +215,7 @@ export namespace GameLauncher {
           opts.game.title
         }" Cannot find terminal-emulator, please install any from given list: ${terminalEmulatorCommands
           .map((te) => te.executableName)
-          .join(", ")}.`,
+          .join(", ")}.\nReason: ${e}`,
       });
       return;
     }
@@ -226,7 +226,8 @@ export namespace GameLauncher {
       source: logSource,
       content:
         `Launch Game "${opts.game.title}" (PID: ${proc.pid}) [\n` +
-        `    applicationPath: "${opts.game.applicationPath}",\n` +
+        `    applicationPath (from xml): "${opts.game.applicationPath}",\n` +
+        `    applicationPath (real): "${gamePath}",\n` +
         `    launchCommand:   "${opts.game.launchCommand}",\n` +
         `    command:         "${command}" ]`,
     });
@@ -261,7 +262,8 @@ export namespace GameLauncher {
         `Launch Game Setup "${opts.game.title}" (PID: ${proc.pid}) [\n` +
         `    applicationPath: "${opts.game.applicationPath}",\n` +
         `    launchCommand:   "${opts.game.launchCommand}",\n` +
-        `    command:         "${command}" ]`,
+        `    command:         "${command}", \n` +
+        `    platform: "${process.platform}" ]`,
     });
   }
 
@@ -276,9 +278,10 @@ export namespace GameLauncher {
   ): string {
     const platform = process.platform;
 
+
     // Bat files won't work on Wine, force a .sh file on non-Windows platforms instead. Sh File may not exist.
-    if (platform !== "win32" && filePath.endsWith(".bat")) {
-      return filePath.substring(0, filePath.length - 4) + ".sh";
+    if (platform !== "win32" && filePath.toLocaleLowerCase().endsWith(".bat")) {
+      return filePath.substring(0, filePath.length - 4) + ".bsh";
     }
 
     // Skip mapping if on Windows or Native application was not requested
@@ -307,7 +310,7 @@ export namespace GameLauncher {
       throw "Terminal emulator command not set. Probably default emulator was not found on system.";
     }
 
-    const isBashFile = filename.toLocaleLowerCase().endsWith(".sh");
+    const isBashFile = filename.toLocaleLowerCase().endsWith(".bsh") || filename.toLocaleLowerCase().endsWith(".sh");
     const linuxTerminalEmulatorCommand = isBashFile
       ? `${terminalEmulator.executableName} -e`
       : `xdg-open`;

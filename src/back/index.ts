@@ -363,7 +363,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
   state.localeCode = content.localeCode;
   state.exePath = content.exePath;
 
-  //Read configs & preferences
+  // Read configs & preferences
   const [pref, conf] = await Promise.all([
     PreferencesFile.readOrCreateFile(
       path.join(state.configFolder, preferencesFilename)
@@ -1660,7 +1660,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         // if (!cache) { state.queries[hash] =
 
         var cache = queryGames(query);
-        //} // @TODO Start clearing the cache if it gets too full
+        // } // @TODO Start clearing the cache if it gets too full
 
         respond<BrowseViewPageResponseData>(event.target, {
           id: req.id,

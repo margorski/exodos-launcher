@@ -226,7 +226,7 @@ export const unescapeHTML = (function () {
       }
     );
   };
-})();
+}());
 const escapeHTML = (function () {
   const escapeChars = {
     "¢": "cent",
@@ -252,4 +252,4 @@ const escapeHTML = (function () {
       return "&" + (escapeChars as any)[m] + ";";
     });
   };
-})();
+}());
