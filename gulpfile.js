@@ -126,7 +126,7 @@ function createBuildTargets(os, arch) {
     case 'win32':
       return Platform.WINDOWS.createTarget('nsis', archFromString(arch));
     case 'darwin':
-      return Platform.MAC.createTarget('dmg');
+      return Platform.MAC.createTarget('dmg', archFromString(arch));
     case 'linux':
       return Platform.LINUX.createTarget(['tar.gz', 'dir'], archFromString(arch));
   }
