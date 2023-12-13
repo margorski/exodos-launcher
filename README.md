@@ -9,6 +9,8 @@ The launcher for eXoDOS project.
 ## About
 The exogui is a desktop application made for browsing, storing and launching other applications (games, manuals etc.). It is specifically made for eXoDOS v5 project. Application is based on Flashpoint Launcher application. [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) is generally very cool project so do not forget to check their website. Exogui loads Launchbox configuration files format.
 
+If you need guidance on setting up eXoDOS on Linux, you can refer to the [linux guide page](https://www.retro-exo.com/linux.html) on the Retro-Exo website. If you encounter any issues, feel free to seek help on the #linux_port_for_nerds channel on the [eXoDOS Discord](https://discord.com/invite/37FYaUZ) server.
+
 ## Setup
 How to setup a development environment:
 1. Download the project (and extract it, if it was downloaded as an archive)
