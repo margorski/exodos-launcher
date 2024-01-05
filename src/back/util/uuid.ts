@@ -15,5 +15,5 @@ const guid = require("uuid/v4") as (options?: { random?: Buffer }) => string;
  * Node.JS.
  */
 export function uuid() {
-  return guid({ random: randomBytes(16) });
+    return guid({ random: randomBytes(16) });
 }

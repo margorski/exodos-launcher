@@ -11,15 +11,15 @@ const execFile = util.promisify(child_process.execFile);
  * @param argument An argument to pass the command. This argument should not cause any side effects. By default --version
  */
 export async function isInstalled(
-  binaryName: string,
-  argument = "--version"
+    binaryName: string,
+    argument = "--version",
 ): Promise<boolean> {
-  try {
-    await execFile(binaryName, [argument]);
-  } catch (e) {
-    return false;
-  }
-  return true;
+    try {
+        await execFile(binaryName, [argument]);
+    } catch (e) {
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -27,12 +27,12 @@ export async function isInstalled(
  * (This is copied straight out of the npm package 'electron-is-dev')
  */
 export const isDev: boolean = (function () {
-  const getFromEnv = parseInt(process.env.ELECTRON_IS_DEV || "", 10) === 1;
-  const isEnvSet = "ELECTRON_IS_DEV" in process.env;
-  return isEnvSet
-    ? getFromEnv
-    : process.defaultApp ||
-        /node_modules[\\/]electron[\\/]/.test(process.execPath);
+    const getFromEnv = parseInt(process.env.ELECTRON_IS_DEV || "", 10) === 1;
+    const isEnvSet = "ELECTRON_IS_DEV" in process.env;
+    return isEnvSet
+        ? getFromEnv
+        : process.defaultApp ||
+              /node_modules[\\/]electron[\\/]/.test(process.execPath);
 })();
 
 /**
@@ -40,18 +40,18 @@ export const isDev: boolean = (function () {
  * @param installed If the application is installed (instead of portable).
  */
 export function getMainFolderPath(): string {
-  return isDev
-    ? process.cwd() // Dev
-    : path.dirname(app.getPath("exe")); // Portable
+    return isDev
+        ? process.cwd() // Dev
+        : path.dirname(app.getPath("exe")); // Portable
 }
 
 /** Open a context menu, built from the specified template. */
 export function openContextMenu(template: MenuItemConstructorOptions[]): Menu {
-  const menu = Menu.buildFromTemplate(template);
-  const window = BrowserWindow.getFocusedWindow();
-  if (!window) {
-    throw Error("Browser window not initialized.");
-  }
-  menu.popup({ window: window });
-  return menu;
+    const menu = Menu.buildFromTemplate(template);
+    const window = BrowserWindow.getFocusedWindow();
+    if (!window) {
+        throw Error("Browser window not initialized.");
+    }
+    menu.popup({ window: window });
+    return menu;
 }

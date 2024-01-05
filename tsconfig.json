@@ -1,36 +1,27 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "noImplicitAny": true,
-    "sourceMap": true,
-    "outDir": "build",
-    "baseUrl": ".",
-    "target": "esnext",
-    "lib": ["es6", "es2015", "dom"],
-    "strict": true,
-    "jsx": "react",
-    "paths": {
-      "@shared/*": [ "./src/shared/*" ],
-      "@main/*": [ "./src/main/*" ],
-      "@back/*": [ "./src/back/*" ],
-      "@renderer/*": [ "./src/renderer/*" ],
-      "@tests/*": [ "./tests/*" ]
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "sourceMap": true,
+        "outDir": "build",
+        "baseUrl": ".",
+        "target": "esnext",
+        "lib": ["es6", "es2015", "dom"],
+        "strict": true,
+        "jsx": "react",
+        "paths": {
+            "@shared/*": ["./src/shared/*"],
+            "@main/*": ["./src/main/*"],
+            "@back/*": ["./src/back/*"],
+            "@renderer/*": ["./src/renderer/*"],
+            "@tests/*": ["./tests/*"]
+        },
+        "plugins": [
+            {
+                "transform": "ts-transform-paths"
+            }
+        ]
     },
-    "plugins": [
-      {
-          "transform": "ts-transform-paths",
-      }
-    ]
-  },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "./src/shared",
-  ],
-  "include": [
-    "./typings/**/*",
-    "./src",
-    "./tests"
-  ],
+    "exclude": ["node_modules", "dist", "build", "./src/shared"],
+    "include": ["./typings/**/*", "./src", "./tests"]
 }

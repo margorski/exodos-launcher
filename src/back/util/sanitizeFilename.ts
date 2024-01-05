@@ -7,44 +7,46 @@
 /* truncate-utf8-bytes */
 
 function isHighSurrogate(codePoint: number) {
-  return codePoint >= 0xd800 && codePoint <= 0xdbff;
+    return codePoint >= 0xd800 && codePoint <= 0xdbff;
 }
 
 function isLowSurrogate(codePoint: number) {
-  return codePoint >= 0xdc00 && codePoint <= 0xdfff;
+    return codePoint >= 0xdc00 && codePoint <= 0xdfff;
 }
 
 // Truncate string by size in bytes
 function truncate(string: string, byteLength: number): string {
-  if (typeof string !== 'string') {
-    throw new Error('Input must be string');
-  }
-
-  var charLength = string.length;
-  var curByteLength = 0;
-  var codePoint;
-  var segment;
-
-  for (var i = 0; i < charLength; i += 1) {
-    codePoint = string.charCodeAt(i);
-    segment = string[i];
-
-    if (isHighSurrogate(codePoint) && isLowSurrogate(string.charCodeAt(i + 1))) {
-      i += 1;
-      segment += string[i];
+    if (typeof string !== "string") {
+        throw new Error("Input must be string");
     }
 
-    curByteLength += Buffer.byteLength(segment);
+    var charLength = string.length;
+    var curByteLength = 0;
+    var codePoint;
+    var segment;
 
-    if (curByteLength === byteLength) {
-      return string.slice(0, i + 1);
-    }
-    else if (curByteLength > byteLength) {
-      return string.slice(0, i - segment.length + 1);
-    }
-  }
+    for (var i = 0; i < charLength; i += 1) {
+        codePoint = string.charCodeAt(i);
+        segment = string[i];
 
-  return string;
+        if (
+            isHighSurrogate(codePoint) &&
+            isLowSurrogate(string.charCodeAt(i + 1))
+        ) {
+            i += 1;
+            segment += string[i];
+        }
+
+        curByteLength += Buffer.byteLength(segment);
+
+        if (curByteLength === byteLength) {
+            return string.slice(0, i + 1);
+        } else if (curByteLength > byteLength) {
+            return string.slice(0, i - segment.length + 1);
+        }
+    }
+
+    return string;
 }
 
 /* node-sanitize-filename */
@@ -82,27 +84,27 @@ var reservedRe = /^\.+$/;
 var windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
 var windowsTrailingRe = /[. ]+$/;
 
-export function sanitizeFilename(input: string, replacement = '') {
-  if (typeof input !== 'string') {
-    throw new Error('Input must be string');
-  }
-  var sanitized = input
-    .replace(illegalRe, replacement)
-    .replace(controlRe, replacement)
-    .replace(reservedRe, replacement)
-    .replace(windowsReservedRe, replacement)
-    .replace(windowsTrailingRe, replacement);
-  return truncate(sanitized, 255);
+export function sanitizeFilename(input: string, replacement = "") {
+    if (typeof input !== "string") {
+        throw new Error("Input must be string");
+    }
+    var sanitized = input
+        .replace(illegalRe, replacement)
+        .replace(controlRe, replacement)
+        .replace(reservedRe, replacement)
+        .replace(windowsReservedRe, replacement)
+        .replace(windowsTrailingRe, replacement);
+    return truncate(sanitized, 255);
 }
 
-export function sanitizeFoldername(input: string, replacement = '') {
-  if (typeof input !== 'string') {
-    throw new Error('Input must be string');
-  }
-  var sanitized = input
-    .replace(illegalRe, replacement)
-    .replace(controlRe, replacement)
-    .replace(reservedRe, replacement)
-    .replace(windowsTrailingRe, replacement);
-  return truncate(sanitized, 255);
+export function sanitizeFoldername(input: string, replacement = "") {
+    if (typeof input !== "string") {
+        throw new Error("Input must be string");
+    }
+    var sanitized = input
+        .replace(illegalRe, replacement)
+        .replace(controlRe, replacement)
+        .replace(reservedRe, replacement)
+        .replace(windowsTrailingRe, replacement);
+    return truncate(sanitized, 255);
 }

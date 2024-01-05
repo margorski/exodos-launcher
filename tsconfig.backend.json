@@ -1,7 +1,4 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": [
-    "./src/renderer",
-    "./tests"
-  ]
+    "extends": "./tsconfig.json",
+    "exclude": ["./src/renderer", "./tests"]
 }

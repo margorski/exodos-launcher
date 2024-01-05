@@ -1,11 +1,8 @@
 {
-  "rules": {
-    "no-redundant-jsdoc": false,
-    "no-void-expression": false,
-    "promise-function-async": false,
-    "typedef": [
-      true,
-      "property-declaration"
-    ]
-  }
+    "rules": {
+        "no-redundant-jsdoc": false,
+        "no-void-expression": false,
+        "promise-function-async": false,
+        "typedef": [true, "property-declaration"]
+    }
 }

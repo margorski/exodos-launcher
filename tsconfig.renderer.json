@@ -1,11 +1,7 @@
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "jsx": "react",
-  },
-  "exclude": [
-    "./src/main",
-    "./src/back",
-    "./tests"
-  ]
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "jsx": "react"
+    },
+    "exclude": ["./src/main", "./src/back", "./tests"]
 }

@@ -5,7 +5,7 @@
 //
 // See
 //  https://github.com/kelektiv/node-uuid/issues/189
-const guid = require('uuid/v4') as (options?: { random?: Buffer }) => string;
+const guid = require("uuid/v4") as (options?: { random?: Buffer }) => string;
 
 /**
  * Fills a buffer with the required number of random bytes.
@@ -19,9 +19,9 @@ const guid = require('uuid/v4') as (options?: { random?: Buffer }) => string;
  *  https://github.com/kelektiv/node-uuid/issues/189
  */
 function getRandomBytes(count: number): Buffer {
-  const rndBuf = new Uint8Array(count);
-  crypto.getRandomValues(rndBuf);
-  return Buffer.from(rndBuf.buffer);
+    const rndBuf = new Uint8Array(count);
+    crypto.getRandomValues(rndBuf);
+    return Buffer.from(rndBuf.buffer);
 }
 
 /**
@@ -30,7 +30,7 @@ function getRandomBytes(count: number): Buffer {
  * Node.JS.
  */
 export function uuid() {
-  return guid({ random: getRandomBytes(16) });
+    return guid({ random: getRandomBytes(16) });
 }
 
 /**
@@ -43,37 +43,43 @@ export function uuid() {
  * @returns Whether or not the argument is a valid semi-UUIDv4 string
  */
 export function validateSemiUUID(uuid: string): boolean {
-  if (uuid.length !== 36) { return false; }
-  for (let i = 0; i < 36; i++) {
-    switch (i) {
-      case 8:
-      case 13:
-      case 18:
-      case 23:
-        if (uuid[i] !== '-') { return false; }
-        break;
-      default:
-        switch (uuid[i]) {
-          case '0':
-          case '1':
-          case '2':
-          case '3':
-          case '4':
-          case '5':
-          case '6':
-          case '7':
-          case '8':
-          case '9':
-          case 'a':
-          case 'b':
-          case 'c':
-          case 'd':
-          case 'e':
-          case 'f': break;
-          default: return false;
-        }
-        break;
+    if (uuid.length !== 36) {
+        return false;
     }
-  }
-  return true;
+    for (let i = 0; i < 36; i++) {
+        switch (i) {
+            case 8:
+            case 13:
+            case 18:
+            case 23:
+                if (uuid[i] !== "-") {
+                    return false;
+                }
+                break;
+            default:
+                switch (uuid[i]) {
+                    case "0":
+                    case "1":
+                    case "2":
+                    case "3":
+                    case "4":
+                    case "5":
+                    case "6":
+                    case "7":
+                    case "8":
+                    case "9":
+                    case "a":
+                    case "b":
+                    case "c":
+                    case "d":
+                    case "e":
+                    case "f":
+                        break;
+                    default:
+                        return false;
+                }
+                break;
+        }
+    }
+    return true;
 }
