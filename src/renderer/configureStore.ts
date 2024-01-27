@@ -6,13 +6,13 @@ import { ApplicationState, createRootReducer } from "./store";
 
 export default function configureStore(
     history: History,
-    initialState?: Partial<ApplicationState>,
+    initialState?: Partial<ApplicationState>
 ): Store<ApplicationState> {
     const composeEnhancers = composeWithDevTools({});
     // Create store
     return createStore(
         createRootReducer(history),
         initialState,
-        composeEnhancers(applyMiddleware(routerMiddleware(history))),
+        composeEnhancers(applyMiddleware(routerMiddleware(history)))
     );
 }

@@ -1564,7 +1564,10 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                         newConfig
                     );
                 } catch (error) {
-                    log({ source: "Launcher", content: error });
+                    log({
+                        source: "Launcher",
+                        content: error?.toString() ?? "",
+                    });
                 }
 
                 respond(event.target, {
@@ -2317,12 +2320,12 @@ function parseWrappedRequest(
     try {
         json = JSON.parse(str);
     } catch (error) {
-        if (typeof error === "object" && "message" in error) {
+        if (error && typeof error === "object" && "message" in error) {
             error.message =
                 'Failed to parse WrappedRequest. Failed to convert "data" into an object.\n' +
                 Coerce.str(error.message);
         }
-        return [undefined, error];
+        return [undefined, error as Error];
     }
 
     // Create result (and ensure the types except for data)

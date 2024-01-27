@@ -11,7 +11,7 @@ import { getDefaultConfigData, overwriteConfigData } from "@shared/config/util";
 export namespace ConfigFile {
     export function readFile(
         filePath: string,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): Promise<IAppConfigData> {
         return new Promise((resolve, reject) => {
             readJsonFile(filePath, "utf8")
@@ -22,27 +22,27 @@ export namespace ConfigFile {
 
     export function readFileSync(
         filePath: string,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): IAppConfigData {
         return parse(readJsonFileSync(filePath), onError);
     }
 
     export async function readOrCreateFile(
         filePath: string,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): Promise<IAppConfigData> {
         let error: Error | undefined, data: IAppConfigData | undefined;
 
         try {
             data = await readFile(filePath, onError);
         } catch (e) {
-            error = e;
+            error = e as Error;
         }
 
         if (error || !data) {
             data = deepCopy(getDefaultConfigData(process.platform));
             saveFile(filePath, data).catch(() =>
-                console.log("Failed to save default config file!"),
+                console.log("Failed to save default config file!")
             );
         }
 
@@ -51,20 +51,20 @@ export namespace ConfigFile {
 
     export function readOrCreateFileSync(
         filePath: string,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): IAppConfigData {
         let error: Error | undefined, data: IAppConfigData | undefined;
 
         try {
             data = readFileSync(filePath, onError);
         } catch (e) {
-            error = e;
+            error = e as Error;
         }
 
         if (error || !data) {
             data = deepCopy(getDefaultConfigData(process.platform));
             saveFile(filePath, data).catch(() =>
-                console.log("Failed to save default config file!"),
+                console.log("Failed to save default config file!")
             );
         }
 
@@ -73,7 +73,7 @@ export namespace ConfigFile {
 
     export function saveFile(
         filePath: string,
-        data: IAppConfigData,
+        data: IAppConfigData
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             // Convert config to json string
@@ -91,12 +91,12 @@ export namespace ConfigFile {
 
     function parse(
         json: any,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): IAppConfigData {
         return overwriteConfigData(
             deepCopy(getDefaultConfigData(process.platform)),
             json,
-            onError,
+            onError
         );
     }
 }

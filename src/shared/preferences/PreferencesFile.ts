@@ -15,20 +15,20 @@ export namespace PreferencesFile {
      */
     export async function readOrCreateFile(
         filePath: string,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): Promise<IAppPreferencesData> {
         let error: Error | undefined, data: IAppPreferencesData | undefined;
         // Try to get the data from the file
         try {
             data = await readFile(filePath, onError);
         } catch (e) {
-            error = e;
+            error = e as Error;
         }
         // If that failed, set data to default and save it to a new file
         if (error || !data) {
             data = deepCopy(defaultPreferencesData);
             await saveFile(filePath, data).catch(() =>
-                console.log("Failed to save default preferences file!"),
+                console.log("Failed to save default preferences file!")
             );
         }
         // Return
@@ -37,7 +37,7 @@ export namespace PreferencesFile {
 
     export function readFile(
         filePath: string,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): Promise<IAppPreferencesData> {
         return new Promise((resolve, reject) => {
             readJsonFile(filePath, fileEncoding)
@@ -46,9 +46,9 @@ export namespace PreferencesFile {
                         overwritePreferenceData(
                             deepCopy(defaultPreferencesData),
                             json,
-                            onError,
-                        ),
-                    ),
+                            onError
+                        )
+                    )
                 )
                 .catch(reject);
         });
@@ -56,7 +56,7 @@ export namespace PreferencesFile {
 
     export function saveFile(
         filePath: string,
-        data: IAppPreferencesData,
+        data: IAppPreferencesData
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             // Convert preferences to json string

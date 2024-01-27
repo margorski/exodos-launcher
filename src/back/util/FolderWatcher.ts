@@ -172,9 +172,10 @@ export class FolderWatcher extends WrappedEventEmitter {
                 this._watcher = fs.watch(
                     this._folderPath,
                     { persistent: false },
-                    eventAggregator(this.onWatcherChange.bind(this), {
-                        time: 25,
-                    })
+                    () =>
+                        eventAggregator(this.onWatcherChange.bind(this), {
+                            time: 25,
+                        })
                 );
                 fixFsWatcher(this._watcher); // (Fix a bug with node/electron)
                 // Relay errors

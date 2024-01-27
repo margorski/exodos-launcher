@@ -14,13 +14,13 @@ import {
 
 export function updatePreferencesData(
     data: DeepPartial<IAppPreferencesData>,
-    send: boolean = true,
+    send: boolean = true
 ) {
     const preferences = window.External.preferences;
     // @TODO Figure out the delta change of the object tree, and only send the changes
     preferences.data = overwritePreferenceData(
         deepCopy(preferences.data),
-        data,
+        data
     );
     if (preferences.onUpdate) {
         preferences.onUpdate();
@@ -74,7 +74,7 @@ export const defaultPreferencesData: Readonly<IAppPreferencesData> =
 export function overwritePreferenceData(
     source: IAppPreferencesData,
     data: DeepPartial<IAppPreferencesData>,
-    onError?: (error: string) => void,
+    onError?: (error: string) => void
 ): IAppPreferencesData {
     const parser = new ObjectParser({
         input: data,
@@ -86,11 +86,11 @@ export function overwritePreferenceData(
     // Parse root object
     parser.prop(
         "browsePageGameScale",
-        (v) => (source.browsePageGameScale = num(v)),
+        (v) => (source.browsePageGameScale = num(v))
     );
     parser.prop(
         "browsePageShowExtreme",
-        (v) => (source.browsePageShowExtreme = !!v),
+        (v) => (source.browsePageShowExtreme = !!v)
     );
     parser.prop("enableEditing", (v) => (source.enableEditing = !!v));
     parser.prop("fallbackLanguage", (v) => (source.fallbackLanguage = str(v)));
@@ -98,33 +98,33 @@ export function overwritePreferenceData(
     parser.prop("browsePageLayout", (v) => (source.browsePageLayout = num(v)));
     parser.prop(
         "browsePageShowLeftSidebar",
-        (v) => (source.browsePageShowLeftSidebar = !!v),
+        (v) => (source.browsePageShowLeftSidebar = !!v)
     );
     parser.prop(
         "browsePageShowRightSidebar",
-        (v) => (source.browsePageShowRightSidebar = !!v),
+        (v) => (source.browsePageShowRightSidebar = !!v)
     );
     parser.prop(
         "browsePageLeftSidebarWidth",
-        (v) => (source.browsePageLeftSidebarWidth = num(v)),
+        (v) => (source.browsePageLeftSidebarWidth = num(v))
     );
     parser.prop(
         "browsePageRightSidebarWidth",
-        (v) => (source.browsePageRightSidebarWidth = num(v)),
+        (v) => (source.browsePageRightSidebarWidth = num(v))
     );
     parser.prop(
         "curatePageLeftSidebarWidth",
-        (v) => (source.curatePageLeftSidebarWidth = num(v)),
+        (v) => (source.curatePageLeftSidebarWidth = num(v))
     );
     parser.prop("showDeveloperTab", (v) => (source.showDeveloperTab = !!v));
     parser.prop("currentTheme", (v) => (source.currentTheme = str(v)), true);
     parser.prop(
         "lastSelectedLibrary",
-        (v) => (source.lastSelectedLibrary = str(v)),
+        (v) => (source.lastSelectedLibrary = str(v))
     );
     parser.prop(
         "gamesOrderBy",
-        (v) => (source.gamesOrderBy = strOpt(v, gameOrderByOptions, "title")),
+        (v) => (source.gamesOrderBy = strOpt(v, gameOrderByOptions, "title"))
     );
     parser.prop(
         "gamesOrder",
@@ -132,13 +132,13 @@ export function overwritePreferenceData(
             (source.gamesOrder = strOpt(
                 v,
                 gameOrderReverseOptions,
-                "ascending",
-            )),
+                "ascending"
+            ))
     );
     parser.prop("defaultLibrary", (v) => (source.defaultLibrary = str(v)));
     parser.prop(
         "saveImportedCurations",
-        (v) => (source.saveImportedCurations = !!v),
+        (v) => (source.saveImportedCurations = !!v)
     );
     // Parse window object
     parseMainWindow(parser.prop("mainWindow"), source.mainWindow);
@@ -151,7 +151,7 @@ export function overwritePreferenceData(
 
 function parseMainWindow(
     parser: IObjectParserProp<any>,
-    output: IAppPreferencesDataMainWindow,
+    output: IAppPreferencesDataMainWindow
 ): void {
     parser.prop("x", (v) => (output.x = num(v)), true);
     parser.prop("y", (v) => (output.y = num(v)), true);
@@ -170,7 +170,7 @@ function parseMainWindow(
 function strOpt<T extends string>(
     value: any,
     options: T[],
-    defaultOption: T,
+    defaultOption: T
 ): T {
     value = str(value);
     for (let option of options) {

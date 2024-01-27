@@ -25,12 +25,12 @@ const config = {
 /* ------ Watch ------ */
 
 gulp.task("watch-back", (done) => {
-    execute("npx ttsc --project tsconfig.backend.json --pretty --watch", done);
+    execute("npx tspc --project tsconfig.backend.json --pretty --watch", done);
 });
 
 gulp.task("watch-renderer", (done) => {
     const mode = config.isRelease ? "production" : "development";
-    execute(`npx webpack --color true --mode "${mode}" --watch`, done);
+    execute(`npx webpack --mode "${mode}" --watch`, done);
 });
 
 gulp.task("watch-static", () => {
@@ -40,12 +40,12 @@ gulp.task("watch-static", () => {
 /* ------ Build ------ */
 
 gulp.task("build-back", (done) => {
-    execute("npx ttsc --project tsconfig.backend.json --pretty", done);
+    execute("npx tspc --project tsconfig.backend.json --pretty", done);
 });
 
 gulp.task("build-renderer", (done) => {
     const mode = config.isRelease ? "production" : "development";
-    execute(`npx webpack --color true --mode "${mode}"`, done);
+    execute(`npx webpack --mode "${mode}"`, done);
 });
 
 gulp.task("copy-static", () => {

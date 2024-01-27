@@ -111,13 +111,13 @@ export function main(init: Init): void {
                                 state._version = data
                                     ? parseInt(
                                           data.toString().replace(/[^\d]/g, ""),
-                                          10,
+                                          10
                                       ) // (Remove all non-numerical characters, then parse it as a string)
                                     : -1; // (Version not found error code)
                                 resolve(null);
-                            },
+                            }
                         );
-                    }),
+                    })
             )
             // Load or generate secret
             .then(async () => {
@@ -128,7 +128,7 @@ export function main(init: Init): void {
                 ) {
                     const secretFilePath = path.join(
                         state.mainFolderPath,
-                        "secret.txt",
+                        "secret.txt"
                     );
                     try {
                         state._secret = await readFile(secretFilePath, {
@@ -142,7 +142,7 @@ export function main(init: Init): void {
                             });
                         } catch (e) {
                             console.warn(
-                                `Failed to save new secret to disk.\n${e}`,
+                                `Failed to save new secret to disk.\n${e}`
                             );
                         }
                     }
@@ -158,18 +158,19 @@ export function main(init: Init): void {
                         state.backProc = fork(
                             path.join(__dirname, "../back/index.js"),
                             undefined,
-                            { detached: true },
+                            { detached: true }
                         );
                         // Wait for process to initialize
-                        state.backProc.once("message", (port) => {
+                        state.backProc.once("message", (msg) => {
+                            const port = parseInt(msg.toString());
                             if (port >= 0) {
                                 state.backHost.port = port.toString();
                                 resolve();
                             } else {
                                 reject(
                                     new Error(
-                                        "Failed to start server in back process. Perhaps because it could not find an available port.",
-                                    ),
+                                        "Failed to start server in back process. Perhaps because it could not find an available port."
+                                    )
                                 );
                             }
                         });
@@ -192,7 +193,7 @@ export function main(init: Init): void {
                             acceptRemote: !!init.args["host-remote"],
                         };
                         state.backProc.send(JSON.stringify(msg));
-                    }),
+                    })
             );
         }
         // Connect to back and start renderer
@@ -206,8 +207,8 @@ export function main(init: Init): void {
                             ws.onclose = () => {
                                 reject(
                                     new Error(
-                                        "Failed to authenticate connection to back.",
-                                    ),
+                                        "Failed to authenticate connection to back."
+                                    )
                                 );
                             };
                             ws.onerror = (event) => {
@@ -222,8 +223,8 @@ export function main(init: Init): void {
                                 ws.send(state._secret);
                             };
                         }),
-                        TIMEOUT_DELAY,
-                    ),
+                        TIMEOUT_DELAY
+                    )
                 )
                 // Send init message
                 .then((ws) =>
@@ -231,7 +232,7 @@ export function main(init: Init): void {
                         new Promise((resolve, reject) => {
                             ws.onmessage = (event) => {
                                 const res: WrappedResponse = JSON.parse(
-                                    event.data.toString(),
+                                    event.data.toString()
                                 );
                                 if (res.type === BackOut.GET_MAIN_INIT_DATA) {
                                     const data: GetMainInitDataResponse =
@@ -249,14 +250,14 @@ export function main(init: Init): void {
                             };
                             ws.send(JSON.stringify(req));
                         }),
-                        TIMEOUT_DELAY,
-                    ),
+                        TIMEOUT_DELAY
+                    )
                 )
                 // Create main window
                 .then(() =>
                     app.whenReady().then(() => {
                         createMainWindow();
-                    }),
+                    })
                 );
         }
         // Catch errors
@@ -295,7 +296,7 @@ export function main(init: Init): void {
         if (process.platform === "win32" && !state._sentLocaleCode) {
             const didSend = state.socket.send<any, SetLocaleData>(
                 BackIn.SET_LOCALE,
-                app.getLocale().toLowerCase(),
+                app.getLocale().toLowerCase()
             );
             if (didSend) {
                 state._sentLocaleCode = true;
@@ -303,7 +304,7 @@ export function main(init: Init): void {
         }
         // Reject all permission requests since we don't need any permissions.
         session.defaultSession.setPermissionRequestHandler(
-            (webContents, permission, callback) => callback(false),
+            (webContents, permission, callback) => callback(false)
         );
         // Ignore proxy settings with chromium APIs (makes WebSockets not close when the Redirector changes proxy settings)
         session.defaultSession.setProxy({
@@ -368,7 +369,7 @@ export function main(init: Init): void {
 
     function onAppWebContentsCreated(
         event: Electron.Event,
-        webContents: Electron.WebContents,
+        webContents: Electron.WebContents
     ): void {
         // Open links to web pages in the OS-es default browser
         // (instead of navigating to it with the electron window that opened it)
@@ -415,12 +416,12 @@ export function main(init: Init): void {
     function createMainWindow(): BrowserWindow {
         if (!state.preferences) {
             throw new Error(
-                "Preferences must be set before you can open a window.",
+                "Preferences must be set before you can open a window."
             );
         }
         if (!state.config) {
             throw new Error(
-                "Configs must be set before you can open a window.",
+                "Configs must be set before you can open a window."
             );
         }
         const mw = state.preferences.mainWindow;
@@ -477,7 +478,7 @@ export function main(init: Init): void {
                 WindowIPC.WINDOW_MOVE,
                 pos[0],
                 pos[1],
-                isMaximized,
+                isMaximized
             );
         });
         // Replay window's move event to the renderer
@@ -491,7 +492,7 @@ export function main(init: Init): void {
                 WindowIPC.WINDOW_RESIZE,
                 size[0],
                 size[1],
-                isMaximized,
+                isMaximized
             );
         });
         // Derefence window when closed
@@ -512,7 +513,7 @@ export function main(init: Init): void {
         return new Promise((resolve, reject) => {
             const handle = setTimeout(() => {
                 reject(
-                    new Error(`Timeout (${(ms / 1000).toFixed(1)} seconds).`),
+                    new Error(`Timeout (${(ms / 1000).toFixed(1)} seconds).`)
                 );
             }, ms);
             promise

@@ -24,22 +24,22 @@ type Context = {
 type ObjectParserMapFunc<P> = (
     item: IObjectParserProp<P[Extract<keyof P, string>]>,
     label: keyof P,
-    map: P,
+    map: P
 ) => void;
 type ObjectParserMapRawFunc<P> = (
     item: P[Extract<keyof P, string>],
     label: Extract<keyof P, string>,
-    map: P,
+    map: P
 ) => void;
 type ObjectParserArrayFunc<P> = (
     item: P extends Array<any> ? IObjectParserProp<P[number]> : never,
     index: number,
-    array: P,
+    array: P
 ) => void;
 type ObjectParserArrayRawFunc<P> = (
     item: P extends Array<any> ? P[number] : never,
     index: number,
-    array: P,
+    array: P
 ) => void;
 
 /** Interface for ObjectParserProp. */
@@ -82,7 +82,7 @@ export interface IObjectParserProp<P> {
      */
     prop<L extends keyof P>(
         label: L,
-        optional?: boolean,
+        optional?: boolean
     ): IObjectParserProp<P[L]>;
 
     /**
@@ -95,7 +95,7 @@ export interface IObjectParserProp<P> {
     prop<L extends keyof P>(
         label: L,
         func?: (prop: P[L]) => void,
-        optional?: boolean,
+        optional?: boolean
     ): IObjectParserProp<P[L]>;
 }
 
@@ -140,16 +140,20 @@ class ObjectParserProp<P> implements IObjectParserProp<P> {
                 const item = new ObjectParserProp(
                     prop[label],
                     this._context,
-                    createStack(this._stack, label),
+                    createStack(this._stack, label)
                 );
-                func(item, label, prop);
+                func(
+                    item as IObjectParserProp<P[Extract<keyof P, string>]>,
+                    label,
+                    prop
+                );
             }
         } else {
             this._context.onError(
                 new ObjectParserError(
                     this._stack,
-                    "Property is not a non-array object.",
-                ),
+                    "Property is not a non-array object."
+                )
             );
         }
         return this;
@@ -165,8 +169,8 @@ class ObjectParserProp<P> implements IObjectParserProp<P> {
             this._context.onError(
                 new ObjectParserError(
                     this._stack,
-                    "Property is not a non-array object.",
-                ),
+                    "Property is not a non-array object."
+                )
             );
         }
         return this;
@@ -179,13 +183,13 @@ class ObjectParserProp<P> implements IObjectParserProp<P> {
                 const item = new ObjectParserProp(
                     prop[i],
                     this._context,
-                    createStack(this._stack, i),
+                    createStack(this._stack, i)
                 );
                 func(item as any, i, prop);
             }
         } else {
             this._context.onError(
-                new ObjectParserError(this._stack, "Property is not an array."),
+                new ObjectParserError(this._stack, "Property is not an array.")
             );
         }
         return this;
@@ -199,7 +203,7 @@ class ObjectParserProp<P> implements IObjectParserProp<P> {
             }
         } else {
             this._context.onError(
-                new ObjectParserError(this._stack, "Property is not an array."),
+                new ObjectParserError(this._stack, "Property is not an array.")
             );
         }
         return this;
@@ -208,7 +212,7 @@ class ObjectParserProp<P> implements IObjectParserProp<P> {
     prop<L extends keyof P>(
         label: L,
         funcOrOptional?: ((prop: P[L]) => void) | boolean,
-        optional?: boolean,
+        optional?: boolean
     ): IObjectParserProp<P[L]> {
         // Figure out which argument is used for what purpose
         let func: ((prop: P[L]) => void) | undefined; // ("func" from parameter)
@@ -232,19 +236,19 @@ class ObjectParserProp<P> implements IObjectParserProp<P> {
             }
             // Create and return wrapper (around property)
             const prop = this._property && this._property[label];
-            return new ObjectParserProp(
-                prop,
+            return new ObjectParserProp<P>(
+                prop as P,
                 this._context,
-                createStack(this._stack, label),
-            );
+                createStack(this._stack, label)
+            ) as IObjectParserProp<P[L]>;
         } else {
             // Error callback
             if (!isOptional) {
                 this._context.onError(
                     new ObjectParserError(
                         this._stack,
-                        `Property "${label}" was not found.`,
-                    ),
+                        `Property "${String(label)}" was not found.`
+                    )
                 );
             }
             // Create and return wrapper (around nothing)
@@ -301,7 +305,7 @@ export class ObjectParser<T> extends ObjectParserProp<T> {
  */
 function createStack(
     stack: string[],
-    label: string | number | Symbol,
+    label: string | number | Symbol
 ): string[] {
     const newStack = stack.slice();
     newStack.push(label + "");
@@ -317,7 +321,7 @@ function stackToString(stack: string[]): string {
         return "";
     }
     return stack.reduce(
-        (prev, cur) => prev + (isArrayIndex(cur) ? `[${cur}]` : `.${cur}`),
+        (prev, cur) => prev + (isArrayIndex(cur) ? `[${cur}]` : `.${cur}`)
     );
 }
 

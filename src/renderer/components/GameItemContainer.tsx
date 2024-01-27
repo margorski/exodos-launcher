@@ -8,30 +8,30 @@ export type GameItemContainerProps = HTMLDivProps & {
     realRef?: JSX.IntrinsicElements["div"]["ref"];
     onGameSelect?: (
         event: React.MouseEvent<HTMLDivElement>,
-        gameId: string | undefined,
+        gameId: string | undefined
     ) => void;
     onGameLaunch?: (
         event: React.MouseEvent<HTMLDivElement>,
-        gameId: string,
+        gameId: string
     ) => void;
     onGameContextMenu?: (
         event: React.MouseEvent<HTMLDivElement>,
-        gameId: string,
+        gameId: string
     ) => void;
     onGameDragStart?: (
         event: React.DragEvent<HTMLDivElement>,
-        gameId: string,
+        gameId: string
     ) => void;
     onGameDragEnd?: (
         event: React.DragEvent<HTMLDivElement>,
-        gameId: string,
+        gameId: string
     ) => void;
     /**
      * Find the game ID of an element (or sub-element) of a game.
      * @param element Element or sub-element of a game.
      * @returns The game's ID (or undefined if no game was found).
      */
-    findGameId: (element: EventTarget) => string | undefined;
+    findGameId?: (element: EventTarget) => string | undefined;
 };
 
 /**
@@ -113,7 +113,7 @@ export class GameItemContainer extends React.Component<GameItemContainerProps> {
 
     /** Short-hand for "props.findGameId". */
     findGameId(target: EventTarget): string | undefined {
-        return this.props.findGameId(target);
+        return this.props.findGameId?.(target);
     }
 }
 
@@ -122,7 +122,7 @@ export class GameItemContainer extends React.Component<GameItemContainerProps> {
  * @param props Properties to copy.
  */
 function filterDivProps(
-    props: GameItemContainerProps,
+    props: GameItemContainerProps
 ): JSX.IntrinsicElements["div"] {
     const rest = Object.assign({}, props);
     delete rest.realRef;

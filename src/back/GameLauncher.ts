@@ -71,7 +71,7 @@ export namespace GameLauncher {
         for (var te of terminalEmulatorCommands) {
             if (fs.existsSync(`${BIN_DIRECTORY}${te.executableName}`)) {
                 console.log(
-                    `Found ${te.executableName}. Setting as default terminal-emulator.`,
+                    `Found ${te.executableName}. Setting as default terminal-emulator.`
                 );
                 terminalEmulator = te;
                 return;
@@ -85,7 +85,7 @@ export namespace GameLauncher {
     export function launchCommand(
         appPath: string,
         appArgs: string,
-        log: LogFunc,
+        log: LogFunc
     ): Promise<void> {
         const command = createCommand(appPath, appArgs);
         const proc = exec(command);
@@ -109,7 +109,7 @@ export namespace GameLauncher {
     }
 
     export function launchAdditionalApplication(
-        opts: LaunchAddAppOpts,
+        opts: LaunchAddAppOpts
     ): Promise<void> {
         // @FIXTHIS It is not possible to open dialog windows from the back process (all electron APIs are undefined).
         switch (opts.addApp.applicationPath) {
@@ -127,8 +127,8 @@ export namespace GameLauncher {
                 const folderPath = fixSlashes(
                     path.join(
                         opts.fpPath,
-                        path.posix.join("Extras", opts.addApp.launchCommand),
-                    ),
+                        path.posix.join("Extras", opts.addApp.launchCommand)
+                    )
                 );
                 return opts
                     .openExternal(folderPath, { activate: true })
@@ -152,9 +152,9 @@ export namespace GameLauncher {
                         getApplicationPath(
                             opts.addApp.applicationPath,
                             opts.execMappings,
-                            opts.native,
-                        ),
-                    ),
+                            opts.native
+                        )
+                    )
                 );
                 const appArgs: string = opts.addApp.launchCommand;
                 return launchCommand(appPath, appArgs, opts.log);
@@ -201,9 +201,9 @@ export namespace GameLauncher {
                 getApplicationPath(
                     opts.game.applicationPath,
                     opts.execMappings,
-                    opts.native,
-                ),
-            ),
+                    opts.native
+                )
+            )
         );
         const gameArgs: string = opts.game.launchCommand;
 
@@ -243,13 +243,13 @@ export namespace GameLauncher {
         let proc: ChildProcess;
         const setupPath = opts.game.applicationPath.replace(
             getFilename(opts.game.applicationPath),
-            "install.sh",
+            "install.sh"
         );
         const gamePath: string = fixSlashes(
             path.join(
                 opts.fpPath,
-                getApplicationPath(setupPath, opts.execMappings, opts.native),
-            ),
+                getApplicationPath(setupPath, opts.execMappings, opts.native)
+            )
         );
 
         const gameArgs: string = opts.game.launchCommand;
@@ -274,7 +274,7 @@ export namespace GameLauncher {
     function getApplicationPath(
         filePath: string,
         execMappings: ExecMapping[],
-        native: boolean,
+        native: boolean
     ): string {
         const platform = process.platform;
 
@@ -328,15 +328,15 @@ export namespace GameLauncher {
             log({
                 source: logSource,
                 content: `${event} (PID: ${padStart(
-                    proc.pid,
-                    5,
+                    proc.pid ?? -1,
+                    5
                 )}) ${stringifyArray(args, stringifyArrayOpts)}`,
             });
         };
         doStuffs(
             proc,
             [/* 'close', */ "disconnect", "error", "exit", "message"],
-            logStuff,
+            logStuff
         );
         if (proc.stdout) {
             proc.stdout.on("data", (data) => {
@@ -358,7 +358,7 @@ const stringifyArrayOpts = {
 function doStuffs(
     emitter: EventEmitter,
     events: string[],
-    callback: (event: string, args: any[]) => void,
+    callback: (event: string, args: any[]) => void
 ): void {
     for (let i = 0; i < events.length; i++) {
         const e: string = events[i];
@@ -376,7 +376,7 @@ function escapeWin(str: string): string {
     return splitQuotes(str).reduce(
         (acc, val, i) =>
             acc + (i % 2 === 0 ? val.replace(/[\^&<>|]/g, "^$&") : `"${val}"`),
-        "",
+        ""
     );
 }
 
@@ -441,7 +441,7 @@ const unityOutputResponses: UnityOutputResponse[] = [
             }).then((response) => {
                 if (!proc.stdin) {
                     throw new Error(
-                        'Failed to signal to Unity starter. Can not access its "standard in".',
+                        'Failed to signal to Unity starter. Can not access its "standard in".'
                     );
                 }
                 if (response === 0) {

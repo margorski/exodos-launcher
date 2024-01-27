@@ -48,7 +48,7 @@ export class ManagedChildProcess extends EventEmitter {
         cwd: string,
         detached: boolean,
         autoRestart: boolean,
-        info: IBackProcessInfo,
+        info: IBackProcessInfo
     ) {
         super();
         this.id = id;
@@ -61,7 +61,7 @@ export class ManagedChildProcess extends EventEmitter {
 
     /** Get the process ID (or -1 if the process is not running). */
     public getPid(): number {
-        return this.process ? this.process.pid : -1;
+        return this.process ? this.process.pid ?? -1 : -1;
     }
 
     /** Get the state of the process. */
@@ -100,11 +100,11 @@ export class ManagedChildProcess extends EventEmitter {
                 .on("exit", (code, signal) => {
                     if (code) {
                         this.logContent(
-                            `${this.name} exited with code ${code}`,
+                            `${this.name} exited with code ${code}`
                         );
                     } else {
                         this.logContent(
-                            `${this.name} exited with signal ${signal}`,
+                            `${this.name} exited with signal ${signal}`
                         );
                     }
                     const wasRunning = this.state === ProcessState.RUNNING;
@@ -116,7 +116,7 @@ export class ManagedChildProcess extends EventEmitter {
                 })
                 .on("error", (error) => {
                     this.logContent(
-                        `${this.name} failed to start - ${error.message}`,
+                        `${this.name} failed to start - ${error.message}`
                     );
                     this.setState(ProcessState.STOPPED);
                     this.process = undefined;
@@ -142,11 +142,11 @@ export class ManagedChildProcess extends EventEmitter {
             this.process.once("exit", (code, signal) => {
                 if (code) {
                     this.logContent(
-                        `Old ${this.name} exited with code ${code}`,
+                        `Old ${this.name} exited with code ${code}`
                     );
                 } else {
                     this.logContent(
-                        `Old ${this.name} exited with signal ${signal}`,
+                        `Old ${this.name} exited with signal ${signal}`
                     );
                 }
                 this._isRestarting = false;
@@ -191,7 +191,7 @@ export class ManagedChildProcess extends EventEmitter {
             }
         } catch (e) {
             console.warn(
-                `ManagedChildProcess failed to log content: "${content}" (type: ${typeof content})`,
+                `ManagedChildProcess failed to log content: "${content}" (type: ${typeof content})`
             );
         }
     };

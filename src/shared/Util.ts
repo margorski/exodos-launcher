@@ -23,7 +23,7 @@ type ReadFileOptions =
  */
 export function readJsonFile(
     path: string,
-    options?: ReadFileOptions,
+    options?: ReadFileOptions
 ): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         fs.readFile(path, options, (error: any, data: any) => {
@@ -80,7 +80,7 @@ export function getFilePathExtension(filepath: string): string {
  */
 export function getFilename(filePath: string): string {
     return filePath.substr(
-        Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")) + 1,
+        Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")) + 1
     );
 }
 
@@ -121,7 +121,7 @@ export type StringifyArrayOpts = {
  */
 export function stringifyArray(
     array: Array<any>,
-    opts?: StringifyArrayOpts,
+    opts?: StringifyArrayOpts
 ): string {
     const trimStrings = (opts && opts.trimStrings) || false;
     // Build string
@@ -212,7 +212,7 @@ export function shallowStrictEquals(first: any, second: any): boolean {
  * @param source Source object to copy data from
  * @returns Target object
  */
-export function recursiveReplace<T = any>(target: T, source: any): T {
+export function recursiveReplace<T extends object>(target: T, source: any): T {
     // Skip if source is missing
     if (!source) {
         return target;
@@ -259,7 +259,7 @@ export function deepCopy<T>(source: T): T {
  * @returns A promise that resolves when either all files have been called back for or recursion is aborted
  */
 export async function recursiveDirectory(
-    options: IRecursiveDirectoryOptions,
+    options: IRecursiveDirectoryOptions
 ): Promise<void> {
     const shared: IRecursiveDirectorySharedObject = {
         options: Object.assign({}, options), // (Shallow Copy)
@@ -270,13 +270,13 @@ export async function recursiveDirectory(
 
 async function innerRecursiveDirectory(
     shared: IRecursiveDirectorySharedObject,
-    dirPath: string,
+    dirPath: string
 ): Promise<void> {
     return new Promise<void>(async function (resolve, reject) {
         // Full path to the current folder
         const fullDirPath: string = path.join(
             shared.options.directoryPath,
-            dirPath,
+            dirPath
         );
         // Get the names of all files and sub-folders
         fs.readdir(fullDirPath, function (err, files): void {
@@ -316,7 +316,7 @@ async function innerRecursiveDirectory(
                                 } else {
                                     await innerRecursiveDirectory(
                                         shared,
-                                        path.join(dirPath, filename),
+                                        path.join(dirPath, filename)
                                     ).catch(reject);
                                 }
                             }
@@ -324,7 +324,7 @@ async function innerRecursiveDirectory(
                             if (filesOrFoldersLeft === 0) {
                                 resolve();
                             }
-                        },
+                        }
                     );
                 }
             }
@@ -378,7 +378,7 @@ export function versionNumberToText(version: number): string {
         const d = new Date(version);
         return `${pad(d.getFullYear(), 4)}-${pad(d.getMonth() + 1, 2)}-${pad(
             d.getDate(),
-            2,
+            2
         )}`;
     } else {
         // (Error code)
@@ -438,15 +438,15 @@ export function createErrorProxy(title: string): any {
                     return errorProxyValue;
                 }
                 throw new Error(
-                    `You must not get a value from ${title} before it is initialzed (property: "${p.toString()}").`,
+                    `You must not get a value from ${title} before it is initialzed (property: "${p.toString()}").`
                 );
             },
             set: (target, p, value, receiver) => {
                 throw new Error(
-                    `You must not set a value from ${title} before it is initialzed (property: "${p.toString()}").`,
+                    `You must not set a value from ${title} before it is initialzed (property: "${p.toString()}").`
                 );
             },
-        },
+        }
     );
 }
 
