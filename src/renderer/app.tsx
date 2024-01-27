@@ -1,7 +1,6 @@
 import { ipcRenderer } from "electron";
 import { app, dialog } from "@electron/remote";
 import { UpdateInfo } from "electron-updater";
-import * as path from "path";
 import * as React from "react";
 import { RouteComponentProps } from "react-router-dom";
 import {
@@ -17,7 +16,6 @@ import {
     ExodosStateData,
     GetGamesTotalResponseData,
     GetPlaylistResponse,
-    GetSuggestionsResponseData,
     InitEventData,
     LanguageChangeData,
     LanguageListChangeData,
@@ -28,20 +26,13 @@ import {
     PlaylistUpdateData,
     QuickSearchData,
     QuickSearchResponseData,
-    SaveGameData,
-    SavePlaylistData,
     ServiceChangeData,
     ThemeChangeData,
     ThemeListChangeData,
-    UpdateConfigData,
 } from "@shared/back/types";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
 import { APP_TITLE, EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
-import {
-    IAdditionalApplicationInfo,
-    IGameInfo,
-    UNKNOWN_LIBRARY,
-} from "@shared/game/interfaces";
+import { UNKNOWN_LIBRARY } from "@shared/game/interfaces";
 import {
     ExodosBackendInfo,
     GamePlaylist,
@@ -56,7 +47,7 @@ import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { updatePreferencesData } from "@shared/preferences/util";
 import { setTheme } from "@shared/Theme";
 import { Theme } from "@shared/ThemeFile";
-import { deepCopy, getFileServerURL, recursiveReplace } from "@shared/Util";
+import { getFileServerURL, recursiveReplace } from "@shared/Util";
 import { GameOrderChangeEvent } from "./components/GameOrder";
 import { SplashScreen } from "./components/SplashScreen";
 import { TitleBar } from "./components/TitleBar";
@@ -211,12 +202,12 @@ export class App extends React.Component<AppProps, AppState> {
 
     async initializeExodosBackendInfo() {
         const changelogRequest = await fetch(
-            `${getFileServerURL()}/eXo/Update/changelog.txt`,
+            `${getFileServerURL()}/eXo/Update/changelog.txt`
         );
         const changelog = await changelogRequest.text();
 
         const versionRequest = await fetch(
-            `${getFileServerURL()}/eXo/Update/ver/ver_linux.txt`,
+            `${getFileServerURL()}/eXo/Update/ver/ver_linux.txt`
         );
         const version = await versionRequest.text();
 
@@ -271,7 +262,7 @@ export class App extends React.Component<AppProps, AppState> {
                         mainWindow: { x: x | 0, y: y | 0 },
                     });
                 }
-            }, 100),
+            }, 100)
         );
         ipcRenderer.on(
             WindowIPC.WINDOW_RESIZE,
@@ -280,7 +271,7 @@ export class App extends React.Component<AppProps, AppState> {
                     sender,
                     width: number,
                     height: number,
-                    isMaximized: boolean,
+                    isMaximized: boolean
                 ) => {
                     if (!isMaximized) {
                         updatePreferencesData({
@@ -291,8 +282,8 @@ export class App extends React.Component<AppProps, AppState> {
                         });
                     }
                 },
-                100,
-            ),
+                100
+            )
         );
         ipcRenderer.on(
             WindowIPC.WINDOW_MAXIMIZE,
@@ -300,7 +291,7 @@ export class App extends React.Component<AppProps, AppState> {
                 updatePreferencesData({
                     mainWindow: { maximized: isMaximized },
                 });
-            },
+            }
         );
 
         window.External.back.send<InitEventData>(
@@ -315,7 +306,7 @@ export class App extends React.Component<AppProps, AppState> {
                     nextLoaded[key] = true;
                 }
                 this.setState({ loaded: nextLoaded });
-            },
+            }
         );
 
         window.External.back.on("message", (res) => {
@@ -342,10 +333,10 @@ export class App extends React.Component<AppProps, AppState> {
                                                     playlists: res.data,
                                                 });
                                                 this.cachePlaylistIcons(
-                                                    res.data,
+                                                    res.data
                                                 );
                                             }
-                                        },
+                                        }
                                     );
                                     break;
 
@@ -359,20 +350,7 @@ export class App extends React.Component<AppProps, AppState> {
                                                     gamesTotal: res.data,
                                                 });
                                             }
-                                        },
-                                    );
-                                    window.External.back.send<GetSuggestionsResponseData>(
-                                        BackIn.GET_SUGGESTIONS,
-                                        undefined,
-                                        (res) => {
-                                            if (res.data) {
-                                                this.setState({
-                                                    suggestions:
-                                                        res.data.suggestions,
-                                                    appPaths: res.data.appPaths,
-                                                });
-                                            }
-                                        },
+                                        }
                                     );
                                     break;
                             }
@@ -492,79 +470,10 @@ export class App extends React.Component<AppProps, AppState> {
                             this.requestSelectedGame(
                                 resData.library ||
                                     getBrowseSubPath(
-                                        this.props.location.pathname,
-                                    ),
+                                        this.props.location.pathname
+                                    )
                             );
                         });
-                    }
-                    break;
-
-                case BackOut.SERVICE_CHANGE:
-                    {
-                        const resData: ServiceChangeData = res.data;
-                        if (resData.id) {
-                            const service = window.External.services.find(
-                                (item) => item.id === resData.id,
-                            );
-                            if (service) {
-                                recursiveReplace(service, resData);
-                            } else {
-                                window.External.services.push(
-                                    recursiveReplace(
-                                        {
-                                            id: "invalid",
-                                            name: "Invalid",
-                                            state: ProcessState.STOPPED,
-                                            pid: -1,
-                                            startTime: 0,
-                                            info: {
-                                                path: "",
-                                                filename: "",
-                                                arguments: [],
-                                                kill: false,
-                                            },
-                                        },
-                                        resData,
-                                    ),
-                                );
-                            }
-                        } else {
-                            throw new Error(
-                                "Service update did not reference a service.",
-                            );
-                        }
-                    }
-                    break;
-
-                case BackOut.LANGUAGE_CHANGE:
-                    {
-                        const resData: LanguageChangeData = res.data;
-                        this.setState({ lang: resData });
-                    }
-                    break;
-
-                case BackOut.LANGUAGE_LIST_CHANGE:
-                    {
-                        const resData: LanguageListChangeData = res.data;
-                        this.setState({ langList: resData });
-                    }
-                    break;
-
-                case BackOut.THEME_CHANGE:
-                    {
-                        const resData: ThemeChangeData = res.data;
-                        if (
-                            resData === this.props.preferencesData.currentTheme
-                        ) {
-                            setTheme(resData);
-                        }
-                    }
-                    break;
-
-                case BackOut.THEME_LIST_CHANGE:
-                    {
-                        const resData: ThemeListChangeData = res.data;
-                        this.setState({ themeList: resData });
                     }
                     break;
 
@@ -572,7 +481,7 @@ export class App extends React.Component<AppProps, AppState> {
                     {
                         const resData: PlaylistUpdateData = res.data;
                         const index = this.state.playlists.findIndex(
-                            (p) => p.filename === resData.filename,
+                            (p) => p.filename === resData.filename
                         );
                         if (index >= 0) {
                             const playlist = this.state.playlists[index];
@@ -595,7 +504,7 @@ export class App extends React.Component<AppProps, AppState> {
                                     playlist.filename
                                 ];
                                 URL.revokeObjectURL(
-                                    state.playlistIconCache[playlist.filename],
+                                    state.playlistIconCache[playlist.filename]
                                 ); // Free blob from memory
                             }
 
@@ -644,10 +553,10 @@ export class App extends React.Component<AppProps, AppState> {
                                         resData.library !== undefined
                                     ) {
                                         this.requestSelectedGame(
-                                            resData.library,
+                                            resData.library
                                         );
                                     }
-                                },
+                                }
                             );
                         } else {
                             this.setState({
@@ -662,7 +571,7 @@ export class App extends React.Component<AppProps, AppState> {
                         const resData: PlaylistRemoveData = res.data;
 
                         const index = this.state.playlists.findIndex(
-                            (p) => p.filename === resData,
+                            (p) => p.filename === resData
                         );
                         if (index >= 0) {
                             const playlists = [...this.state.playlists];
@@ -684,6 +593,75 @@ export class App extends React.Component<AppProps, AppState> {
                         }
                     }
                     break;
+
+                case BackOut.SERVICE_CHANGE:
+                    {
+                        const resData: ServiceChangeData = res.data;
+                        if (resData.id) {
+                            const service = window.External.services.find(
+                                (item) => item.id === resData.id
+                            );
+                            if (service) {
+                                recursiveReplace(service, resData);
+                            } else {
+                                window.External.services.push(
+                                    recursiveReplace(
+                                        {
+                                            id: "invalid",
+                                            name: "Invalid",
+                                            state: ProcessState.STOPPED,
+                                            pid: -1,
+                                            startTime: 0,
+                                            info: {
+                                                path: "",
+                                                filename: "",
+                                                arguments: [],
+                                                kill: false,
+                                            },
+                                        },
+                                        resData
+                                    )
+                                );
+                            }
+                        } else {
+                            throw new Error(
+                                "Service update did not reference a service."
+                            );
+                        }
+                    }
+                    break;
+
+                case BackOut.LANGUAGE_CHANGE:
+                    {
+                        const resData: LanguageChangeData = res.data;
+                        this.setState({ lang: resData });
+                    }
+                    break;
+
+                case BackOut.LANGUAGE_LIST_CHANGE:
+                    {
+                        const resData: LanguageListChangeData = res.data;
+                        this.setState({ langList: resData });
+                    }
+                    break;
+
+                case BackOut.THEME_CHANGE:
+                    {
+                        const resData: ThemeChangeData = res.data;
+                        if (
+                            resData === this.props.preferencesData.currentTheme
+                        ) {
+                            setTheme(resData);
+                        }
+                    }
+                    break;
+
+                case BackOut.THEME_LIST_CHANGE:
+                    {
+                        const resData: ThemeListChangeData = res.data;
+                        this.setState({ themeList: resData });
+                    }
+                    break;
             }
         });
 
@@ -691,13 +669,6 @@ export class App extends React.Component<AppProps, AppState> {
         if (this.state.playlists.length > 0) {
             this.cachePlaylistIcons(this.state.playlists);
         }
-
-        // -- Stuff that should probably be moved to the back --
-
-        // Load Upgrades
-        const folderPath = window.External.isDev
-            ? process.cwd()
-            : path.dirname(app.getPath("exe"));
     }
 
     componentDidUpdate(prevProps: AppProps, prevState: AppState) {
@@ -733,7 +704,7 @@ export class App extends React.Component<AppProps, AppState> {
                     },
                     () => {
                         this.requestSelectedGame(library);
-                    },
+                    }
                 );
             }
 
@@ -766,7 +737,7 @@ export class App extends React.Component<AppProps, AppState> {
                     },
                     () => {
                         this.requestSelectedGame(library);
-                    },
+                    }
                 );
             }
         }
@@ -826,7 +797,7 @@ export class App extends React.Component<AppProps, AppState> {
         const view = this.state.views[libraryPath];
         const playlists = this.orderAndFilterPlaylistsMemo(
             this.state.playlists,
-            libraryPath,
+            libraryPath
         );
 
         // Props to set to the router
@@ -839,7 +810,6 @@ export class App extends React.Component<AppProps, AppState> {
             platforms: this.state.platforms,
             platformsFlat: this.flattenPlatformsMemo(this.state.platforms),
             playlistIconCache: this.state.playlistIconCache,
-            onSaveGame: this.onSaveGame,
             onLaunchGame: this.onLaunchGame,
             onRequestGames: this.onRequestGames,
             onQuickSearch: this.onQuickSearch,
@@ -911,7 +881,7 @@ export class App extends React.Component<AppProps, AppState> {
                                         libraryPath &&
                                         getLibraryItemTitle(
                                             libraryPath,
-                                            this.state.lang.libraries,
+                                            this.state.lang.libraries
                                         )
                                     }
                                     currentCount={view ? view.total : 0}
@@ -921,7 +891,6 @@ export class App extends React.Component<AppProps, AppState> {
                                     scaleSliderValue={this.state.gameScale}
                                     onLayoutChange={this.onLayoutSelectorChange}
                                     layout={this.state.gameLayout}
-                                    onNewGameClick={this.onNewGameClick}
                                 />
                             </>
                         ) : undefined}
@@ -955,7 +924,7 @@ export class App extends React.Component<AppProps, AppState> {
                 },
                 () => {
                     this.requestSelectedGame(library);
-                },
+                }
             );
         }
         // Update Preferences Data (this is to make it get saved on disk)
@@ -975,10 +944,6 @@ export class App extends React.Component<AppProps, AppState> {
         this.setState({ gameLayout: value });
         // Update Preferences Data (this is to make it get saved on disk)
         updatePreferencesData({ browsePageLayout: value });
-    };
-
-    private onNewGameClick = (): void => {
-        this.setState({ wasNewGameClicked: true });
     };
 
     private onToggleLeftSidebarClick = (): void => {
@@ -1014,7 +979,7 @@ export class App extends React.Component<AppProps, AppState> {
     /** Set the selected playlist for a single "browse route" */
     private onSelectPlaylist = (
         library: string,
-        playlistId: string | undefined,
+        playlistId: string | undefined
     ): void => {
         const view = this.state.views[library];
         if (view) {
@@ -1031,49 +996,6 @@ export class App extends React.Component<AppProps, AppState> {
         }
     };
 
-    onSaveGame = (
-        game: IGameInfo,
-        addApps: IAdditionalApplicationInfo[] | undefined,
-        playlistNotes: string | undefined,
-        saveToFile: boolean,
-    ): void => {
-        const library = getBrowseSubPath(this.props.location.pathname);
-        window.External.back.send<any, SaveGameData>(BackIn.SAVE_GAME, {
-            game,
-            addApps: addApps || [],
-            library,
-            saveToFile,
-        });
-
-        const view = this.state.views[library];
-        if (view && view.selectedPlaylistId && view.selectedGameId) {
-            // Find the selected game in the selected playlist
-            const playlist = this.state.playlists.find(
-                (p) => p.filename === view.selectedPlaylistId,
-            );
-            if (playlist) {
-                const entryIndex = playlist.games.findIndex(
-                    (g) => g.id === view.selectedGameId,
-                );
-                if (
-                    entryIndex >= 0 &&
-                    playlist.games[entryIndex].notes !== playlistNotes
-                ) {
-                    // Save playlist
-                    const newPlaylist = deepCopy(playlist); // @PERF This should only copy the objects that are modified instead of the whole thing
-                    newPlaylist.games[entryIndex].notes = playlistNotes;
-                    window.External.back.send<any, SavePlaylistData>(
-                        BackIn.SAVE_PLAYLIST,
-                        {
-                            prevFilename: newPlaylist.filename,
-                            playlist: newPlaylist,
-                        },
-                    );
-                }
-            }
-        }
-    };
-
     onLaunchGame(gameId: string): void {
         window.External.back.send<LaunchGameData>(BackIn.LAUNCH_GAME, {
             id: gameId,
@@ -1086,7 +1008,7 @@ export class App extends React.Component<AppProps, AppState> {
 
         if (!view) {
             log(
-                `Failed to request game index. Current view is missing (Library: "${library}", View: "${view}").`,
+                `Failed to request game index. Current view is missing (Library: "${library}", View: "${view}").`
             );
             return;
         }
@@ -1127,10 +1049,10 @@ export class App extends React.Component<AppProps, AppState> {
                             },
                             () => {
                                 this.onRequestGames(0, 1);
-                            },
+                            }
                         );
                     }
-                },
+                }
             );
         }
     }
@@ -1141,7 +1063,7 @@ export class App extends React.Component<AppProps, AppState> {
 
         if (!view) {
             log(
-                `Failed to request games. Current view is missing (Library: "${library}", View: "${view}").`,
+                `Failed to request games. Current view is missing (Library: "${library}", View: "${view}").`
             );
             return;
         }
@@ -1201,7 +1123,7 @@ export class App extends React.Component<AppProps, AppState> {
         const view = this.state.views[library];
         if (!view) {
             log(
-                `Failed to quick search. Current view is missing (Library: "${library}", View: "${view}").`,
+                `Failed to quick search. Current view is missing (Library: "${library}", View: "${view}").`
             );
             return;
         }
@@ -1240,7 +1162,7 @@ export class App extends React.Component<AppProps, AppState> {
                         },
                     });
                 }
-            },
+            }
         );
     };
 
@@ -1251,8 +1173,8 @@ export class App extends React.Component<AppProps, AppState> {
                     if (p.icon) {
                         return cacheIcon(p.icon);
                     }
-                })(),
-            ),
+                })()
+            )
         ).then((urls) => {
             const cache: Record<string, string> = {};
             for (let i = 0; i < playlists.length; i++) {
@@ -1281,7 +1203,7 @@ export class App extends React.Component<AppProps, AppState> {
                           return 0;
                       })
                 : [];
-        },
+        }
     );
 
     private unmountBeforeClose = (): void => {
@@ -1305,7 +1227,7 @@ export class App extends React.Component<AppProps, AppState> {
                 }
             }
             return names;
-        },
+        }
     );
 }
 

@@ -5,7 +5,6 @@ import {
     stringifyBrowsePageLayout,
 } from "@shared/BrowsePageLayout";
 import { LangContainer } from "@shared/lang";
-import { formatString } from "@shared/utils/StringFormatter";
 import { WithPreferencesProps } from "../containers/withPreferences";
 import { gameScaleSpan } from "../Util";
 import { LangContext } from "../util/lang";
@@ -25,8 +24,6 @@ type OwnProps = {
     layout: BrowsePageLayout;
     /** Called when the value of the layout selector is changed. */
     onLayoutChange?: (value: BrowsePageLayout) => void;
-    /** Called when the "New Game" button is clicked. */
-    onNewGameClick?: () => void;
 };
 
 export type FooterProps = OwnProps & WithPreferencesProps;
@@ -55,7 +52,6 @@ export class Footer extends React.Component<FooterProps> {
             currentCount,
             currentLabel,
             layout,
-            onNewGameClick,
             preferencesData,
             scaleSliderValue,
             totalCount,
@@ -80,26 +76,13 @@ export class Footer extends React.Component<FooterProps> {
                 <div className="footer__wrap footer__right">
                     <div>
                         <div className="footer__right__inner">
-                            {/* New Game */}
-                            {preferencesData.enableEditing ? (
-                                <div className="footer__wrap">
-                                    <div className="simple-center">
-                                        <input
-                                            type="button"
-                                            value={strings.newGame}
-                                            onClick={onNewGameClick}
-                                            className="footer__new-game simple-button simple-center__vertical-inner"
-                                        />
-                                    </div>
-                                </div>
-                            ) : undefined}
                             {/* Layout Selector */}
                             <div className="footer__wrap">
                                 <div>
                                     <select
                                         className="footer__layout-selector simple-selector"
                                         value={stringifyBrowsePageLayout(
-                                            layout,
+                                            layout
                                         )}
                                         onChange={this.onLayoutChange}
                                     >
@@ -138,7 +121,7 @@ export class Footer extends React.Component<FooterProps> {
                                 <p>
                                     {Math.round(
                                         100 +
-                                            (scale - 0.5) * 200 * gameScaleSpan,
+                                            (scale - 0.5) * 200 * gameScaleSpan
                                     )}
                                     %
                                 </p>
@@ -151,7 +134,7 @@ export class Footer extends React.Component<FooterProps> {
     }
 
     onScaleSliderChange = (
-        event: React.ChangeEvent<HTMLInputElement>,
+        event: React.ChangeEvent<HTMLInputElement>
     ): void => {
         this.scaleSliderChange(event.target);
     };
@@ -161,7 +144,7 @@ export class Footer extends React.Component<FooterProps> {
             const value = parseBrowsePageLayout(event.target.value);
             if (value === undefined) {
                 throw new Error(
-                    `Layout selector option has an invalid value (${event.target.value})`,
+                    `Layout selector option has an invalid value (${event.target.value})`
                 );
             }
             this.props.onLayoutChange(value);
@@ -191,7 +174,7 @@ export class Footer extends React.Component<FooterProps> {
     scaleSliderChange(element: HTMLInputElement): void {
         if (this.props.onScaleSliderChange) {
             this.props.onScaleSliderChange(
-                element.valueAsNumber / Footer.scaleSliderMax,
+                element.valueAsNumber / Footer.scaleSliderMax
             );
         }
     }

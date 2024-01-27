@@ -1,11 +1,5 @@
 import { MessageBoxOptions, OpenExternalOptions } from "electron";
 import { IAppConfigData } from "../config/interfaces";
-import {
-    EditAddAppCuration,
-    EditCuration,
-    EditCurationMeta,
-    EditAddAppCurationMeta,
-} from "../curate/types";
 import { IAdditionalApplicationInfo, IGameInfo } from "../game/interfaces";
 import {
     GamePlaylist,
@@ -22,7 +16,6 @@ import { Theme } from "../ThemeFile";
 export enum BackIn {
     GENERIC_RESPONSE,
     INIT_LISTEN,
-    GET_SUGGESTIONS,
     GET_GAMES_TOTAL,
     SET_LOCALE,
     GET_EXEC,
@@ -32,21 +25,10 @@ export enum BackIn {
     RANDOM_GAMES,
     LAUNCH_GAME,
     LAUNCH_GAME_SETUP,
-    DELETE_GAME,
-    DUPLICATE_GAME,
-    EXPORT_GAME,
     LAUNCH_ADDAPP,
-    SAVE_IMAGE,
-    DELETE_IMAGE,
     QUICK_SEARCH,
     ADD_LOG,
-    SERVICE_ACTION,
     GET_PLAYLISTS,
-    SAVE_PLAYLIST,
-    DELETE_PLAYLIST,
-    IMPORT_CURATION,
-    LAUNCH_CURATION,
-    LAUNCH_CURATION_ADDAPP,
     LAUNCH_COMMAND,
     QUIT,
     /** Get a page of a browse view. */
@@ -81,7 +63,6 @@ export enum BackOut {
     THEME_LIST_CHANGE,
     PLAYLIST_UPDATE,
     PLAYLIST_REMOVE,
-    IMPORT_CURATION_RESPONSE,
     EXODOS_STATE_UPDATE,
     QUIT,
 }
@@ -147,11 +128,6 @@ export type GetRendererInitDataResponse = {
     localeCode: string;
 };
 
-export type GetSuggestionsResponseData = {
-    suggestions: Partial<GamePropSuggestions>;
-    appPaths: { [platform: string]: string };
-};
-
 export type GetGamesTotalResponseData = number;
 
 export type SetLocaleData = string;
@@ -175,28 +151,6 @@ export type OpenExternalResponseData = {
 
 export type LaunchGameData = {
     id: string;
-};
-
-export type SaveGameData = {
-    game: IGameInfo;
-    addApps: IAdditionalApplicationInfo[];
-    library: string;
-    saveToFile: boolean;
-};
-
-export type DeleteGameData = {
-    id: string;
-};
-
-export type DuplicateGameData = {
-    id: string;
-    dupeImages: boolean;
-};
-
-export type ExportGameData = {
-    id: string;
-    location: string;
-    metaOnly: boolean;
 };
 
 export type GetGameData = {
@@ -261,17 +215,6 @@ export type BrowseViewIndexData = {
 
 export type BrowseViewIndexResponseData = {
     index: number;
-};
-
-export type SaveImageData = {
-    folder: string;
-    id: string;
-    content: string;
-};
-
-export type DeleteImageData = {
-    folder: string;
-    id: string;
 };
 
 export type QuickSearchData = {
@@ -344,40 +287,6 @@ export type PlaylistUpdateData = GamePlaylist;
 export type PlaylistRemoveData = string;
 
 export type GetPlaylistResponse = GamePlaylist[];
-
-export type SavePlaylistData = {
-    prevFilename?: string;
-    playlist: GamePlaylist;
-};
-
-export type DeletePlaylistData = string;
-
-export type ImportCurationData = {
-    curation: EditCuration;
-    log?: boolean;
-    /**
-     * Note: This will have the incorrect prototype after being sent.
-     * Wrapping it new a new date object seems to work ("new Date(date)").
-     */
-    date?: Date;
-    saveCuration: boolean;
-};
-
-export type ImportCurationResponseData = {
-    error?: any;
-};
-
-export type LaunchCurationData = {
-    key: string;
-    meta: EditCurationMeta;
-    addApps: EditAddAppCurationMeta[];
-};
-
-export type LaunchCurationAddAppData = {
-    curationKey: string;
-    curation: EditAddAppCuration;
-    platform?: string;
-};
 
 export type ExodosStateData = {
     gamesEnabled?: boolean;

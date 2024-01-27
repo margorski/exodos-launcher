@@ -2,7 +2,6 @@ import { AppUpdater, UpdateInfo } from "electron-updater";
 import * as React from "react";
 import { Route, Switch } from "react-router-dom";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
-import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import {
     ExodosBackendInfo,
     GamePlaylist,
@@ -12,10 +11,6 @@ import { LangFile } from "@shared/lang";
 import { Theme } from "@shared/ThemeFile";
 import { GameOrderChangeEvent } from "./components/GameOrder";
 import { AboutPage } from "./components/pages/AboutPage";
-import {
-    DeveloperPage,
-    DeveloperPageProps,
-} from "./components/pages/DeveloperPage";
 import { NotFoundPage } from "./components/pages/NotFoundPage";
 import ConnectedBrowsePage, {
     ConnectedBrowsePageProps,
@@ -40,12 +35,6 @@ export type AppRouterProps = {
     appPaths: Record<string, string>;
     platforms: Record<string, string[]>;
     platformsFlat: string[];
-    onSaveGame: (
-        game: IGameInfo,
-        addApps: IAdditionalApplicationInfo[] | undefined,
-        playlistNotes: string | undefined,
-        saveToFile: boolean,
-    ) => void;
     onLaunchGame: (gameId: string) => void;
     onRequestGames: (start: number, end: number) => void;
     onQuickSearch: (search: string) => void;
@@ -84,10 +73,8 @@ export class AppRouter extends React.Component<AppRouterProps> {
             playlists: this.props.playlists,
             suggestions: this.props.suggestions,
             playlistIconCache: this.props.playlistIconCache,
-            onSaveGame: this.props.onSaveGame,
             onRequestGames: this.props.onRequestGames,
             onQuickSearch: this.props.onQuickSearch,
-
             order: this.props.order,
             gameScale: this.props.gameScale,
             gameLayout: this.props.gameLayout,
@@ -95,7 +82,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
             selectedPlaylistId: this.props.selectedPlaylistId,
             onSelectGame: this.props.onSelectGame,
             onSelectPlaylist: this.props.onSelectPlaylist,
-            wasNewGameClicked: this.props.wasNewGameClicked,
             gameLibrary: this.props.gameLibrary,
         };
         const configProps: ConnectedConfigPageProps = {
@@ -103,10 +89,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
             availableLangs: this.props.languages,
             platforms: this.props.platformsFlat,
             localeCode: this.props.localeCode,
-        };
-        const developerProps: DeveloperPageProps = {
-            platforms: this.props.platformsFlat,
-            playlists: this.props.playlists,
         };
         return (
             <Switch>
@@ -128,11 +110,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
                     {...configProps}
                 />
                 <PropsRoute path={Paths.ABOUT} component={AboutPage} />
-                <PropsRoute
-                    path={Paths.DEVELOPER}
-                    component={DeveloperPage}
-                    {...developerProps}
-                />
                 <Route component={NotFoundPage} />
             </Switch>
         );

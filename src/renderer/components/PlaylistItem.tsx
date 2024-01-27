@@ -3,70 +3,20 @@ import { useCallback, useMemo } from "react";
 import { GamePlaylist } from "@shared/interfaces";
 import { LangContext } from "../util/lang";
 import { InputElement, InputField } from "./InputField";
-import { OpenIcon } from "./OpenIcon";
 
 export type PlaylistItemProps = {
     playlist: GamePlaylist;
     iconFilename?: string;
-    editing: boolean;
     selected: boolean;
     playlistIconCache: Record<string, string>;
-    onDrop: (event: React.DragEvent, playlistId: string) => void;
-    onDragOver: (event: React.DragEvent) => void;
     onHeadClick: (playlistId: string, selected: boolean) => void;
     onSetIcon: () => void;
     onTitleChange: (event: React.ChangeEvent<InputElement>) => void;
     onAuthorChange: (event: React.ChangeEvent<InputElement>) => void;
-    onKeyDown: (event: React.KeyboardEvent<InputElement>) => void;
 };
 
 export function PlaylistItem(props: PlaylistItemProps) {
     const strings = React.useContext(LangContext).playlist;
-
-    const [dragOver, setDragOver] = React.useState(false);
-
-    const onDrop = useCallback(
-        (event: React.DragEvent) => {
-            if (dragOver) {
-                setDragOver(false);
-            }
-            props.onDrop(event, props.playlist.filename);
-        },
-        [dragOver, props.onDrop],
-    );
-
-    const onDragOver = useCallback(
-        (event: React.DragEvent): void => {
-            props.onDragOver(event);
-        },
-        [props.onDragOver, props.playlist],
-    );
-
-    const onDragEnter = useCallback(
-        (event: React.DragEvent): void => {
-            if (
-                !dragOver &&
-                !findParent(event.currentTarget, event.relatedTarget as Element)
-            ) {
-                setDragOver(true);
-                event.stopPropagation();
-            }
-        },
-        [dragOver],
-    );
-
-    const onDragLeave = useCallback(
-        (event: React.DragEvent): void => {
-            if (
-                dragOver &&
-                !findParent(event.currentTarget, event.relatedTarget as Element)
-            ) {
-                setDragOver(false);
-                event.stopPropagation();
-            }
-        },
-        [dragOver],
-    );
 
     const onHeadClick = useCallback(() => {
         props.onHeadClick(props.playlist.filename, props.selected);
@@ -79,13 +29,10 @@ export function PlaylistItem(props: PlaylistItemProps) {
     }, [props.onSetIcon, props.selected]);
 
     const icon = useMemo(() => {
-        return props.editing
-            ? `url("${props.playlist.icon}")`
-            : props.playlistIconCache[
-                  props.iconFilename || props.playlist.filename
-              ];
+        return props.playlistIconCache[
+            props.iconFilename || props.playlist.filename
+        ];
     }, [
-        props.editing,
         props.iconFilename,
         props.playlist.filename,
         props.playlist.icon,
@@ -96,21 +43,9 @@ export function PlaylistItem(props: PlaylistItemProps) {
     if (props.selected) {
         className += " playlist-list-item--selected";
     }
-    if (props.editing) {
-        className += " playlist-list-item--editing";
-    }
-    if (dragOver) {
-        className += " playlist-list-item--drag-over";
-    }
 
     return (
-        <div
-            className={className}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onDragEnter={onDragEnter}
-            onDragLeave={onDragLeave}
-        >
+        <div className={className}>
             {/* Drag Overlay */}
             <div className="playlist-list-item__drag-overlay" />
             {/* Head */}
@@ -132,12 +67,10 @@ export function PlaylistItem(props: PlaylistItemProps) {
                         placeholder={strings.noTitle}
                         className="playlist-list-item__text-field"
                         onChange={props.onTitleChange}
-                        editable={props.editing}
-                        onKeyDown={props.onKeyDown}
                     />
                 </div>
                 {/* Author */}
-                {props.editing || props.playlist.author ? (
+                {props.playlist.author ? (
                     <>
                         <div className="playlist-list-item__divider simple-center">
                             <p className="simple-center__inner">{strings.by}</p>
@@ -148,8 +81,6 @@ export function PlaylistItem(props: PlaylistItemProps) {
                                 placeholder={strings.noAuthor}
                                 className="playlist-list-item__text-field"
                                 onChange={props.onAuthorChange}
-                                editable={props.editing}
-                                onKeyDown={props.onKeyDown}
                             />
                         </div>
                     </>
@@ -157,20 +88,4 @@ export function PlaylistItem(props: PlaylistItemProps) {
             </div>
         </div>
     );
-}
-
-/** Check if an element or one of its parents is the same as another element. */
-function findParent(parent: Element, leafElement: Element | null): boolean {
-    let element: Element | null = leafElement;
-    for (let i = 20; i >= 0; i--) {
-        // (Depth limit - to stop endless looping)
-        if (!element) {
-            return false;
-        }
-        if (element === parent) {
-            return true;
-        }
-        element = element.parentElement;
-    }
-    return false;
 }

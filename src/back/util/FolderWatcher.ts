@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import { openStdin } from "process";
 import { eventAggregator } from "./EventAggregator";
 import { EventQueue } from "./EventQueue";
 import { WrappedEventEmitter } from "./WrappedEventEmitter";
@@ -22,20 +21,20 @@ export interface FolderWatcher {
     /** Emitted when a file has been changed (does NOT include "rename"). */
     on(
         event: "change",
-        listener: (filename: string, offsetPath: string) => void,
+        listener: (filename: string, offsetPath: string) => void
     ): this;
     once(
         event: "change",
-        listener: (filename: string, offsetPath: string) => void,
+        listener: (filename: string, offsetPath: string) => void
     ): this;
     /** Emitted when an file is added (or renamed to this). */
     on(
         event: "add",
-        listener: (filename: string, offsetPath: string) => void,
+        listener: (filename: string, offsetPath: string) => void
     ): this;
     once(
         event: "add",
-        listener: (filename: string, offsetPath: string) => void,
+        listener: (filename: string, offsetPath: string) => void
     ): this;
     /** Emitted when a file is removed (or renamed to something else). */
     on(
@@ -43,16 +42,16 @@ export interface FolderWatcher {
         listener: (
             filename: string,
             stats: fs.Stats,
-            offsetPath: string,
-        ) => void,
+            offsetPath: string
+        ) => void
     ): this;
     once(
         event: "remove",
         listener: (
             filename: string,
             stats: fs.Stats,
-            offsetPath: string,
-        ) => void,
+            offsetPath: string
+        ) => void
     ): this;
     /** Emitted any time an uncaught error occurs. */
     on(event: "error", listener: (error: Error) => void): this;
@@ -157,8 +156,8 @@ export class FolderWatcher extends WrappedEventEmitter {
                 this.emit(
                     "error",
                     new Error(
-                        'Failed to setFolder. "folderPath" was unexpectedly set to undefined.',
-                    ),
+                        'Failed to setFolder. "folderPath" was unexpectedly set to undefined.'
+                    )
                 );
             } else {
                 // Load the filenames of all files in the folder
@@ -175,7 +174,7 @@ export class FolderWatcher extends WrappedEventEmitter {
                     { persistent: false },
                     eventAggregator(this.onWatcherChange.bind(this), {
                         time: 25,
-                    }),
+                    })
                 );
                 fixFsWatcher(this._watcher); // (Fix a bug with node/electron)
                 // Relay errors
@@ -297,29 +296,29 @@ export class FolderWatcher extends WrappedEventEmitter {
                                             this._recursionDepth <= 0
                                                 ? this._recursionDepth
                                                 : this._recursionDepth - 1,
-                                    },
+                                    }
                                 );
                                 FolderWatcher.setAsChildWatcher(
                                     this,
                                     childWatcher,
-                                    filename,
+                                    filename
                                 );
                                 // Relay it's events to this
                                 childWatcher.on(
                                     "add",
-                                    this.emit.bind(this, "add"),
+                                    this.emit.bind(this, "add")
                                 );
                                 childWatcher.on(
                                     "remove",
-                                    this.emit.bind(this, "remove"),
+                                    this.emit.bind(this, "remove")
                                 );
                                 childWatcher.on(
                                     "change",
-                                    this.emit.bind(this, "change"),
+                                    this.emit.bind(this, "change")
                                 );
                                 childWatcher.on(
                                     "error",
-                                    this.emit.bind(this, "error"),
+                                    this.emit.bind(this, "error")
                                 );
                                 // Add it to map
                                 this._childWatchers[filename] = childWatcher;
@@ -333,7 +332,7 @@ export class FolderWatcher extends WrappedEventEmitter {
                         resolve();
                     }
                 });
-            }),
+            })
         );
     }
 
@@ -368,12 +367,12 @@ export class FolderWatcher extends WrappedEventEmitter {
     protected static setAsChildWatcher(
         parentWatcher: FolderWatcher,
         childWatcher: FolderWatcher,
-        filename: string,
+        filename: string
     ): void {
         childWatcher._parentWatcher = parentWatcher;
         childWatcher._pathOffset = path.join(
             parentWatcher._pathOffset,
-            filename,
+            filename
         );
     }
 }
@@ -383,6 +382,6 @@ export class FolderWatcher extends WrappedEventEmitter {
 //       Hopefully this is fixed in the newest version of node/electron.
 function fixFsWatcher(watcher: fs.FSWatcher) {
     (watcher as any)._handle.onchange = (watcher as any)._handle.onchange.bind(
-        watcher,
+        watcher
     );
 }

@@ -4,16 +4,10 @@ import {
     BackInit,
     BackInitArgs,
     BackOut,
-    BrowseChangeData,
     BrowseViewIndexData,
     BrowseViewIndexResponseData,
     BrowseViewPageData,
     BrowseViewPageResponseData,
-    DeleteGameData,
-    DeleteImageData,
-    DeletePlaylistData,
-    DuplicateGameData,
-    ExportGameData,
     ExodosStateData,
     GetAllGamesResponseData,
     GetExecData,
@@ -23,32 +17,20 @@ import {
     GetMainInitDataResponse,
     GetPlaylistResponse,
     GetRendererInitDataResponse,
-    GetSuggestionsResponseData,
-    ImageChangeData,
-    ImportCurationData,
-    ImportCurationResponseData,
     InitEventData,
     LanguageChangeData,
     LanguageListChangeData,
     LaunchAddAppData,
-    LaunchCurationAddAppData,
-    LaunchCurationData,
     LaunchGameData,
     LocaleUpdateData,
     OpenDialogData,
     OpenDialogResponseData,
     OpenExternalData,
     OpenExternalResponseData,
-    PlaylistRemoveData,
-    PlaylistUpdateData,
     QuickSearchData,
     QuickSearchResponseData,
     RandomGamesData,
     RandomGamesResponseData,
-    SaveGameData,
-    SaveImageData,
-    SavePlaylistData,
-    ServiceActionData,
     SetLocaleData,
     ThemeChangeData,
     ThemeListChangeData,
@@ -57,16 +39,11 @@ import {
     WrappedRequest,
     WrappedResponse,
     LaunchExodosContentData,
+    PlaylistUpdateData,
+    PlaylistRemoveData,
 } from "@shared/back/types";
 import { overwriteConfigData } from "@shared/config/util";
-import {
-    EXODOS_GAMES_PLATFORM_NAME,
-    LOGOS,
-    SCREENSHOTS,
-} from "@shared/constants";
-import { findMostUsedApplicationPaths } from "@shared/curate/defaultValues";
-import { stringifyCurationFormat } from "@shared/curate/format/stringifier";
-import { convertToCurationMeta } from "@shared/curate/metaToMeta";
+import { EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
 import {
     FilterGameOpts,
     filterGames,
@@ -79,7 +56,6 @@ import {
     GamePlaylistEntry,
     IBackProcessInfo,
     IService,
-    ProcessAction,
     RecursivePartial,
 } from "@shared/interfaces";
 import {
@@ -127,27 +103,17 @@ import { ConfigFile } from "./ConfigFile";
 import { loadExecMappingsFile } from "./Execs";
 import { GameManager } from "./game/GameManager";
 import { GameLauncher } from "./GameLauncher";
-import {
-    importCuration,
-    launchAddAppCuration,
-    launchCuration,
-} from "./importGame";
 import { ManagedChildProcess } from "./ManagedChildProcess";
 import { PlaylistFile } from "./PlaylistFile";
 import { ServicesFile } from "./ServicesFile";
-import { getSuggestions } from "./suggestions";
 import { BackQuery, BackQueryChache, BackState } from "./types";
 import { EventQueue } from "./util/EventQueue";
 import { FolderWatcher } from "./util/FolderWatcher";
-import { copyError, pathExists, walkSync } from "./util/misc";
-import { sanitizeFilename } from "./util/sanitizeFilename";
+import { walkSync } from "./util/misc";
 import { uuid } from "./util/uuid";
 
-const copyFile = util.promisify(fs.copyFile);
 const readFile = util.promisify(fs.readFile);
-const stat = util.promisify(fs.stat);
 const unlink = util.promisify(fs.unlink);
-const writeFile = util.promisify(fs.writeFile);
 
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
@@ -214,7 +180,7 @@ process.on("disconnect", () => {
 
 function getDosPlatform() {
     return state.gameManager.platforms.find(
-        (p) => p.name === EXODOS_GAMES_PLATFORM_NAME,
+        (p) => p.name === EXODOS_GAMES_PLATFORM_NAME
     );
 }
 
@@ -222,7 +188,7 @@ function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
     const dosPlatform = getDosPlatform();
     if (!dosPlatform) {
         console.log(
-            "Cannot create installed game playlist. MS-DOS platform not loaded yet.",
+            "Cannot create installed game playlist. MS-DOS platform not loaded yet."
         );
         return;
     }
@@ -230,7 +196,7 @@ function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
     const gamesList = state.installedGames
         .map((gameName) => {
             const gameInPlatform = dosPlatform.collection.games.find((game) =>
-                game.applicationPath.split("\\").includes(gameName),
+                game.applicationPath.split("\\").includes(gameName)
             );
             if (gameInPlatform) return { id: gameInPlatform.id };
             else return;
@@ -239,7 +205,7 @@ function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
 
     const playlistDummyFilename = "installedgamesdummyfile";
     var existingPlaylistIndex = state.playlists.findIndex(
-        (p) => p.filename === playlistDummyFilename,
+        (p) => p.filename === playlistDummyFilename
     );
     if (existingPlaylistIndex !== -1) {
         state.playlists[existingPlaylistIndex].games = gamesList;
@@ -279,7 +245,7 @@ const initExodosWatcher = () => {
 
 function initExodosMagazinesWatcher() {
     const magazinesPath = path.resolve(
-        path.join(state.config.exodosPath, "eXo/Magazines/"),
+        path.join(state.config.exodosPath, "eXo/Magazines/")
     );
     const magazinesPathExists = fs.existsSync(magazinesPath);
     if (magazinesPathExists) {
@@ -296,7 +262,7 @@ function initExodosMagazinesWatcher() {
 
 function initExodosInstalledGamesWatcher() {
     const gamesPath = path.resolve(
-        path.join(state.config.exodosPath, "eXo/eXoDOS/"),
+        path.join(state.config.exodosPath, "eXo/eXoDOS/")
     );
 
     const installedGamesWatcher = new FolderWatcher(gamesPath, {
@@ -312,7 +278,7 @@ function initExodosInstalledGamesWatcher() {
                 })
                 .on("remove", (path) => {
                     console.log(
-                        `Game ${path} has been removed, rescan installed games.`,
+                        `Game ${path} has been removed, rescan installed games.`
                     );
                     rescanInstalledGamesAndBroadcast(gamesPath);
                 });
@@ -340,7 +306,7 @@ function rescanInstalledGames(gamesPath: string) {
 
     if (!fs.existsSync(gamesPath)) {
         console.error(
-            `Directory ${gamesPath} doesn't exists, that could mean that exodos is not installed.`,
+            `Directory ${gamesPath} doesn't exists, that could mean that exodos is not installed.`
         );
         return [];
     }
@@ -365,13 +331,13 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     state.localeCode = content.localeCode;
     state.exePath = content.exePath;
 
-    //Read configs & preferences
+    // Read configs & preferences
     const [pref, conf] = await Promise.all([
         PreferencesFile.readOrCreateFile(
-            path.join(state.configFolder, preferencesFilename),
+            path.join(state.configFolder, preferencesFilename)
         ),
         ConfigFile.readOrCreateFile(
-            path.join(state.configFolder, configFilename),
+            path.join(state.configFolder, configFilename)
         ),
     ]);
     state.preferences = pref;
@@ -392,7 +358,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             path.join(state.config.exodosPath, state.config.jsonFolderPath),
             (error) => {
                 log({ source: servicesSource, content: error.toString() });
-            },
+            }
         );
     } catch (error) {
         /* @TODO Do something about this error */
@@ -407,7 +373,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             state.services.server = runService(
                 "server",
                 "Server",
-                state.serviceInfo.server,
+                state.serviceInfo.server
             );
         }
         if (state.config.startRedirector && process.platform !== "linux") {
@@ -418,13 +384,13 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                 throw new Error(
                     `Redirector process information not found. (Type: ${
                         state.config.useFiddler ? "Fiddler" : "Redirector"
-                    })`,
+                    })`
                 );
             }
             state.services.redirector = runService(
                 "redirector",
                 "Redirector",
-                redirectorInfo,
+                redirectorInfo
             );
         }
     }
@@ -441,16 +407,16 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                     const filePath = path.join(
                         state.languageWatcher.getFolder() || "",
                         offsetPath,
-                        filename,
+                        filename
                     );
                     const index = state.languages.findIndex(
-                        (l) => l.filename === filePath,
+                        (l) => l.filename === filePath
                     );
                     if (index >= 0) {
                         state.languages.splice(index, 1);
                     }
                 });
-            },
+            }
         );
         // Add initial files
         console.log("Adding initial playlist files.");
@@ -463,7 +429,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                 const filePath = path.join(
                     state.languageWatcher.getFolder() || "",
                     offsetPath,
-                    filename,
+                    filename
                 );
                 const langFile = await readLangFile(filePath);
                 let lang = state.languages.find((l) => l.filename === filePath);
@@ -492,7 +458,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                     state.languageContainer = createContainer(
                         state.preferences.currentLanguage,
                         state.localeCode,
-                        state.preferences.fallbackLanguage,
+                        state.preferences.fallbackLanguage
                     );
                     broadcast<LanguageChangeData>({
                         id: "",
@@ -506,7 +472,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     state.languageWatcher.on("error", console.error);
     const langFolder = path.join(
         content.isDev ? process.cwd() : content.exePath,
-        "lang",
+        "lang"
     );
     fs.stat(langFolder, (error) => {
         if (!error) {
@@ -555,11 +521,11 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                     } else {
                         console.warn(
                             "A file has been changed in a theme that is not registered " +
-                                `(Filename: "${filename}", OffsetPath: "${offsetPath}")`,
+                                `(Filename: "${filename}", OffsetPath: "${offsetPath}")`
                         );
                     }
                 });
-            },
+            }
         );
         state.themeWatcher.on(
             "remove",
@@ -573,7 +539,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                             // (Entry file was removed)
                             state.themeFiles.splice(
                                 state.themeFiles.indexOf(item),
-                                1,
+                                1
                             );
                             // A theme has been removed
                             broadcast<ThemeListChangeData>({
@@ -593,11 +559,11 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                     } else {
                         console.warn(
                             "A file has been removed from a theme that is not registered " +
-                                `(Filename: "${filename}", OffsetPath: "${offsetPath}")`,
+                                `(Filename: "${filename}", OffsetPath: "${offsetPath}")`
                         );
                     }
                 });
-            },
+            }
         );
         // Add initial files
         for (let filename of state.themeWatcher.filenames) {
@@ -607,10 +573,10 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
         function onThemeAdd(
             filename: string,
             offsetPath: string,
-            doBroadcast: boolean = true,
+            doBroadcast: boolean = true
         ) {
             console.log(
-                `Trying to add/update playlist: ${filename}, doBroadcast: ${doBroadcast}`,
+                `Trying to add/update playlist: ${filename}, doBroadcast: ${doBroadcast}`
             );
             state.themeQueue.push(async () => {
                 const item = findOwner(filename, offsetPath);
@@ -627,7 +593,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                     const folders = offsetPath.split(path.sep);
                     const folderName = folders[0] || offsetPath;
                     const file = state.themeWatcher.getFile(
-                        folderName ? [...folders, filename] : [filename],
+                        folderName ? [...folders, filename] : [filename]
                     );
                     if (
                         file &&
@@ -641,7 +607,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                         const entryPath = path.join(
                             themeFolder,
                             folderName,
-                            filename,
+                            filename
                         );
                         let meta: Partial<ThemeMeta> | undefined;
                         try {
@@ -650,7 +616,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                         } catch (error) {
                             console.warn(
                                 `Failed to load theme entry file (File: "${entryPath}")`,
-                                error,
+                                error
                             );
                         }
                         if (meta) {
@@ -659,7 +625,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                                 meta: meta,
                                 entryPath: path.relative(
                                     themeFolder,
-                                    entryPath,
+                                    entryPath
                                 ),
                             });
                             if (doBroadcast) {
@@ -681,14 +647,14 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                 const folderName =
                     index >= 0 ? offsetPath.substr(0, index) : offsetPath;
                 return state.themeFiles.find(
-                    (item) => item.basename === folderName,
+                    (item) => item.basename === folderName
                 );
             } else {
                 // (Theme folder)
                 return state.themeFiles.find(
                     (item) =>
                         item.entryPath === filename ||
-                        item.basename === filename,
+                        item.basename === filename
                 );
             }
         }
@@ -696,7 +662,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     state.themeWatcher.on("error", console.error);
     const themeFolder = path.join(
         state.config.exodosPath,
-        state.config.themeFolderPath,
+        state.config.themeFolderPath
     );
     fs.stat(themeFolder, (error) => {
         if (!error) {
@@ -736,7 +702,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             (filename: string, offsetPath: string) => {
                 state.playlistQueue.push(async () => {
                     const index = state.playlists.findIndex(
-                        (p) => p.filename === filename,
+                        (p) => p.filename === filename
                     );
                     if (index >= 0) {
                         const id = state.playlists[index].filename;
@@ -761,7 +727,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                         });
                     }
                 });
-            },
+            }
         );
         // Add initial files
         for (let filename of state.playlistWatcher.filenames) {
@@ -777,13 +743,13 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
         function onPlaylistAddOrChange(
             filename: string,
             offsetPath: string,
-            doBroadcast: boolean = true,
+            doBroadcast: boolean = true
         ) {
             state.playlistQueue.push(async () => {
                 // Load and parse playlist
                 const filePath = path.join(
                     state.playlistWatcher.getFolder() || "",
-                    filename,
+                    filename
                 );
                 let playlist: GamePlaylist | undefined;
                 try {
@@ -793,7 +759,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                             log({
                                 source: "Playlist",
                                 content: `Error while parsing playlist "${filePath}". ${error}`,
-                            }),
+                            })
                     );
                     playlist = {
                         ...data,
@@ -809,7 +775,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                 if (playlist) {
                     console.log(`Playlist is valid`);
                     const index = state.playlists.findIndex(
-                        (p) => p.filename === filename,
+                        (p) => p.filename === filename
                     );
                     if (index >= 0) {
                         console.log(`Playlist exists, updating.`);
@@ -824,7 +790,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                         }
                     } else {
                         console.log(
-                            `Adding new playlist: ${playlist.filename}`,
+                            `Adding new playlist: ${playlist.filename}`
                         );
                         state.playlists.push(playlist);
                     }
@@ -842,7 +808,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
 
     const boxImagesPath = path.join(
         state.config.exodosPath,
-        "Images/MS-DOS/Box - Front",
+        "Images/MS-DOS/Box - Front"
     );
 
     const thumbnails: IThumbnailsInfo[] = [];
@@ -859,7 +825,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
 
     const playlistFolder = path.join(
         state.config.exodosPath,
-        state.config.playlistFolderPath,
+        state.config.playlistFolderPath
     );
     fs.stat(playlistFolder, (error) => {
         if (!error) {
@@ -888,14 +854,14 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     // Init Game Manager
     state.gameManager.platformsPath = path.join(
         state.config.exodosPath,
-        state.config.platformFolderPath,
+        state.config.platformFolderPath
     );
 
     GameManager.loadPlatforms(state.gameManager, thumbnails)
         .then((errors) => {
             if (errors.length > 0) {
                 console.error(
-                    `${errors.length} platform(s) failed to load. Errors:`,
+                    `${errors.length} platform(s) failed to load. Errors:`
                 );
                 for (let error of errors) {
                     console.error(error);
@@ -914,7 +880,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     // Load Exec Mappings
     loadExecMappingsFile(
         path.join(state.config.exodosPath, state.config.jsonFolderPath),
-        (content) => log({ source: "Launcher", content }),
+        (content) => log({ source: "Launcher", content })
     )
         .then((data) => {
             state.execMappings = data;
@@ -955,8 +921,8 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             } else {
                 done(
                     new Error(
-                        `Failed to open server. All attempted ports are already in use (Ports: ${minPort} - ${maxPort}).`,
-                    ),
+                        `Failed to open server. All attempted ports are already in use (Ports: ${minPort} - ${maxPort}).`
+                    )
                 );
             }
         }
@@ -1014,13 +980,13 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             if (port++ < maxPort) {
                 state.fileServer.listen(
                     port,
-                    content.acceptRemote ? undefined : "localhost",
+                    content.acceptRemote ? undefined : "localhost"
                 );
             } else {
                 done(
                     new Error(
-                        `All attempted ports are already in use (Ports: ${minPort} - ${maxPort}).`,
-                    ),
+                        `All attempted ports are already in use (Ports: ${minPort} - ${maxPort}).`
+                    )
                 );
             }
         }
@@ -1050,7 +1016,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     function runService(
         id: string,
         name: string,
-        info: IBackProcessInfo,
+        info: IBackProcessInfo
     ): ManagedChildProcess {
         const proc = new ManagedChildProcess(
             id,
@@ -1058,7 +1024,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             path.join(state.config.exodosPath, info.path),
             false,
             true,
-            info,
+            info
         );
         proc.on("output", log);
         proc.on("change", () => {
@@ -1075,7 +1041,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                 source: servicesSource,
                 content:
                     `An unexpected error occurred while trying to run the background process "${proc.name}".` +
-                    `  ${error.toString()}`,
+                    `  ${error ? error.toString() : ""}`,
             });
         }
         return proc;
@@ -1085,7 +1051,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
 function onConnect(
     this: WebSocket,
     socket: WebSocket,
-    request: http.IncomingMessage,
+    request: http.IncomingMessage
 ): void {
     socket.onmessage = function onAuthMessage(event) {
         if (event.data === state.secret) {
@@ -1102,7 +1068,7 @@ async function onMessageWrap(event: WebSocket.MessageEvent) {
     if (error || !req) {
         console.error(
             "Failed to parse incoming WebSocket request (see error below):\n",
-            error,
+            error
         );
         return;
     }
@@ -1131,7 +1097,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
     if (error || !req) {
         console.error(
             "Failed to parse incoming WebSocket request (see error below):\n",
-            error,
+            error
         );
         return;
     }
@@ -1172,7 +1138,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 state.languageContainer = createContainer(
                     state.preferences.currentLanguage,
                     state.localeCode,
-                    state.preferences.fallbackLanguage,
+                    state.preferences.fallbackLanguage
                 );
 
                 const platforms: Record<string, string[]> = {}; // platforms[library] = [platform1, platform2 etc.]
@@ -1238,20 +1204,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             }
             break;
 
-        case BackIn.GET_SUGGESTIONS:
-            {
-                const games = allGames();
-                respond<GetSuggestionsResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: {
-                        suggestions: getSuggestions(games, getLibraries()),
-                        appPaths: findMostUsedApplicationPaths(games),
-                    },
-                });
-            }
-            break;
-
         case BackIn.GET_GAMES_TOTAL:
             {
                 respond<GetGamesTotalResponseData>(event.target, {
@@ -1297,7 +1249,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     const addApp = platforms[
                         i
                     ].collection.additionalApplications.find(
-                        (item) => item.id === reqData.id,
+                        (item) => item.id === reqData.id
                     );
                     if (addApp) {
                         const game = findGame(addApp.gameId);
@@ -1307,7 +1259,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                             native:
                                 (game &&
                                     state.config.nativePlatforms.some(
-                                        (p) => p === game.platform,
+                                        (p) => p === game.platform
                                     )) ||
                                 false,
                             execMappings: state.execMappings,
@@ -1334,8 +1286,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 const appPath = fixSlashes(
                     path.join(
                         path.resolve(state.config.exodosPath),
-                        reqData.path,
-                    ),
+                        reqData.path
+                    )
                 );
                 GameLauncher.launchCommand(appPath, "", log);
                 respond(event.target, {
@@ -1359,7 +1311,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                         addApps,
                         fpPath: path.resolve(state.config.exodosPath),
                         native: state.config.nativePlatforms.some(
-                            (p) => p === game.platform,
+                            (p) => p === game.platform
                         ),
                         execMappings: state.execMappings,
                         lang: state.languageContainer,
@@ -1389,7 +1341,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                         addApps,
                         fpPath: path.resolve(state.config.exodosPath),
                         native: state.config.nativePlatforms.some(
-                            (p) => p === game.platform,
+                            (p) => p === game.platform
                         ),
                         execMappings: state.execMappings,
                         lang: state.languageContainer,
@@ -1403,262 +1355,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
                     data: undefined,
-                });
-            }
-            break;
-
-        case BackIn.SAVE_GAME:
-            {
-                const reqData: SaveGameData = req.data;
-
-                const result = GameManager.updateMeta(state.gameManager, {
-                    game: reqData.game,
-                    addApps: reqData.addApps,
-                });
-
-                if (reqData.saveToFile) {
-                    await GameManager.savePlatforms(
-                        state.gameManager,
-                        result.edited,
-                    );
-                }
-
-                state.queries = {}; // Clear entire cache
-
-                respond<BrowseChangeData>(event.target, {
-                    id: req.id,
-                    type: BackOut.BROWSE_CHANGE,
-                    data: {
-                        library: reqData.library,
-                        gamesTotal: countGames(),
-                    },
-                });
-            }
-            break;
-
-        case BackIn.DELETE_GAME:
-            {
-                const reqData: DeleteGameData = req.data;
-
-                const result = GameManager.removeGameAndAddApps(
-                    state.gameManager,
-                    reqData.id,
-                );
-
-                await GameManager.savePlatforms(
-                    state.gameManager,
-                    result.edited,
-                );
-
-                state.queries = {}; // Clear entire cache
-
-                respond<BrowseChangeData>(event.target, {
-                    id: req.id,
-                    type: BackOut.BROWSE_CHANGE,
-                    data: {
-                        library: undefined,
-                        gamesTotal: countGames(),
-                    },
-                });
-            }
-            break;
-
-        case BackIn.DUPLICATE_GAME:
-            {
-                const reqData: DuplicateGameData = req.data;
-
-                const game = findGame(reqData.id);
-                if (game) {
-                    const addApps = findAddApps(reqData.id);
-
-                    // Copy and apply new IDs
-                    const newGame = deepCopy(game);
-                    const newAddApps = addApps.map((addApp) =>
-                        deepCopy(addApp),
-                    );
-                    newGame.id = uuid();
-                    for (let j = 0; j < newAddApps.length; j++) {
-                        newAddApps[j].id = uuid();
-                        newAddApps[j].gameId = newGame.id;
-                    }
-
-                    // Add copies
-                    const result = GameManager.updateMeta(state.gameManager, {
-                        game: newGame,
-                        addApps: newAddApps,
-                    });
-                    await GameManager.savePlatforms(
-                        state.gameManager,
-                        result.edited,
-                    );
-
-                    // Copy images
-                    if (reqData.dupeImages) {
-                        const imageFolder = path.join(
-                            state.config.exodosPath,
-                            state.config.imageFolderPath,
-                        );
-                        const oldLast = path.join(
-                            game.id.substr(0, 2),
-                            game.id.substr(2, 2),
-                            game.id + ".png",
-                        );
-                        const newLast = path.join(
-                            newGame.id.substr(0, 2),
-                            newGame.id.substr(2, 2),
-                            newGame.id + ".png",
-                        );
-
-                        const oldLogoPath = path.join(
-                            imageFolder,
-                            LOGOS,
-                            oldLast,
-                        );
-                        const newLogoPath = path.join(
-                            imageFolder,
-                            LOGOS,
-                            newLast,
-                        );
-                        try {
-                            if (await pathExists(oldLogoPath)) {
-                                await fs.promises.mkdir(
-                                    path.dirname(newLogoPath),
-                                    {
-                                        recursive: true,
-                                    },
-                                );
-                                await copyFile(oldLogoPath, newLogoPath);
-                            }
-                        } catch (e) {
-                            console.error(e);
-                        }
-
-                        const oldScreenshotPath = path.join(
-                            imageFolder,
-                            SCREENSHOTS,
-                            oldLast,
-                        );
-                        const newScreenshotPath = path.join(
-                            imageFolder,
-                            SCREENSHOTS,
-                            newLast,
-                        );
-                        try {
-                            if (await pathExists(oldScreenshotPath)) {
-                                await fs.promises.mkdir(
-                                    path.dirname(newScreenshotPath),
-                                    {
-                                        recursive: true,
-                                    },
-                                );
-                                await copyFile(
-                                    oldScreenshotPath,
-                                    newScreenshotPath,
-                                );
-                            }
-                        } catch (e) {
-                            console.error(e);
-                        }
-                    }
-
-                    state.queries = {}; // Clear entire cache
-                }
-
-                respond<BrowseChangeData>(event.target, {
-                    id: req.id,
-                    type: BackOut.BROWSE_CHANGE,
-                    data: {
-                        library: undefined,
-                        gamesTotal: countGames(),
-                    },
-                });
-            }
-            break;
-
-        case BackIn.EXPORT_GAME:
-            {
-                const reqData: ExportGameData = req.data;
-
-                if (
-                    await pathExists(
-                        reqData.metaOnly
-                            ? path.dirname(reqData.location)
-                            : reqData.location,
-                    )
-                ) {
-                    const game = findGame(reqData.id);
-                    if (game) {
-                        const addApps = findAddApps(reqData.id);
-
-                        // Save to file
-                        try {
-                            await writeFile(
-                                reqData.metaOnly
-                                    ? reqData.location
-                                    : path.join(reqData.location, "meta.txt"),
-                                stringifyCurationFormat(
-                                    convertToCurationMeta(game, addApps),
-                                ),
-                            );
-                        } catch (e) {
-                            console.error(e);
-                        }
-
-                        // Copy images
-                        if (!reqData.metaOnly) {
-                            const imageFolder = path.join(
-                                state.config.exodosPath,
-                                state.config.imageFolderPath,
-                            );
-                            const last = path.join(
-                                game.id.substr(0, 2),
-                                game.id.substr(2, 2),
-                                game.id + ".png",
-                            );
-
-                            const oldLogoPath = path.join(
-                                imageFolder,
-                                LOGOS,
-                                last,
-                            );
-                            const newLogoPath = path.join(
-                                reqData.location,
-                                "logo.png",
-                            );
-                            try {
-                                if (await pathExists(oldLogoPath)) {
-                                    await copyFile(oldLogoPath, newLogoPath);
-                                }
-                            } catch (e) {
-                                console.error(e);
-                            }
-
-                            const oldScreenshotPath = path.join(
-                                imageFolder,
-                                SCREENSHOTS,
-                                last,
-                            );
-                            const newScreenshotPath = path.join(
-                                reqData.location,
-                                "ss.png",
-                            );
-                            try {
-                                if (await pathExists(oldScreenshotPath)) {
-                                    await copyFile(
-                                        oldScreenshotPath,
-                                        newScreenshotPath,
-                                    );
-                                }
-                            } catch (e) {
-                                console.error(e);
-                            }
-                        }
-                    }
-                }
-
-                respond(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
                 });
             }
             break;
@@ -1702,7 +1398,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 for (let platform of state.gameManager.platforms) {
                     Array.prototype.push.apply(
                         allGames,
-                        platform.collection.games,
+                        platform.collection.games
                     );
                 }
 
@@ -1752,7 +1448,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 // if (!cache) { state.queries[hash] =
 
                 var cache = queryGames(query);
-                //} // @TODO Start clearing the cache if it gets too full
+                // } // @TODO Start clearing the cache if it gets too full
 
                 respond<BrowseViewPageResponseData>(event.target, {
                     id: req.id,
@@ -1760,7 +1456,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     data: {
                         games: cache.viewGames.slice(
                             reqData.offset,
-                            reqData.offset + reqData.limit,
+                            reqData.offset + reqData.limit
                         ),
                         offset: reqData.offset,
                         total: cache.games.length,
@@ -1804,96 +1500,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
                     data: { index },
-                });
-            }
-            break;
-
-        case BackIn.SAVE_IMAGE:
-            {
-                const reqData: SaveImageData = req.data;
-
-                const imageFolder = path.join(
-                    state.config.exodosPath,
-                    state.config.imageFolderPath,
-                );
-                const folder = sanitizeFilename(reqData.folder);
-                const id = sanitizeFilename(reqData.id);
-                const fullPath = path.join(
-                    imageFolder,
-                    folder,
-                    id.substr(0, 2),
-                    id.substr(2, 2),
-                    id + ".png",
-                );
-
-                if (fullPath.startsWith(imageFolder)) {
-                    // (Ensure that it does not climb out of the image folder)
-                    try {
-                        await fs.promises.mkdir(path.dirname(fullPath), {
-                            recursive: true,
-                        });
-                        await writeFile(
-                            fullPath,
-                            Buffer.from(reqData.content, "base64"),
-                        );
-                    } catch (e) {
-                        log({
-                            source: "Launcher",
-                            content: e + "",
-                        });
-                    }
-                }
-
-                respond<ImageChangeData>(event.target, {
-                    id: req.id,
-                    type: BackOut.IMAGE_CHANGE,
-                    data: {
-                        id: id,
-                        folder: folder,
-                    },
-                });
-            }
-            break;
-
-        case BackIn.DELETE_IMAGE:
-            {
-                const reqData: DeleteImageData = req.data;
-
-                const imageFolder = path.join(
-                    state.config.exodosPath,
-                    state.config.imageFolderPath,
-                );
-                const folder = sanitizeFilename(reqData.folder);
-                const id = sanitizeFilename(reqData.id);
-                const fullPath = path.join(
-                    imageFolder,
-                    folder,
-                    id.substr(0, 2),
-                    id.substr(2, 2),
-                    id + ".png",
-                );
-
-                if (fullPath.startsWith(imageFolder)) {
-                    // (Ensure that it does not climb out of the image folder)
-                    try {
-                        if ((await stat(fullPath)).isFile()) {
-                            await unlink(fullPath);
-                            // @TODO Remove the two top folders if they are empty (so no empty folders are left hanging)
-                        }
-                    } catch (error) {
-                        if (error.code !== "ENOENT") {
-                            console.error(error);
-                        }
-                    }
-                }
-
-                respond<ImageChangeData>(event.target, {
-                    id: req.id,
-                    type: BackOut.IMAGE_CHANGE,
-                    data: {
-                        id: id,
-                        folder: folder,
-                    },
                 });
             }
             break;
@@ -1955,7 +1561,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 try {
                     await ConfigFile.saveFile(
                         path.join(state.configFolder, configFilename),
-                        newConfig,
+                        newConfig
                     );
                 } catch (error) {
                     log({ source: "Launcher", content: error });
@@ -1973,7 +1579,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 const dif = difObjects(
                     defaultPreferencesData,
                     state.preferences,
-                    req.data,
+                    req.data
                 );
                 if (dif) {
                     if (
@@ -1991,7 +1597,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                             state.localeCode,
                             typeof dif.fallbackLanguage !== "undefined"
                                 ? dif.fallbackLanguage
-                                : state.preferences.fallbackLanguage,
+                                : state.preferences.fallbackLanguage
                         );
                         broadcast<LanguageChangeData>({
                             id: "",
@@ -2003,7 +1609,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     overwritePreferenceData(state.preferences, dif);
                     await PreferencesFile.saveFile(
                         path.join(state.configFolder, preferencesFilename),
-                        state.preferences,
+                        state.preferences
                     );
                 }
                 respond(event.target, {
@@ -2014,232 +1620,12 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             }
             break;
 
-        case BackIn.SERVICE_ACTION:
-            {
-                const reqData: ServiceActionData = req.data;
-
-                const proc = state.services[reqData.id];
-                if (proc) {
-                    switch (reqData.action) {
-                        case ProcessAction.START:
-                            proc.spawn();
-                            break;
-                        case ProcessAction.STOP:
-                            proc.kill();
-                            break;
-                        case ProcessAction.RESTART:
-                            proc.restart();
-                            break;
-                        default:
-                            console.warn("Unhandled Process Action");
-                    }
-                }
-
-                respond(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                });
-            }
-            break;
-
         case BackIn.GET_PLAYLISTS:
             {
                 respond<GetPlaylistResponse>(event.target, {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
                     data: state.playlists,
-                });
-            }
-            break;
-
-        case BackIn.SAVE_PLAYLIST:
-            {
-                // const reqData: SavePlaylistData = req.data;
-
-                // const folder = state.playlistWatcher.getFolder();
-                // const filename = sanitizeFilename(reqData.playlist.filename || `${reqData.playlist.title}.json`);
-                // if (folder && filename) {
-                //   if (reqData.prevFilename === filename) { // (Existing playlist)
-                //     await PlaylistFile.saveFile(path.join(folder, filename), reqData.playlist);
-                //   } else {
-                //     let coolFilename = filename;
-
-                //     // Attempt to find an available filename
-                //     if (await pathExists(path.join(folder, filename))) {
-                //       const parts: string[] = [];
-
-                //       // Split filename into "name" and "extension"
-                //       const dotIndex = filename.lastIndexOf('.');
-                //       if (dotIndex >= 0) {
-                //         parts.push(coolFilename.substr(0, dotIndex));
-                //         parts.push(coolFilename.substr(dotIndex));
-                //       } else {
-                //         parts.push(coolFilename);
-                //       }
-
-                //       // Attempt extracting a "number" from the "name"
-                //       let n = 2;
-                //       const match = parts[parts.length - 1].match(/ \d+$/);
-                //       if (match) {
-                //         n = parseInt(match[0]) + 1;
-                //         parts[parts.length - 1] = parts[parts.length - 1].replace(/ \d+$/, '');
-                //       }
-
-                //       // Add space between "name" and "number"
-                //       if (parts.length > 1 && parts[0].length > 0 && !parts[0].endsWith(' ')) { parts[0] += ' '; }
-
-                //       // Increment the "number" and try again a few times
-                //       let foundName = false;
-                //       while (n < 100) {
-                //         const str = `${parts[0] || ''}${n++}${parts[1] || ''}`;
-                //         if (!(await pathExists(path.join(folder, str)))) {
-                //           foundName = true;
-                //           coolFilename = str;
-                //           break;
-                //         }
-                //       }
-
-                //       if (!foundName) { coolFilename = ''; } // Abort save
-                //     }
-
-                //     if (coolFilename) {
-                //       await PlaylistFile.saveFile(path.join(folder, coolFilename), reqData.playlist);
-
-                //       // Delete old playlist (if renaming it)
-                //       if (reqData.prevFilename) {
-                //         await deletePlaylist(reqData.prevFilename, folder, state.playlists);
-                //       }
-                //     }
-                //   }
-                // }
-
-                respond(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                });
-            }
-            break;
-
-        case BackIn.DELETE_PLAYLIST:
-            {
-                const reqData: DeletePlaylistData = req.data;
-
-                const folder = state.playlistWatcher.getFolder();
-                if (folder) {
-                    await deletePlaylist(reqData, folder, state.playlists);
-                }
-
-                respond(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                });
-            }
-            break;
-
-        case BackIn.IMPORT_CURATION:
-            {
-                const reqData: ImportCurationData = req.data;
-
-                let error: any | undefined;
-                try {
-                    await importCuration({
-                        curation: reqData.curation,
-                        gameManager: state.gameManager,
-                        log: reqData.log ? log : undefined,
-                        date:
-                            reqData.date !== undefined
-                                ? new Date(reqData.date)
-                                : undefined,
-                        saveCuration: reqData.saveCuration,
-                        fpPath: state.config.exodosPath,
-                        imageFolderPath: state.config.imageFolderPath,
-                        openDialog: openDialog(event.target),
-                        openExternal: openExternal(event.target),
-                    });
-                } catch (e) {
-                    if (util.types.isNativeError(e)) {
-                        error = copyError(e);
-                    } else {
-                        error = e;
-                    }
-                }
-
-                respond<ImportCurationResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: { error: error || undefined },
-                });
-            }
-            break;
-
-        case BackIn.LAUNCH_CURATION:
-            {
-                const reqData: LaunchCurationData = req.data;
-
-                try {
-                    await launchCuration(
-                        reqData.key,
-                        reqData.meta,
-                        reqData.addApps,
-                        {
-                            fpPath: path.resolve(state.config.exodosPath),
-                            native: state.config.nativePlatforms.some(
-                                (p) => p === reqData.meta.platform,
-                            ),
-                            execMappings: state.execMappings,
-                            lang: state.languageContainer,
-                            log,
-                            openDialog: openDialog(event.target),
-                            openExternal: openExternal(event.target),
-                        },
-                    );
-                } catch (e) {
-                    log({
-                        source: "Launcher",
-                        content: e + "",
-                    });
-                }
-
-                respond(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: undefined,
-                });
-            }
-            break;
-
-        case BackIn.LAUNCH_CURATION_ADDAPP:
-            {
-                const reqData: LaunchCurationAddAppData = req.data;
-
-                try {
-                    await launchAddAppCuration(
-                        reqData.curationKey,
-                        reqData.curation,
-                        {
-                            fpPath: path.resolve(state.config.exodosPath),
-                            native:
-                                state.config.nativePlatforms.some(
-                                    (p) => p === reqData.platform,
-                                ) || false,
-                            execMappings: state.execMappings,
-                            lang: state.languageContainer,
-                            log,
-                            openDialog: openDialog(event.target),
-                            openExternal: openExternal(event.target),
-                        },
-                    );
-                } catch (e) {
-                    log({
-                        source: "Launcher",
-                        content: e + "",
-                    });
-                }
-
-                respond(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: undefined,
                 });
             }
             break;
@@ -2258,7 +1644,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
 
 function onFileServerRequest(
     req: http.IncomingMessage,
-    res: http.ServerResponse,
+    res: http.ServerResponse
 ): void {
     try {
         let urlPath = decodeURIComponent(req.url || "");
@@ -2287,11 +1673,11 @@ function onFileServerRequest(
                 {
                     const imageFolder = path.join(
                         state.config.exodosPath,
-                        state.config.imageFolderPath,
+                        state.config.imageFolderPath
                     );
                     const filePath = path.join(
                         imageFolder,
-                        urlPath.substr(index + 1),
+                        urlPath.substr(index + 1)
                     );
                     if (filePath.startsWith(imageFolder)) {
                         serveFile(req, res, filePath);
@@ -2304,7 +1690,7 @@ function onFileServerRequest(
                 {
                     const themeFolder = path.join(
                         state.config.exodosPath,
-                        state.config.themeFolderPath,
+                        state.config.themeFolderPath
                     );
                     const index = urlPath.indexOf("/");
                     const relativeUrl =
@@ -2321,11 +1707,11 @@ function onFileServerRequest(
                 {
                     const logoFolder = path.join(
                         state.config.exodosPath,
-                        state.config.logoFolderPath,
+                        state.config.logoFolderPath
                     );
                     const filePath = path.join(
                         logoFolder,
-                        urlPath.substr(index + 1),
+                        urlPath.substr(index + 1)
                     );
                     if (filePath.startsWith(logoFolder)) {
                         serveFile(req, res, filePath);
@@ -2343,7 +1729,7 @@ function onFileServerRequest(
                 ) {
                     const filePath = path.join(
                         state.config.exodosPath,
-                        urlPath,
+                        urlPath
                     );
                     serveFile(req, res, filePath);
                 } else {
@@ -2368,7 +1754,7 @@ function onFileServerRequest(
 function serveFile(
     req: http.IncomingMessage,
     res: http.ServerResponse,
-    filePath: string,
+    filePath: string
 ): void {
     if (req.method === "GET" || req.method === "HEAD") {
         fs.stat(filePath, (error, stats) => {
@@ -2384,7 +1770,7 @@ function serveFile(
                     const stream = fs.createReadStream(filePath);
                     stream.on("error", (error) => {
                         console.warn(
-                            `File server failed to stream file. ${error}`,
+                            `File server failed to stream file. ${error}`
                         );
                         stream.destroy(); // Calling "destroy" inside the "error" event seems like it could case an endless loop (although it hasn't thus far)
                         if (!res.finished) {
@@ -2440,28 +1826,28 @@ function exit() {
             // Close WebSocket server
             isErrorProxy(state.server)
                 ? undefined
-                : new Promise((resolve) =>
+                : new Promise<void>((resolve) =>
                       state.server.close((error) => {
                           if (error) {
                               console.warn(
                                   "An error occurred whie closing the WebSocket server.",
-                                  error,
+                                  error
                               );
                           }
                           resolve();
-                      }),
+                      })
                   ),
             // Close file server
-            new Promise((resolve) =>
+            new Promise<void>((resolve) =>
                 state.fileServer.close((error) => {
                     if (error) {
                         console.warn(
                             "An error occurred whie closing the file server.",
-                            error,
+                            error
                         );
                     }
                     resolve();
-                }),
+                })
             ),
             // Wait for game manager to complete all saves
             state.gameManager.saveQueue.push(() => {}, true),
@@ -2502,7 +1888,7 @@ function log(preEntry: ILogPreEntry, id?: string): void {
         console.warn(
             `Type Warning! A log entry has a source of an incorrect type!\n  Type: "${typeof entry.source}"\n  Value: "${
                 entry.source
-            }"`,
+            }"`
         );
         entry.source = entry.source + "";
     }
@@ -2510,7 +1896,7 @@ function log(preEntry: ILogPreEntry, id?: string): void {
         console.warn(
             `Type Warning! A log entry has content of an incorrect type!\n  Type: "${typeof entry.content}"\n  Value: "${
                 entry.content
-            }"`,
+            }"`
         );
         entry.content = entry.content + "";
     }
@@ -2542,7 +1928,7 @@ function log(preEntry: ILogPreEntry, id?: string): void {
 function difObjects<T>(
     template: T,
     a: T,
-    b: DeepPartial<T>,
+    b: DeepPartial<T>
 ): DeepPartial<T> | undefined {
     let dif: DeepPartial<T> | undefined;
     for (let key in template) {
@@ -2601,7 +1987,7 @@ function searchGames(opts: SearchGamesOpts): IGameInfo[] {
         // If library matches filter, or no library filter given, filter this platforms games
         if (!opts.library || platforms[i].library === opts.library) {
             foundGames = foundGames.concat(
-                filterGames(platforms[i].collection.games, filterOpts),
+                filterGames(platforms[i].collection.games, filterOpts)
             );
         }
     }
@@ -2621,13 +2007,13 @@ function searchGames(opts: SearchGamesOpts): IGameInfo[] {
  */
 async function execProcess(
     proc: IBackProcessInfo,
-    sync: boolean = false,
+    sync: boolean = false
 ): Promise<void> {
     const cwd: string = path.join(state.config.exodosPath, proc.path);
     log({
         source: servicesSource,
         content: `Executing "${proc.filename}" ${stringifyArray(
-            proc.arguments,
+            proc.arguments
         )} in "${proc.path}"`,
     });
     try {
@@ -2641,7 +2027,7 @@ async function execProcess(
                 proc.arguments,
                 {
                     cwd: cwd,
-                },
+                }
             );
             await awaitEvents(childProc, ["exit", "error"]);
         }
@@ -2665,7 +2051,7 @@ function procToService(proc: ManagedChildProcess): IService {
 }
 
 function readLangFile(
-    filepath: string,
+    filepath: string
 ): Promise<RecursivePartial<LangFileContent>> {
     return new Promise(function (resolve, reject) {
         fs.readFile(filepath, "utf8", function (error, data) {
@@ -2687,7 +2073,7 @@ const defaultLang = getDefaultLocalization();
 function createContainer(
     currentCode: string,
     autoLangCode: string,
-    fallbackCode: string,
+    fallbackCode: string
 ): LangContainer {
     // Get current language
     let current: LangFile | undefined;
@@ -2700,7 +2086,7 @@ function createContainer(
         current = state.languages.find((item) => item.code === autoLangCode);
         if (!current) {
             current = state.languages.find((item) =>
-                item.code.startsWith(autoLangCode.substr(0, 2)),
+                item.code.startsWith(autoLangCode.substr(0, 2))
             );
         }
     }
@@ -2708,12 +2094,12 @@ function createContainer(
     const fallback =
         state.languages.find((item) => item.code === fallbackCode) || // (Exact match)
         state.languages.find((item) =>
-            item.code.startsWith(fallbackCode.substr(0, 2)),
+            item.code.startsWith(fallbackCode.substr(0, 2))
         ); // (Same language)
     // Combine all language container objects (by overwriting the default with the fallback and the current)
     const data = recursiveReplace(
         recursiveReplace(deepCopy(defaultLang), fallback && fallback.data),
-        current && current.data,
+        current && current.data
     );
     data.libraries = {
         // Allow libraries to add new properties (and not just overwrite the default)
@@ -2733,7 +2119,7 @@ function createContainer(
 async function deletePlaylist(
     id: string,
     folder: string,
-    playlists: GamePlaylist[],
+    playlists: GamePlaylist[]
 ): Promise<void> {
     if (id && folder !== undefined) {
         // (Check if id is not empty and if the folder watcher is set up)
@@ -2753,7 +2139,7 @@ async function deletePlaylist(
 
 function queryGames(query: BackQuery): BackQueryChache {
     const playlist = state.playlists.find(
-        (p) => p.filename === query.playlistId,
+        (p) => p.filename === query.playlistId
     );
     const results = searchGames({
         extreme: query.extreme,
@@ -2853,7 +2239,7 @@ function openExternal(target: WebSocket) {
                     } else {
                         resolve();
                     }
-                },
+                }
             );
 
             respond<OpenExternalData>(target, {
@@ -2897,7 +2283,7 @@ function allGames(): IGameInfo[] {
 }
 
 function parseWrappedRequest(
-    data: string | Buffer | ArrayBuffer | Buffer[],
+    data: string | Buffer | ArrayBuffer | Buffer[]
 ): [WrappedRequest<any>, undefined] | [undefined, Error] {
     // Parse data into string
     let str: string | undefined;
@@ -2921,7 +2307,7 @@ function parseWrappedRequest(
         return [
             undefined,
             new Error(
-                'Failed to parse WrappedRequest. Failed to convert "data" into a string.',
+                'Failed to parse WrappedRequest. Failed to convert "data" into a string.'
             ),
         ];
     }

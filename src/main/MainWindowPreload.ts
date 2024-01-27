@@ -17,13 +17,14 @@ import { setTheme } from "@shared/Theme";
 import { createErrorProxy } from "@shared/Util";
 import { isDev } from "./Util";
 import { app, BrowserWindow, dialog, shell } from "@electron/remote";
+import { IMainWindowExternal } from "@shared/interfaces";
 
 /**
  * Object with functions that bridge between this and the Main processes
  * (Note: This is mostly a left-over from when "node integration" was disabled.
  *        It might be a good idea to move this to the Renderer?)
  */
-window.External = {
+(window.External as IMainWindowExternal) = {
     installed: createErrorProxy("installed"),
 
     version: createErrorProxy("version"),
@@ -115,7 +116,7 @@ const onInit = (async () => {
     const socket = await SharedSocket.connect(
         WebSocket,
         data.host,
-        data.secret,
+        data.secret
     );
     window.External.back.url = data.host;
     window.External.back.secret = data.secret;
@@ -137,11 +138,11 @@ const onInit = (async () => {
                                 data: response.data.config,
                                 // @FIXTHIS This should take if this is installed into account
                                 fullExodosPath: path.resolve(
-                                    response.data.config.exodosPath,
+                                    response.data.config.exodosPath
                                 ),
                                 fullJsonFolderPath: path.resolve(
                                     response.data.config.exodosPath,
-                                    response.data.config.jsonFolderPath,
+                                    response.data.config.jsonFolderPath
                                 ),
                             };
                             window.External.fileServerPort =
@@ -163,20 +164,20 @@ const onInit = (async () => {
                             if (window.External.preferences.data.currentTheme) {
                                 setTheme(
                                     window.External.preferences.data
-                                        .currentTheme,
+                                        .currentTheme
                                 );
                             }
                             resolve(null);
                         } else {
                             reject(
                                 new Error(
-                                    '"Get Renderer Init Data" response does not contain any data.',
-                                ),
+                                    '"Get Renderer Init Data" response does not contain any data.'
+                                )
                             );
                         }
-                    },
+                    }
                 );
-            }),
+            })
     )
     .then(() => {
         isInitDone = true;
