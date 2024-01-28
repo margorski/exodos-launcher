@@ -154,7 +154,6 @@ const state: BackState = {
     log: [],
     serviceInfo: undefined,
     services: {},
-    languageWatcher: new FolderWatcher(),
     languageQueue: new EventQueue(),
     languages: [],
     languageContainer: getDefaultLocalization(), // Cache of the latest lang container - used by back when it needs lang strings
@@ -352,6 +351,77 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
         console.log("chdir: " + err);
     }
 
+    const loadLanguages = async () => {
+        const langFolder = "lang";
+        console.log(`Loading languages...`);
+
+        const onLangAddOrChange = (filename: string) => {
+            console.log(`Trying to add/update language: ${filename}`);
+
+            state.languageQueue.push(async () => {
+                const filePath = path.join(langFolder, filename);
+                const langFile = await readLangFile(filePath);
+                let lang = state.languages.find((l) => l.filename === filePath);
+                if (lang) {
+                    lang.data = langFile;
+                } else {
+                    lang = {
+                        filename: filePath,
+                        code: removeFileExtension(filename),
+                        data: langFile,
+                    };
+                    state.languages.push(lang);
+                }
+
+                console.log(`Added language ${lang}`);
+
+                broadcast<LanguageListChangeData>({
+                    id: "",
+                    type: BackOut.LANGUAGE_LIST_CHANGE,
+                    data: state.languages,
+                });
+
+                if (
+                    lang.code === state.preferences.currentLanguage ||
+                    lang.code === state.localeCode ||
+                    lang.code === state.preferences.fallbackLanguage
+                ) {
+                    state.languageContainer = createContainer(
+                        state.preferences.currentLanguage,
+                        state.localeCode,
+                        state.preferences.fallbackLanguage
+                    );
+                    broadcast<LanguageChangeData>({
+                        id: "",
+                        type: BackOut.LANGUAGE_CHANGE,
+                        data: state.languageContainer,
+                    });
+                }
+            });
+        };
+
+        try {
+            const languageFiles = (
+                await fs.promises.readdir(langFolder, { withFileTypes: true })
+            )
+                .filter(
+                    (dirent) => dirent.isFile() && dirent.name.endsWith(".json")
+                )
+                .map((dirent) => dirent.name);
+            languageFiles.forEach((lf) => onLangAddOrChange(lf));
+        } catch (error) {
+            const errorMessage =
+                error instanceof Error
+                    ? error.message
+                    : error?.toString() ?? "";
+            log({
+                source: "Back",
+                content: `Error while loading language files. Error: ${errorMessage}`,
+            });
+        }
+    };
+    await loadLanguages();
+
     // Init services
     try {
         state.serviceInfo = await ServicesFile.readFile(
@@ -394,113 +464,6 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             );
         }
     }
-
-    // Init language
-    state.languageWatcher.on("ready", () => {
-        // Add event listeners
-        state.languageWatcher.on("add", onLangAddOrChange);
-        state.languageWatcher.on("change", onLangAddOrChange);
-        state.languageWatcher.on(
-            "remove",
-            (filename: string, offsetPath: string) => {
-                state.languageQueue.push(() => {
-                    const filePath = path.join(
-                        state.languageWatcher.getFolder() || "",
-                        offsetPath,
-                        filename
-                    );
-                    const index = state.languages.findIndex(
-                        (l) => l.filename === filePath
-                    );
-                    if (index >= 0) {
-                        state.languages.splice(index, 1);
-                    }
-                });
-            }
-        );
-        // Add initial files
-        console.log("Adding initial playlist files.");
-        for (let filename of state.languageWatcher.filenames) {
-            onLangAddOrChange(filename, "");
-        }
-        // Functions
-        function onLangAddOrChange(filename: string, offsetPath: string) {
-            state.languageQueue.push(async () => {
-                const filePath = path.join(
-                    state.languageWatcher.getFolder() || "",
-                    offsetPath,
-                    filename
-                );
-                const langFile = await readLangFile(filePath);
-                let lang = state.languages.find((l) => l.filename === filePath);
-                if (lang) {
-                    lang.data = langFile;
-                } else {
-                    lang = {
-                        filename: filePath,
-                        code: removeFileExtension(filename),
-                        data: langFile,
-                    };
-                    state.languages.push(lang);
-                }
-
-                broadcast<LanguageListChangeData>({
-                    id: "",
-                    type: BackOut.LANGUAGE_LIST_CHANGE,
-                    data: state.languages,
-                });
-
-                if (
-                    lang.code === state.preferences.currentLanguage ||
-                    lang.code === state.localeCode ||
-                    lang.code === state.preferences.fallbackLanguage
-                ) {
-                    state.languageContainer = createContainer(
-                        state.preferences.currentLanguage,
-                        state.localeCode,
-                        state.preferences.fallbackLanguage
-                    );
-                    broadcast<LanguageChangeData>({
-                        id: "",
-                        type: BackOut.LANGUAGE_CHANGE,
-                        data: state.languageContainer,
-                    });
-                }
-            });
-        }
-    });
-    state.languageWatcher.on("error", console.error);
-    const langFolder = path.join(
-        content.isDev ? process.cwd() : content.exePath,
-        "lang"
-    );
-    fs.stat(langFolder, (error) => {
-        if (!error) {
-            state.languageWatcher.watch(langFolder);
-        } else {
-            log({
-                source: "Back",
-                content:
-                    typeof error.toString === "function"
-                        ? error.toString()
-                        : error + "",
-            });
-            if (error.code === "ENOENT") {
-                log({
-                    source: "Back",
-                    content: `Failed to watch language folder. Folder does not exist (Path: "${langFolder}")`,
-                });
-            } else {
-                log({
-                    source: "Back",
-                    content:
-                        typeof error.toString === "function"
-                            ? error.toString()
-                            : error + "",
-                });
-            }
-        }
-    });
 
     // Init themes
     state.themeWatcher.on("ready", () => {
@@ -1822,7 +1785,6 @@ function exit() {
             }
         }
 
-        state.languageWatcher.abort();
         state.themeWatcher.abort();
 
         Promise.all([

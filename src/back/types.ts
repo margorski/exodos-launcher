@@ -42,7 +42,6 @@ export type BackState = {
     log: ILogEntry[];
     serviceInfo?: ServiceFileData;
     services: Record<string, ManagedChildProcess>;
-    languageWatcher: FolderWatcher;
     languageQueue: EventQueue;
     languages: LangFile[];
     languageContainer: LangContainer;
@@ -79,7 +78,7 @@ type InitEmitter = EmitterPart<BackInit, () => void> & EventEmitter;
 
 interface EmitterPart<
     E extends string | number | Symbol,
-    F extends (...args: any[]) => void,
+    F extends (...args: any[]) => void
 > {
     on(event: E, listener: F): this;
     once(event: E, listener: F): this;
@@ -109,5 +108,5 @@ export type LogFunc = (entry: ILogPreEntry) => void;
 export type OpenDialogFunc = (options: MessageBoxOptions) => Promise<number>;
 export type OpenExternalFunc = (
     url: string,
-    options?: OpenExternalOptions,
+    options?: OpenExternalOptions
 ) => Promise<void>;
