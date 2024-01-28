@@ -32,8 +32,6 @@ import {
     RandomGamesData,
     RandomGamesResponseData,
     SetLocaleData,
-    ThemeChangeData,
-    ThemeListChangeData,
     UpdateConfigData,
     ViewGame,
     WrappedRequest,
@@ -157,8 +155,6 @@ const state: BackState = {
     languageQueue: new EventQueue(),
     languages: [],
     languageContainer: getDefaultLocalization(), // Cache of the latest lang container - used by back when it needs lang strings
-    themeWatcher: new FolderWatcher(),
-    themeQueue: new EventQueue(),
     themeFiles: [],
     playlistWatcher: new FolderWatcher(),
     playlistQueue: new EventQueue(),
@@ -373,7 +369,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                     state.languages.push(lang);
                 }
 
-                console.log(`Added language ${lang}`);
+                console.log(`Added language ${lang.filename}`);
 
                 broadcast<LanguageListChangeData>({
                     id: "",
@@ -464,196 +460,6 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             );
         }
     }
-
-    // Init themes
-    state.themeWatcher.on("ready", () => {
-        // Add event listeners
-        state.themeWatcher.on("add", onThemeAdd);
-        state.themeWatcher.on(
-            "change",
-            (filename: string, offsetPath: string) => {
-                state.themeQueue.push(() => {
-                    const item = findOwner(filename, offsetPath);
-                    if (item) {
-                        // A file in a theme has been changed
-                        broadcast<ThemeChangeData>({
-                            id: "",
-                            type: BackOut.THEME_CHANGE,
-                            data: item.entryPath,
-                        });
-                    } else {
-                        console.warn(
-                            "A file has been changed in a theme that is not registered " +
-                                `(Filename: "${filename}", OffsetPath: "${offsetPath}")`
-                        );
-                    }
-                });
-            }
-        );
-        state.themeWatcher.on(
-            "remove",
-            (filename: string, offsetPath: string) => {
-                state.themeQueue.push(() => {
-                    const item = findOwner(filename, offsetPath);
-                    if (item) {
-                        if (
-                            item.entryPath === path.join(offsetPath, filename)
-                        ) {
-                            // (Entry file was removed)
-                            state.themeFiles.splice(
-                                state.themeFiles.indexOf(item),
-                                1
-                            );
-                            // A theme has been removed
-                            broadcast<ThemeListChangeData>({
-                                id: "",
-                                type: BackOut.THEME_LIST_CHANGE,
-                                data: state.themeFiles,
-                            });
-                        } else {
-                            // (Non-entry file was removed)
-                            // A file in a theme has been removed
-                            broadcast<ThemeChangeData>({
-                                id: "",
-                                type: BackOut.THEME_CHANGE,
-                                data: item.entryPath,
-                            });
-                        }
-                    } else {
-                        console.warn(
-                            "A file has been removed from a theme that is not registered " +
-                                `(Filename: "${filename}", OffsetPath: "${offsetPath}")`
-                        );
-                    }
-                });
-            }
-        );
-        // Add initial files
-        for (let filename of state.themeWatcher.filenames) {
-            onThemeAdd(filename, "", false);
-        }
-        // Functions
-        function onThemeAdd(
-            filename: string,
-            offsetPath: string,
-            doBroadcast: boolean = true
-        ) {
-            console.log(
-                `Trying to add/update playlist: ${filename}, doBroadcast: ${doBroadcast}`
-            );
-            state.themeQueue.push(async () => {
-                const item = findOwner(filename, offsetPath);
-                if (item) {
-                    // A file has been added to this theme
-                    broadcast<ThemeChangeData>({
-                        id: "",
-                        type: BackOut.THEME_CHANGE,
-                        data: item.entryPath,
-                    });
-                } else {
-                    // Check if it is a potential entry file
-                    // (Entry files are either directly inside the "Theme Folder", or one folder below that and named "theme.css")
-                    const folders = offsetPath.split(path.sep);
-                    const folderName = folders[0] || offsetPath;
-                    const file = state.themeWatcher.getFile(
-                        folderName ? [...folders, filename] : [filename]
-                    );
-                    if (
-                        file &&
-                        file.isFile() &&
-                        (offsetPath === "" ||
-                            (offsetPath === folderName &&
-                                filename === themeEntryFilename))
-                    ) {
-                        const themeFolder =
-                            state.themeWatcher.getFolder() || "";
-                        const entryPath = path.join(
-                            themeFolder,
-                            folderName,
-                            filename
-                        );
-                        let meta: Partial<ThemeMeta> | undefined;
-                        try {
-                            const data = await readFile(entryPath, "utf8");
-                            meta = parseThemeMetaData(data) || {};
-                        } catch (error) {
-                            console.warn(
-                                `Failed to load theme entry file (File: "${entryPath}")`,
-                                error
-                            );
-                        }
-                        if (meta) {
-                            state.themeFiles.push({
-                                basename: folderName || filename,
-                                meta: meta,
-                                entryPath: path.relative(
-                                    themeFolder,
-                                    entryPath
-                                ),
-                            });
-                            if (doBroadcast) {
-                                broadcast<ThemeListChangeData>({
-                                    id: "",
-                                    type: BackOut.THEME_LIST_CHANGE,
-                                    data: state.themeFiles,
-                                });
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        function findOwner(filename: string, offsetPath: string) {
-            if (offsetPath) {
-                // (Sub-folder)
-                const index = offsetPath.indexOf(path.sep);
-                const folderName =
-                    index >= 0 ? offsetPath.substr(0, index) : offsetPath;
-                return state.themeFiles.find(
-                    (item) => item.basename === folderName
-                );
-            } else {
-                // (Theme folder)
-                return state.themeFiles.find(
-                    (item) =>
-                        item.entryPath === filename ||
-                        item.basename === filename
-                );
-            }
-        }
-    });
-    state.themeWatcher.on("error", console.error);
-    const themeFolder = path.join(
-        state.config.exodosPath,
-        state.config.themeFolderPath
-    );
-    fs.stat(themeFolder, (error) => {
-        if (!error) {
-            state.themeWatcher.watch(themeFolder, { recursionDepth: -1 });
-        } else {
-            log({
-                source: "Back",
-                content:
-                    typeof error.toString === "function"
-                        ? error.toString()
-                        : error + "",
-            });
-            if (error.code === "ENOENT") {
-                log({
-                    source: "Back",
-                    content: `Failed to watch theme folder. Folder does not exist (Path: "${themeFolder}")`,
-                });
-            } else {
-                log({
-                    source: "Back",
-                    content:
-                        typeof error.toString === "function"
-                            ? error.toString()
-                            : error + "",
-                });
-            }
-        }
-    });
 
     // Init playlists
     state.playlistWatcher.on("ready", () => {
@@ -1784,8 +1590,6 @@ function exit() {
                 execProcess(state.serviceInfo.stop[i], true);
             }
         }
-
-        state.themeWatcher.abort();
 
         Promise.all([
             // Close WebSocket server
