@@ -8,7 +8,7 @@ interface CallableCopy<T extends AnyFunction> extends Function {
 
 type EqualsCheck<T extends AnyFunction> = (
     newArgs: ArgumentTypesOf<T>,
-    prevArgs: ArgumentTypesOf<T>,
+    prevArgs: ArgumentTypesOf<T>
 ) => boolean;
 
 /** A buffered event. */

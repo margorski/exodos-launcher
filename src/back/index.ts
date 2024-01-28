@@ -225,15 +225,13 @@ function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
     }
 }
 
-const initExodosWatcher = () => {
-    console.log("Initialize eXoDOS watchers...");
-    initExodosInstalledGamesWatcher();
-    initExodosMagazinesWatcher();
-};
-
 function initExodosMagazinesWatcher() {
     const magazinesPath = path.resolve(
         path.join(state.config.exodosPath, "eXo/Magazines/")
+    );
+
+    console.log(
+        `Checking if exodos magazines exists in path ${magazinesPath}...`
     );
     const magazinesPathExists = fs.existsSync(magazinesPath);
     if (magazinesPathExists) {
@@ -245,6 +243,8 @@ function initExodosMagazinesWatcher() {
                 magazinesEnabled: true,
             },
         });
+    } else {
+        console.log(`Magazines not found, disabling magazines`);
     }
 }
 
@@ -253,12 +253,16 @@ function initExodosInstalledGamesWatcher() {
         path.join(state.config.exodosPath, "eXo/eXoDOS/")
     );
 
+    console.log(
+        `Initializing installed games watcher with ${gamesPath} path...`
+    );
     const installedGamesWatcher = new FolderWatcher(gamesPath, {
         recursionDepth: 0,
     });
 
     installedGamesWatcher
         .on("ready", () => {
+            console.log("Installed games watcher is ready.");
             installedGamesWatcher
                 .on("add", (path) => {
                     console.log(`Game ${path} added, rescan installed games.`);
@@ -881,7 +885,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     },
                 });
                 if (getDosPlatform()) {
-                    initExodosWatcher();
+                    initExodosInstalledGamesWatcher();
+                    initExodosMagazinesWatcher();
                 }
             }
             break;

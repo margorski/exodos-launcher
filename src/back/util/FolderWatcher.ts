@@ -168,14 +168,21 @@ export class FolderWatcher extends WrappedEventEmitter {
                         this.onWatchedFolderRead(files);
                     }
                 });
+
+                const aggregatedCallback = eventAggregator(
+                    this.onWatcherChange.bind(this),
+                    {
+                        time: 25,
+                    }
+                );
+
                 // Watch folder for changes
                 this._watcher = fs.watch(
                     this._folderPath,
-                    { persistent: false },
-                    () =>
-                        eventAggregator(this.onWatcherChange.bind(this), {
-                            time: 25,
-                        })
+                    {
+                        persistent: false,
+                    },
+                    aggregatedCallback
                 );
                 fixFsWatcher(this._watcher); // (Fix a bug with node/electron)
                 // Relay errors
@@ -250,7 +257,13 @@ export class FolderWatcher extends WrappedEventEmitter {
     }
 
     /** Called when a child file is changed. */
-    protected onWatcherChange(eventType: string, filename: string): void {
+    protected onWatcherChange(
+        eventType: fs.WatchEventType,
+        filename: string | null
+    ): void {
+        if (!filename) return;
+
+        console.log("On watcher change", eventType, filename);
         const filePath = path.join(this._folderPath || "", filename);
 
         // Update filenames array

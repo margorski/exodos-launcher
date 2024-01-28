@@ -18,7 +18,6 @@ import { Theme } from "@shared/ThemeFile";
 import { GameManagerState } from "./game/types";
 import { ManagedChildProcess } from "./ManagedChildProcess";
 import { EventQueue } from "./util/EventQueue";
-import { FolderWatcher } from "./util/FolderWatcher";
 
 export type BackState = {
     isInit: boolean;
