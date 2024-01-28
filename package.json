@@ -38,9 +38,9 @@
     "author": "mgo",
     "license": "MIT",
     "dependencies": {
-        "@electron/remote": "2.0.8",
+        "@electron/remote": "^2.1.2",
         "connected-react-router": "6.5.2",
-        "electron-updater": "4.2.0",
+        "electron-updater": "^6.1.7",
         "fast-xml-parser": "3.12.19",
         "follow-redirects": "1.14.8",
         "fs-extra": "8.1.0",
@@ -63,7 +63,6 @@
         "yaml": "1.7.2"
     },
     "devDependencies": {
-        "@types/electron-builder": "2.8.0",
         "@types/enzyme": "3.10.8",
         "@types/enzyme-adapter-react-16": "1.0.6",
         "@types/enzyme-to-json": "1.5.4",
@@ -71,7 +70,7 @@
         "@types/fs-extra": "8.0.0",
         "@types/jest": "24.0.17",
         "@types/mime": "2.0.1",
-        "@types/node": "^20.11.8",
+        "@types/node": "^20.11.9",
         "@types/node-7z": "~2.1.8",
         "@types/react": "16.8.24",
         "@types/react-dom": "16.8.5",
@@ -87,7 +86,7 @@
         "coveralls": "3.0.9",
         "cross-env": "5.2.0",
         "electron": "19.0.1",
-        "electron-builder": "21.2.0",
+        "electron-builder": "^24.9.1",
         "enzyme": "3.11.0",
         "enzyme-adapter-react-16": "1.15.5",
         "enzyme-to-json": "3.6.1",
