@@ -72,11 +72,6 @@ import {
     overwritePreferenceData,
 } from "@shared/preferences/util";
 import {
-    parseThemeMetaData,
-    themeEntryFilename,
-    ThemeMeta,
-} from "@shared/ThemeFile";
-import {
     createErrorProxy,
     deepCopy,
     isErrorProxy,
@@ -110,7 +105,6 @@ import { FolderWatcher } from "./util/FolderWatcher";
 import { walkSync } from "./util/misc";
 import { uuid } from "./util/uuid";
 
-const readFile = util.promisify(fs.readFile);
 const unlink = util.promisify(fs.unlink);
 
 // Make sure the process.send function is available
@@ -156,7 +150,6 @@ const state: BackState = {
     languages: [],
     languageContainer: getDefaultLocalization(), // Cache of the latest lang container - used by back when it needs lang strings
     themeFiles: [],
-    playlistWatcher: new FolderWatcher(),
     playlistQueue: new EventQueue(),
     playlists: [],
     execMappings: [],
@@ -406,13 +399,9 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                 .map((dirent) => dirent.name);
             languageFiles.forEach((lf) => onLangAddOrChange(lf));
         } catch (error) {
-            const errorMessage =
-                error instanceof Error
-                    ? error.message
-                    : error?.toString() ?? "";
             log({
                 source: "Back",
-                content: `Error while loading language files. Error: ${errorMessage}`,
+                content: `Error while loading language files. Error: ${error}`,
             });
         }
     };
@@ -461,65 +450,23 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
         }
     }
 
-    // Init playlists
-    state.playlistWatcher.on("ready", () => {
-        // Add event listeners
-        state.playlistWatcher.on("add", onPlaylistAddOrChange);
-        state.playlistWatcher.on("change", onPlaylistAddOrChange);
-        state.playlistWatcher.on(
-            "remove",
-            (filename: string, offsetPath: string) => {
-                state.playlistQueue.push(async () => {
-                    const index = state.playlists.findIndex(
-                        (p) => p.filename === filename
-                    );
-                    if (index >= 0) {
-                        const id = state.playlists[index].filename;
-                        state.playlists.splice(index, 1);
-                        // Clear all query caches that uses this playlist
-                        const hashes = Object.keys(state.queries);
-                        for (let hash of hashes) {
-                            const cache = state.queries[hash];
-                            if (cache.query.playlistId === id) {
-                                delete state.queries[hash]; // Clear query from cache
-                            }
-                        }
-                        broadcast<PlaylistRemoveData>({
-                            id: "",
-                            type: BackOut.PLAYLIST_REMOVE,
-                            data: id,
-                        });
-                    } else {
-                        log({
-                            source: "Playlist",
-                            content: `Failed to remove playlist. Playlist is not registered (Filename: ${filename})`,
-                        });
-                    }
-                });
-            }
+    const loadPlaylists = async () => {
+        console.log("Loading playlists...");
+
+        const playlistFolder = path.join(
+            state.config.exodosPath,
+            state.config.playlistFolderPath
         );
-        // Add initial files
-        for (let filename of state.playlistWatcher.filenames) {
-            onPlaylistAddOrChange(filename, "", false);
-        }
-        // Track when all playlist are done loading
-        state.playlistQueue.push(async () => {
-            state.init[BackInit.PLAYLISTS] = true;
-            state.initEmitter.emit(BackInit.PLAYLISTS);
-        });
 
         // Functions
         function onPlaylistAddOrChange(
             filename: string,
-            offsetPath: string,
             doBroadcast: boolean = true
         ) {
+            console.log("Playlist added or changed: " + filename);
             state.playlistQueue.push(async () => {
                 // Load and parse playlist
-                const filePath = path.join(
-                    state.playlistWatcher.getFolder() || "",
-                    filename
-                );
+                const filePath = path.join(playlistFolder, filename);
                 let playlist: GamePlaylist | undefined;
                 try {
                     const data = await PlaylistFile.readFile(
@@ -573,7 +520,33 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
                 }
             });
         }
-    });
+        try {
+            const playlistFiles = (
+                await fs.promises.readdir(playlistFolder, {
+                    withFileTypes: true,
+                })
+            )
+                .filter(
+                    (dirent) => dirent.isFile() && dirent.name.endsWith(".xml")
+                )
+                .map((dirent) => dirent.name);
+            playlistFiles.forEach((pf) => onPlaylistAddOrChange(pf));
+        } catch (error) {
+            log({
+                source: "Back",
+                content: `Error while loading language files. Error: ${error}`,
+            });
+        }
+        state.init[BackInit.PLAYLISTS] = true;
+        state.initEmitter.emit(BackInit.PLAYLISTS);
+    };
+    await loadPlaylists();
+
+    // Init Game Manager
+    state.gameManager.platformsPath = path.join(
+        state.config.exodosPath,
+        state.config.platformFolderPath
+    );
 
     const boxImagesPath = path.join(
         state.config.exodosPath,
@@ -591,40 +564,6 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
             TitleThumbnail: "",
         });
     }
-
-    const playlistFolder = path.join(
-        state.config.exodosPath,
-        state.config.playlistFolderPath
-    );
-    fs.stat(playlistFolder, (error) => {
-        if (!error) {
-            state.playlistWatcher.watch(playlistFolder);
-        } else {
-            if (error.code === "ENOENT") {
-                log({
-                    source: "Back",
-                    content: `Failed to watch playlist folder. Folder does not exist (Path: "${playlistFolder}")`,
-                });
-            } else {
-                log({
-                    source: "Back",
-                    content:
-                        typeof error.toString === "function"
-                            ? error.toString()
-                            : error + "",
-                });
-            }
-
-            state.init[BackInit.PLAYLISTS] = true;
-            state.initEmitter.emit(BackInit.PLAYLISTS);
-        }
-    });
-
-    // Init Game Manager
-    state.gameManager.platformsPath = path.join(
-        state.config.exodosPath,
-        state.config.platformFolderPath
-    );
 
     GameManager.loadPlatforms(state.gameManager, thumbnails)
         .then((errors) => {

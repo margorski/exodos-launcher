@@ -46,7 +46,6 @@ export type BackState = {
     languages: LangFile[];
     languageContainer: LangContainer;
     themeFiles: ThemeListItem[];
-    playlistWatcher: FolderWatcher;
     playlistQueue: EventQueue;
     playlists: GamePlaylist[];
     execMappings: ExecMapping[];
