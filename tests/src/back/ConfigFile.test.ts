@@ -26,7 +26,7 @@ describe("Config File", () => {
         const filePath = path.join(
             RESULT_PATH,
             BASE_PATH,
-            "config_generated.json",
+            "config_generated.json"
         );
         await ConfigFile.readOrCreateFile(filePath);
         // Get expected defaults

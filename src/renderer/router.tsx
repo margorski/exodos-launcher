@@ -99,7 +99,7 @@ export class AppRouter extends React.Component<AppRouterProps> {
                     path={Paths.BROWSE}
                     element={<ConnectedBrowsePage {...browseProps} />}
                 />
-                <Route path={Paths.LOGS} element=npm {<ConnectedLogsPage />} />
+                <Route path={Paths.LOGS} element={<ConnectedLogsPage />} />
                 <Route
                     path={Paths.CONFIG}
                     element={<ConnectedConfigPage {...configProps} />}

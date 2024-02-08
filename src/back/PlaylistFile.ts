@@ -1,12 +1,8 @@
 import * as fs from "fs";
-import { promisify } from "util";
 import { GamePlaylistContent, GamePlaylistEntry } from "@shared/interfaces";
-import { stringifyJsonDataFile } from "@shared/Util";
 import { Coerce } from "@shared/utils/Coerce";
 import { IObjectParserProp, ObjectParser } from "@shared/utils/ObjectParser";
 import * as fastXmlParser from "fast-xml-parser";
-
-const writeFile = promisify(fs.writeFile);
 
 const { str } = Coerce;
 
@@ -18,7 +14,7 @@ export namespace PlaylistFile {
      */
     export function readFile(
         filePath: string,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): Promise<GamePlaylistContent> {
         return new Promise((resolve, reject) => {
             fs.readFile(filePath, (error, data) => {
@@ -45,58 +41,19 @@ export namespace PlaylistFile {
         });
     }
 
-    //   await Promise.all(platforms.map(async (platform) => {
-    //     try {
-    //       const content = await readFile(platform.filePath);
-    //       const data: any | undefined = fastXmlParser.parse(content.toString(), {
-    //         ignoreAttributes: true,
-    //         ignoreNameSpace: true,
-    //         parseNodeValue: true,
-    //         parseAttributeValue: false,
-    //         parseTrueNumberOnly: true,
-    //         // @TODO Look into which settings are most appropriate
-    //       });
-    //       if (!LaunchBox.formatPlatformFileData(data)) { throw new Error(`Failed to parse XML file: ${platform.filePath}`); }
-
-    //       // Populate platform
-    //       platform.data = data;
-    //       platform.collection = GameParser.parse(data, platform.library);
-
-    //       // Success!
-    //       state.platforms.push(platform);
-    //     } catch (e) {
-    //       errors.push({
-    //         ...copyError(e),
-    //         filePath: platform.filePath,
-    //       });
-    //     }
-    //   }));
-
-    //   return errors;
-    // }
-
     /**
      * Save the data to a file asynchronously.
      * @param filePath Path of the file.
      * @param data Data to save to the file.
      */
     export function saveFile(filePath: string, data: GamePlaylistContent): any {
-        // const obj = {
-        //   games: data.games,
-        //   title: data.title,
-        //   description: data.description,
-        //   author: data.author,
-        //   icon: data.icon,
-        //   library: data.library,
-        // };
-        // return writeFile(filePath, stringifyJsonDataFile(obj));
         console.log("Playlists writing option disabled");
         return;
     }
 
     function parseGamePlaylist(
         data: any,
-        onError?: (error: string) => void,
+        onError?: (error: string) => void
     ): GamePlaylistContent {
         const playlist: GamePlaylistContent = {
             games: [],
@@ -130,7 +87,7 @@ export namespace PlaylistFile {
                 onError &&
                 ((e) =>
                     onError(
-                        `Error while converting Playlist: ${e.toString()}`,
+                        `Error while converting Playlist: ${e.toString()}`
                     )),
         });
         parser.prop("title", (v) => (playlist.title = str(v)));
@@ -145,7 +102,7 @@ export namespace PlaylistFile {
     }
 
     function parseGamePlaylistEntry(
-        parser: IObjectParserProp<any>,
+        parser: IObjectParserProp<any>
     ): GamePlaylistEntry {
         let parsed: GamePlaylistEntry = {
             id: "",

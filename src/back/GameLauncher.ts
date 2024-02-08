@@ -1,4 +1,3 @@
-import { LaunchExodosContentData } from "@shared/back/types";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { ExecMapping } from "@shared/interfaces";
 import { LangContainer } from "@shared/lang";
@@ -9,9 +8,8 @@ import {
     stringifyArray,
     escapeShell,
 } from "@shared/Util";
-import { ChildProcess, exec, execFile } from "child_process";
+import { ChildProcess, exec } from "child_process";
 import { EventEmitter } from "events";
-import { fstat } from "fs-extra";
 import * as fs from "fs";
 import * as path from "path";
 import { LogFunc, OpenDialogFunc, OpenExternalFunc } from "./types";
