@@ -92,6 +92,8 @@ import * as mime from "mime";
 import * as path from "path";
 import * as util from "util";
 import * as WebSocket from "ws";
+import { v4 as uuid } from "uuid";
+
 import { ConfigFile } from "./ConfigFile";
 import { loadExecMappingsFile } from "./Execs";
 import { GameManager } from "./game/GameManager";
@@ -103,7 +105,6 @@ import { BackQuery, BackQueryChache, BackState } from "./types";
 import { EventQueue } from "./util/EventQueue";
 import { FolderWatcher } from "./util/FolderWatcher";
 import { walkSync } from "./util/misc";
-import { uuid } from "./util/uuid";
 
 const unlink = util.promisify(fs.unlink);
 
@@ -335,6 +336,10 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     state.preferences = pref;
     state.config = conf;
 
+    console.log(conf);
+    console.info(
+        `Starting exogui with ${state.config.exodosPath} exodos path.`
+    );
     console.log("Starting directory: " + process.cwd());
 
     try {
@@ -761,7 +766,7 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
 }
 
 function onConnect(
-    this: WebSocket,
+    this: WebSocket.Server,
     socket: WebSocket,
     request: http.IncomingMessage
 ): void {

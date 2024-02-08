@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import { MenuItemConstructorOptions } from "electron";
 import { BrowserWindow, shell } from "@electron/remote";
 import * as React from "react";
@@ -23,7 +24,6 @@ import {
     resourceExists,
 } from "../Util";
 import { LangContext } from "../util/lang";
-import { uuid } from "../util/uuid";
 import { DropdownInputField } from "./DropdownInputField";
 import { ImagePreview } from "./ImagePreview";
 import { InputField } from "./InputField";

@@ -40,13 +40,13 @@ const configDataDefaults: IConfigDataDefaults = {
     win32: Object.freeze(
         overwriteConfigData(deepCopy(configDataDefaultBase), {
             useCustomTitlebar: true,
-        }),
+        })
     ),
     // Linux
     linux: Object.freeze(
         overwriteConfigData(deepCopy(configDataDefaultBase), {
             useCustomTitlebar: false,
-        }),
+        })
     ),
     // ...
 };
@@ -56,7 +56,7 @@ const configDataDefaults: IConfigDataDefaults = {
  * @param platform Platform to get the defaults for.
  */
 export function getDefaultConfigData(
-    platform: NodeJS.Platform,
+    platform: NodeJS.Platform
 ): IAppConfigData {
     return configDataDefaults[platform] || configDataDefaultBase;
 }
@@ -70,7 +70,7 @@ export function getDefaultConfigData(
 export function overwriteConfigData(
     source: IAppConfigData,
     data: Partial<IAppConfigData>,
-    onError?: (error: string) => void,
+    onError?: (error: string) => void
 ): IAppConfigData {
     const parser = new ObjectParser({
         input: data,
@@ -81,27 +81,27 @@ export function overwriteConfigData(
     parser.prop("exodosPath", (v) => (source.exodosPath = parseVarStr(str(v))));
     parser.prop(
         "imageFolderPath",
-        (v) => (source.imageFolderPath = parseVarStr(str(v))),
+        (v) => (source.imageFolderPath = parseVarStr(str(v)))
     );
     parser.prop(
         "logoFolderPath",
-        (v) => (source.logoFolderPath = parseVarStr(str(v))),
+        (v) => (source.logoFolderPath = parseVarStr(str(v)))
     );
     parser.prop(
         "playlistFolderPath",
-        (v) => (source.playlistFolderPath = parseVarStr(str(v))),
+        (v) => (source.playlistFolderPath = parseVarStr(str(v)))
     );
     parser.prop(
         "jsonFolderPath",
-        (v) => (source.jsonFolderPath = parseVarStr(str(v))),
+        (v) => (source.jsonFolderPath = parseVarStr(str(v)))
     );
     parser.prop(
         "platformFolderPath",
-        (v) => (source.platformFolderPath = parseVarStr(str(v))),
+        (v) => (source.platformFolderPath = parseVarStr(str(v)))
     );
     parser.prop(
         "themeFolderPath",
-        (v) => (source.themeFolderPath = parseVarStr(str(v))),
+        (v) => (source.themeFolderPath = parseVarStr(str(v)))
     );
     parser.prop("useCustomTitlebar", (v) => (source.useCustomTitlebar = !!v));
     parser.prop("startServer", (v) => (source.startServer = !!v));
@@ -109,12 +109,12 @@ export function overwriteConfigData(
     parser.prop("useFiddler", (v) => (source.useFiddler = !!v));
     parser.prop(
         "disableExtremeGames",
-        (v) => (source.disableExtremeGames = !!v),
+        (v) => (source.disableExtremeGames = !!v)
     );
     parser.prop("showBrokenGames", (v) => (source.showBrokenGames = !!v));
     parser.prop(
         "nativePlatforms",
-        (v) => (source.nativePlatforms = strArray(v)),
+        (v) => (source.nativePlatforms = strArray(v))
     );
     parser.prop("backPortMin", (v) => (source.backPortMin = num(v)));
     parser.prop("backPortMax", (v) => (source.backPortMax = num(v)));

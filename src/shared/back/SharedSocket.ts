@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import * as uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
 import { BackIn, WrappedRequest, WrappedResponse } from "./types";
 
 type CB = ((ev: any) => any) | null;
@@ -69,7 +69,7 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
 
     private onClose = (event: SocketCloseEvent): void => {
         console.log(
-            `SharedSocket Closed (Code: ${event.code}, Clean: ${event.wasClean}, Reason: "${event.reason}", URL: "${this.url}").`,
+            `SharedSocket Closed (Code: ${event.code}, Clean: ${event.wasClean}, Reason: "${event.reason}", URL: "${this.url}").`
         );
         this.reconnect();
     };
@@ -81,7 +81,7 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
     public send<T, U = any>(
         type: BackIn,
         data: U,
-        callback?: (res: WrappedResponse<T>) => void,
+        callback?: (res: WrappedResponse<T>) => void
     ): boolean {
         return this.sendReq(
             {
@@ -89,13 +89,13 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
                 type: type,
                 data: data,
             },
-            callback,
+            callback
         );
     }
 
     public sendP<T, U = any>(
         type: BackIn,
-        data: U,
+        data: U
     ): Promise<WrappedResponse<T>> {
         return new Promise((resolve) => {
             this.sendReq<T, U>(
@@ -106,7 +106,7 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
                 },
                 (res) => {
                     resolve(res);
-                },
+                }
             );
         });
     }
@@ -119,7 +119,7 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
      */
     public sendReq<T, U = any>(
         request: WrappedRequest<U>,
-        callback?: (res: WrappedResponse<T>) => void,
+        callback?: (res: WrappedResponse<T>) => void
     ): boolean {
         // console.log('OUT', request);
         if (this.socket && this.socket.readyState === this.socketCon.OPEN) {
@@ -138,7 +138,7 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
                         : "There is no socket!") +
                     ` (ID: "${request.id}", Type: ${request.type} / "${
                         BackIn[request.type]
-                    }")`,
+                    }")`
             );
             return false;
         }
@@ -193,7 +193,7 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
     static connect<T extends Socket>(
         constructor: SocketConstructor<T>,
         url: string,
-        secret: string,
+        secret: string
     ): Promise<T> {
         return new Promise<T>((resolve, reject) => {
             let socket: T;

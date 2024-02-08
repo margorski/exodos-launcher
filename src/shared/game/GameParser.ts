@@ -1,4 +1,3 @@
-import { uuid } from "@back/util/uuid";
 import {
     IRawAdditionalApplicationInfo,
     IRawGameInfo,
@@ -9,11 +8,12 @@ import {
     IGameCollection,
     IGameInfo,
 } from "./interfaces";
+import { v4 as uuid } from "uuid";
 
 export class GameParser {
     public static parse(
         data: IRawPlatformFile,
-        filename: string,
+        filename: string
     ): IGameCollection {
         const collection: IGameCollection = {
             games: [],
@@ -37,7 +37,7 @@ export class GameParser {
             for (let i = games.length - 1; i >= 0; i--) {
                 collection.games[i] = GameParser.parseRawGame(
                     games[i],
-                    filename,
+                    filename
                 );
                 if (games[i].ManualPath) {
                     collection.additionalApplications.push({
@@ -64,7 +64,7 @@ export class GameParser {
 
     public static parseRawGame(
         data: Partial<IRawGameInfo>,
-        library: string,
+        library: string
     ): IGameInfo {
         const title = data.Title
             ? this.convertTheInTitle(data.Title.toString())
@@ -102,7 +102,7 @@ export class GameParser {
     }
 
     private static parseRawAdditionalApplication(
-        data: IRawAdditionalApplicationInfo,
+        data: IRawAdditionalApplicationInfo
     ): IAdditionalApplicationInfo {
         return {
             id: unescapeHTML(data.Id),
@@ -144,7 +144,7 @@ export class GameParser {
     }
 
     public static reverseParseAdditionalApplication(
-        addapp: IAdditionalApplicationInfo,
+        addapp: IAdditionalApplicationInfo
     ): IRawAdditionalApplicationInfo {
         return {
             Id: escapeHTML(addapp.id),
@@ -226,7 +226,7 @@ export const unescapeHTML = (function () {
                 } else {
                     return entity;
                 }
-            },
+            }
         );
     };
 })();

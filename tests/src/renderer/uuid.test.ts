@@ -1,5 +1,5 @@
 /* Tests for src/renderer/uuid.test.ts */
-import { validateSemiUUID, uuid } from "@renderer/util/uuid";
+import { v4 as uuid } from "uuid";
 import * as nodeCrypto from "crypto";
 
 describe("uuid.uuid()", function () {

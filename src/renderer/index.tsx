@@ -1,7 +1,5 @@
-import { ConnectedRouter } from "connected-react-router";
 import { createMemoryHistory } from "history";
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { AddLogData, BackIn } from "@shared/back/types";
 import configureStore from "./configureStore";
@@ -9,6 +7,8 @@ import ConnectedApp from "./containers/ConnectedApp";
 import { ContextReducerProvider } from "./context-reducer/ContextReducerProvider";
 import { PreferencesContextProvider } from "./context/PreferencesContext";
 import { ProgressContext } from "./context/ProgressContext";
+import { ReduxRouter } from "@lagunovsky/redux-react-router";
+import * as ReactDOM from "react-dom/client";
 
 (async () => {
     // Toggle DevTools when CTRL+SHIFT+I is pressed
@@ -18,30 +18,23 @@ import { ProgressContext } from "./context/ProgressContext";
             event.preventDefault();
         }
     });
-    // Wait for the preferences and config to initialize
+
     await window.External.waitUntilInitialized();
-    // Create history
     const history = createMemoryHistory();
-    // Create Redux store
     const store = configureStore(history);
-    // Render the application
-    ReactDOM.render(
+
+    const root = ReactDOM.createRoot(
+        document.getElementById("root") as HTMLElement
+    );
+    root.render(
         <Provider store={store}>
             <PreferencesContextProvider>
                 <ContextReducerProvider context={ProgressContext}>
-                    <ConnectedRouter history={history}>
+                    <ReduxRouter history={history}>
                         <ConnectedApp />
-                    </ConnectedRouter>
+                    </ReduxRouter>
                 </ContextReducerProvider>
             </PreferencesContextProvider>
-        </Provider>,
-        document.getElementById("root"),
+        </Provider>
     );
 })();
-
-function log(content: string): void {
-    window.External.back.send<any, AddLogData>(BackIn.ADD_LOG, {
-        source: "Launcher",
-        content: content,
-    });
-}

@@ -19,10 +19,12 @@ export namespace PreferencesFile {
     ): Promise<IAppPreferencesData> {
         let error: Error | undefined, data: IAppPreferencesData | undefined;
         // Try to get the data from the file
+        console.info(`Reading preferences file... (${filePath}) `);
         try {
             data = await readFile(filePath, onError);
         } catch (e) {
             error = e as Error;
+            console.error("Failed to read preferences file!", error);
         }
         // If that failed, set data to default and save it to a new file
         if (error || !data) {
@@ -32,6 +34,7 @@ export namespace PreferencesFile {
             );
         }
         // Return
+        console.log("##############", data);
         return data;
     }
 

@@ -3,9 +3,8 @@ import { readJsonFile } from "@shared/Util";
 import { Coerce } from "@shared/utils/Coerce";
 import { IObjectParserProp, ObjectParser } from "@shared/utils/ObjectParser";
 import { UpgradeStageState } from "../interfaces";
-import { uuid } from "../util/uuid";
 import { UpgradeStage } from "./types";
-
+import { v4 as uuid } from "uuid";
 const { str } = Coerce;
 
 export namespace UpgradeFile {

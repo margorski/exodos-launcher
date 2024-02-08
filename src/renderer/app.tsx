@@ -2,7 +2,6 @@ import { ipcRenderer } from "electron";
 import { app, dialog } from "@electron/remote";
 import { UpdateInfo } from "electron-updater";
 import * as React from "react";
-import { RouteComponentProps } from "react-router-dom";
 import {
     AddLogData,
     BackIn,
@@ -61,6 +60,7 @@ import { SearchQuery } from "./store/search";
 import { joinLibraryRoute } from "./Util";
 import { LangContext } from "./util/lang";
 import { debounce } from "@shared/utils/debounce";
+import { WithRouterProps } from "./containers/withRouter";
 // Auto updater works only with .appImage distribution. We are using .tar.gz
 // so it will just fail silently. Code is left for future.
 
@@ -90,7 +90,7 @@ type AppOwnProps = {
     search: SearchQuery;
 };
 
-export type AppProps = AppOwnProps & RouteComponentProps & WithPreferencesProps;
+export type AppProps = AppOwnProps & WithRouterProps & WithPreferencesProps;
 
 export type AppState = {
     views: Views;
@@ -672,7 +672,7 @@ export class App extends React.Component<AppProps, AppState> {
     }
 
     componentDidUpdate(prevProps: AppProps, prevState: AppState) {
-        const { history, location, preferencesData } = this.props;
+        const { navigate, location, preferencesData } = this.props;
         const library = getBrowseSubPath(this.props.location.pathname);
         const prevLibrary = getBrowseSubPath(prevProps.location.pathname);
         const view = this.state.views[library];
@@ -783,7 +783,7 @@ export class App extends React.Component<AppProps, AppState> {
                     this.setState({ views });
                 }
             } else {
-                history.push(joinLibraryRoute(route));
+                navigate(joinLibraryRoute(route));
             }
         }
     }

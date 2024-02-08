@@ -21,9 +21,9 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchToProps =>
         {
             clearSearch: () => searchActions.setQuery({ text: "" }),
         },
-        dispatch,
+        dispatch
     );
 
 export const ConnectedHomePage = withSearch(
-    withPreferences(connect(undefined, mapDispatchToProps)(HomePage)),
+    withPreferences(connect(undefined, mapDispatchToProps)(HomePage))
 );

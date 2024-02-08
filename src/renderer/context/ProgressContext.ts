@@ -1,6 +1,6 @@
 import { createContextReducer } from "../context-reducer/contextReducer";
 import { ReducerAction } from "../context-reducer/interfaces";
-import { uuid } from "../util/uuid";
+import { v4 as uuid } from "uuid";
 
 export type ProgressData = {
     /* Key identifier */
@@ -102,13 +102,13 @@ const defaultProgressState = {};
 /** Stores the progress data of various components. */
 export const ProgressContext = createContextReducer(
     progressReducer,
-    defaultProgressState,
+    defaultProgressState
 );
 
 /** Reducer for the progress state. */
 function progressReducer(
     prevState: Record<string, ProgressData[] | undefined>,
-    action: ProgressAction,
+    action: ProgressAction
 ) {
     // Things to keep in mind when writing an action handler:
     // * Don't mutate the previous state or the action object.
@@ -176,7 +176,7 @@ function progressReducer(
             const newItemCount = (newParent[index].itemCount += 1);
             const newPercentDone = Math.min(
                 (newItemCount / newParent[index].totalItems) * 100,
-                100,
+                100
             );
             newParent[index].itemCount = newItemCount;
             newParent[index].percentDone = newPercentDone;
@@ -189,7 +189,7 @@ function progressReducer(
             const newState = { ...prevState };
             const newParent = ensureParent(newState, parentKey);
             const index = newParent.findIndex((data) =>
-                data ? data.key === key : false,
+                data ? data.key === key : false
             );
             if (index >= 0) {
                 newParent.splice(index, 1);
@@ -209,7 +209,7 @@ function progressReducer(
  */
 function ensureParent(
     state: Record<string, ProgressData[] | undefined>,
-    parentKey: string,
+    parentKey: string
 ): ProgressData[] {
     const parent = state[parentKey];
     if (parent) {
@@ -254,7 +254,7 @@ function ensureProgressIndex(state: ProgressData[], key: string): number {
  */
 export function newProgress(
     parentKey: string,
-    dispatch: React.Dispatch<ProgressAction>,
+    dispatch: React.Dispatch<ProgressAction>
 ): ProgressHandle {
     return {
         parentKey: parentKey,
@@ -274,7 +274,7 @@ export type ProgressHandle = {
 export class ProgressDispatch {
     public static setPercentDone = (
         handle: ProgressHandle,
-        percentDone: number,
+        percentDone: number
     ) => {
         handle.dispatch({
             type: "set-percent-done",
@@ -288,7 +288,7 @@ export class ProgressDispatch {
 
     public static setUsePercentDone = (
         handle: ProgressHandle,
-        usePercentDone: boolean,
+        usePercentDone: boolean
     ) => {
         handle.dispatch({
             type: "set-use-percent-done",
@@ -324,7 +324,7 @@ export class ProgressDispatch {
 
     public static setTotalItems = (
         handle: ProgressHandle,
-        totalItems: number,
+        totalItems: number
     ) => {
         handle.dispatch({
             type: "set-total-items",

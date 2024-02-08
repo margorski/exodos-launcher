@@ -36,14 +36,14 @@ export function formatString<T extends Arg[]>(
                 if (React.isValidElement(arg)) {
                     onlyStrings = false;
                     return React.Children.toArray(arg).map((component) => ({
-                        ...component,
+                        ...(component as object),
                         key: index.toString(),
                     }));
                 }
                 return arg;
             } else {
                 throw new Error(
-                    `Failed to format string. Index out of bounds (index: "${i}", string: "${str}").`,
+                    `Failed to format string. Index out of bounds (index: "${i}", string: "${str}").`
                 );
             }
         } else {

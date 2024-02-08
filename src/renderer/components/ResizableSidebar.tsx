@@ -14,6 +14,7 @@ type ResizableSidebarProps = {
     onResize?: (event: SidebarResizeEvent) => void;
     /** Called when ending the resize the sidebar (when the divider is released). */
     onResizeEnd?: () => void;
+    children?: React.ReactNode;
 };
 
 type ResizableSidebarState = {
@@ -104,9 +105,9 @@ export class ResizableSidebar extends React.Component<
                 startX: event.clientX,
                 startWidth: parseInt(
                     document.defaultView.getComputedStyle(
-                        this.sidebarRef.current,
+                        this.sidebarRef.current
                     ).width || "",
-                    10,
+                    10
                 ),
             });
             if (this.props.onResizeStart) {

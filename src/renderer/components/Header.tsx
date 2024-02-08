@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, RouteComponentProps } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { LangContainer } from "@shared/lang";
 import { getLibraryItemTitle } from "@shared/library/util";
 import { WithPreferencesProps } from "../containers/withPreferences";
@@ -38,7 +38,7 @@ type OwnProps = {
     onRandomGameClick?: () => void;
 };
 
-export type HeaderProps = OwnProps & RouteComponentProps & WithPreferencesProps;
+export type HeaderProps = OwnProps & WithPreferencesProps;
 
 type HeaderState = {
     /** Current text in the search field. */
@@ -110,10 +110,10 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                                 key={`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`}
                                 title={getLibraryItemTitle(
                                     `${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`,
-                                    this.context.libraries,
+                                    this.context.libraries
                                 )}
                                 link={joinLibraryRoute(
-                                    `${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`,
+                                    `${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`
                                 )}
                             />
                         ) : null}
@@ -122,10 +122,10 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                                 key={`${EXODOS_GAMES_PLATFORM_NAME}.xml`}
                                 title={getLibraryItemTitle(
                                     `${EXODOS_GAMES_PLATFORM_NAME}.xml`,
-                                    this.context.libraries,
+                                    this.context.libraries
                                 )}
                                 link={joinLibraryRoute(
-                                    `${EXODOS_GAMES_PLATFORM_NAME}.xml`,
+                                    `${EXODOS_GAMES_PLATFORM_NAME}.xml`
                                 )}
                             />
                         ) : null}
@@ -199,7 +199,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
     }
 
     onReset = (
-        onOrderChange: ((event: GameOrderChangeEvent) => void) | undefined,
+        onOrderChange: ((event: GameOrderChangeEvent) => void) | undefined
     ) => {
         if (onOrderChange)
             onOrderChange({

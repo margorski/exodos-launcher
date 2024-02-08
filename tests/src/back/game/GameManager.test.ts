@@ -1,7 +1,7 @@
 import { GameManager, LaunchBox } from "@back/game/GameManager";
 import { GameManagerState } from "@back/game/types";
 import { EventQueue } from "@back/util/EventQueue";
-import { uuid } from "@back/util/uuid";
+import { v4 as uuid } from "uuid";
 import { GameParser } from "@shared/game/GameParser";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { GamePlatform } from "@shared/platform/interfaces";
@@ -28,7 +28,7 @@ describe("GameManager", () => {
         const platform = createPlatform(
             "test_platform",
             "test_library",
-            state.platformsPath,
+            state.platformsPath
         );
         state.platforms.push(platform);
         for (let i = 0; i < 10; i++) {
@@ -53,7 +53,7 @@ describe("GameManager", () => {
                         AdditionalApplication: [
                             ...before.data.LaunchBox.AdditionalApplication,
                             ...addApps.map(
-                                GameParser.reverseParseAdditionalApplication,
+                                GameParser.reverseParseAdditionalApplication
                             ),
                         ],
                     },
@@ -82,14 +82,14 @@ describe("GameManager", () => {
             });
             // Compare
             const platform = state.platforms.find(
-                (p) => p.name === game.platform && p.library === game.library,
+                (p) => p.name === game.platform && p.library === game.library
             );
             expect(platform).toEqual({
                 // Platform has been created and contains the game and add-apps
                 filePath: path.join(
                     state.platformsPath,
                     game.library,
-                    game.platform + ".xml",
+                    game.platform + ".xml"
                 ),
                 name: game.platform,
                 library: game.library,
@@ -97,7 +97,7 @@ describe("GameManager", () => {
                     LaunchBox: {
                         Game: [GameParser.reverseParseGame(game)],
                         AdditionalApplication: addApps.map(
-                            GameParser.reverseParseAdditionalApplication,
+                            GameParser.reverseParseAdditionalApplication
                         ),
                     },
                 },
@@ -115,12 +115,12 @@ describe("GameManager", () => {
         const fromPlatform = createPlatform(
             "from_platform",
             "some_library",
-            state.platformsPath,
+            state.platformsPath
         );
         const toPlatform = createPlatform(
             "to_platform",
             "another_library",
-            state.platformsPath,
+            state.platformsPath
         );
         state.platforms.push(fromPlatform, toPlatform);
         // Add Game
@@ -162,7 +162,7 @@ describe("GameManager", () => {
                 LaunchBox: {
                     Game: [GameParser.reverseParseGame(sameGame)],
                     AdditionalApplication: addApps.map(
-                        GameParser.reverseParseAdditionalApplication,
+                        GameParser.reverseParseAdditionalApplication
                     ),
                 },
             },
@@ -179,7 +179,7 @@ describe("GameManager", () => {
         const platform = createPlatform(
             "test_platform",
             "test_library",
-            state.platformsPath,
+            state.platformsPath
         );
         state.platforms.push(platform);
         // Add Game
@@ -222,7 +222,7 @@ describe("GameManager", () => {
         const platform = createPlatform(
             "test_platform",
             "test_library",
-            state.platformsPath,
+            state.platformsPath
         );
         state.platforms.push(platform);
         // Add Games & AddApps
@@ -248,21 +248,21 @@ describe("GameManager", () => {
                 data: {
                     LaunchBox: {
                         Game: before.data.LaunchBox.Game.filter(
-                            (g) => g.ID !== gameId,
+                            (g) => g.ID !== gameId
                         ),
                         AdditionalApplication:
                             before.data.LaunchBox.AdditionalApplication.filter(
-                                (a) => a.GameID !== gameId,
+                                (a) => a.GameID !== gameId
                             ),
                     },
                 },
                 collection: {
                     games: before.collection.games.filter(
-                        (g) => g.id !== gameId,
+                        (g) => g.id !== gameId
                     ),
                     additionalApplications:
                         before.collection.additionalApplications.filter(
-                            (a) => a.gameId !== gameId,
+                            (a) => a.gameId !== gameId
                         ),
                 },
             });
@@ -275,7 +275,7 @@ describe("GameManager", () => {
         const platform = createPlatform(
             "test_platform",
             "test_library",
-            state.platformsPath,
+            state.platformsPath
         );
         state.platforms.push(platform);
         // Add content to platform
@@ -291,8 +291,8 @@ describe("GameManager", () => {
         for (let i = 0; i < 5; i++) {
             saves.push(
                 expect(
-                    GameManager.savePlatforms(state, [platform]),
-                ).resolves.toBe(undefined),
+                    GameManager.savePlatforms(state, [platform])
+                ).resolves.toBe(undefined)
             );
         }
         return Promise.all(saves);
@@ -304,17 +304,17 @@ describe("GameManager", () => {
         const platform = createPlatform(
             "test_platform",
             "test_library",
-            state.platformsPath,
+            state.platformsPath
         );
         const game = createGame("", "");
         game.title = "Sonic";
         platform.collection.games.push(game);
         // Find Sonic (not Tails)
         expect(
-            GameManager.findGame([platform], (g) => g.title === "Tails"),
+            GameManager.findGame([platform], (g) => g.title === "Tails")
         ).toBe(undefined);
         expect(
-            GameManager.findGame([platform], (g) => g.title === "Sonic"),
+            GameManager.findGame([platform], (g) => g.title === "Sonic")
         ).toHaveProperty("title", "Sonic");
     });
 
@@ -338,7 +338,7 @@ function createState(): GameManagerState {
 function createPlatform(
     name: string,
     library: string,
-    folderPath: string,
+    folderPath: string
 ): GamePlatform {
     return {
         filePath: path.join(folderPath, library, name + ".xml"),
@@ -399,7 +399,7 @@ function createAddApp(gameId: string): IAdditionalApplicationInfo {
 }
 function createAddApps(
     gameId: string,
-    length: number,
+    length: number
 ): IAdditionalApplicationInfo[] {
     const result: IAdditionalApplicationInfo[] = [];
     for (let i = 0; i < length; i++) {

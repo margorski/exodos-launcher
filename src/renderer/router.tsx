@@ -1,6 +1,6 @@
-import { AppUpdater, UpdateInfo } from "electron-updater";
+import { UpdateInfo } from "electron-updater";
 import * as React from "react";
-import { Route, Switch } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
 import {
     ExodosBackendInfo,
@@ -10,7 +10,6 @@ import {
 import { LangFile } from "@shared/lang";
 import { Theme } from "@shared/ThemeFile";
 import { GameOrderChangeEvent } from "./components/GameOrder";
-import { AboutPage } from "./components/pages/AboutPage";
 import { NotFoundPage } from "./components/pages/NotFoundPage";
 import ConnectedBrowsePage, {
     ConnectedBrowsePageProps,
@@ -91,40 +90,22 @@ export class AppRouter extends React.Component<AppRouterProps> {
             localeCode: this.props.localeCode,
         };
         return (
-            <Switch>
-                <PropsRoute
-                    exact
+            <Routes>
+                <Route
                     path={Paths.HOME}
-                    component={ConnectedHomePage}
-                    {...homeProps}
+                    element={<ConnectedHomePage {...homeProps} />}
                 />
-                <PropsRoute
+                <Route
                     path={Paths.BROWSE}
-                    component={ConnectedBrowsePage}
-                    {...browseProps}
+                    element={<ConnectedBrowsePage {...browseProps} />}
                 />
-                <PropsRoute path={Paths.LOGS} component={ConnectedLogsPage} />
-                <PropsRoute
+                <Route path={Paths.LOGS} element=npm {<ConnectedLogsPage />} />
+                <Route
                     path={Paths.CONFIG}
-                    component={ConnectedConfigPage}
-                    {...configProps}
+                    element={<ConnectedConfigPage {...configProps} />}
                 />
-                <PropsRoute path={Paths.ABOUT} component={AboutPage} />
-                <Route component={NotFoundPage} />
-            </Switch>
+                <Route Component={NotFoundPage} />
+            </Routes>
         );
     }
-}
-
-/** Reusable way to pass properties down a router and to its component. */
-const PropsRoute = ({ component, ...rest }: any) => (
-    <Route
-        {...rest}
-        render={(routeProps) => renderMergedProps(component, routeProps, rest)}
-    />
-);
-
-function renderMergedProps(component: any, ...rest: any[]) {
-    const finalProps = Object.assign({}, ...rest);
-    return React.createElement(component, finalProps);
 }

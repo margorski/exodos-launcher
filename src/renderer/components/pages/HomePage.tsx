@@ -34,13 +34,13 @@ export function HomePage(props: HomePageProps) {
         (gameId: string) => {
             props.onLaunchGame(gameId);
         },
-        [props.onLaunchGame],
+        [props.onLaunchGame]
     );
 
-    const onLaunchCommand = React.useCallback((commandPath) => {
+    const onLaunchCommand = React.useCallback((commandPath: any) => {
         window.External.back.send<any, LaunchExodosContentData>(
             BackIn.LAUNCH_COMMAND,
-            { path: commandPath },
+            { path: commandPath }
         );
     }, []);
 
@@ -86,7 +86,7 @@ export function HomePage(props: HomePageProps) {
                 </ul>
             </div>
         ),
-        [strings, onLaunchCommand],
+        [strings, onLaunchCommand]
     );
 
     const renderedDocs = React.useMemo(
@@ -133,7 +133,7 @@ export function HomePage(props: HomePageProps) {
                 </ul>
             </div>
         ),
-        [strings, onLaunchCommand],
+        [strings, onLaunchCommand]
     );
 
     const renderedChangelog = React.useMemo(
@@ -153,7 +153,7 @@ export function HomePage(props: HomePageProps) {
                 </ul>
             </div>
         ),
-        [props.exodosBackendInfo, strings],
+        [props.exodosBackendInfo, strings]
     );
 
     const renderedGreetings = React.useMemo(
@@ -178,7 +178,7 @@ export function HomePage(props: HomePageProps) {
                 </div>
             </div>
         ),
-        [],
+        []
     );
 
     const renderedHeader = () => (
@@ -238,7 +238,7 @@ export function HomePage(props: HomePageProps) {
                 </div>
             </SizeProvider>
         ),
-        [strings, onLaunchGame],
+        [strings, onLaunchGame]
     );
 
     // Render
