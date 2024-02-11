@@ -62,7 +62,6 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
     };
 
     private onError = (event: Event): void => {
-        console.log("DUPA");
         console.log("SharedSocket Error:", event);
         this.reconnect();
     };

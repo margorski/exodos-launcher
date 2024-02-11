@@ -34,7 +34,6 @@ export namespace PreferencesFile {
             );
         }
         // Return
-        console.log("##############", data);
         return data;
     }
 

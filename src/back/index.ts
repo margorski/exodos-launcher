@@ -336,7 +336,6 @@ async function onProcessMessage(message: any, sendHandle: any): Promise<void> {
     state.preferences = pref;
     state.config = conf;
 
-    console.log(conf);
     console.info(
         `Starting exogui with ${state.config.exodosPath} exodos path.`
     );
