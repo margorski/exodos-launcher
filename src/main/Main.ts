@@ -357,7 +357,7 @@ export function main(init: Init): void {
         }
     }
 
-    function onAppWillQuit(event: Event): void {
+    function onAppWillQuit(event: Electron.Event): void {
         if (!init.args["connect-remote"] && !state.isQuitting) {
             // (Local back)
             const result = state.socket.send(BackIn.QUIT, undefined);
@@ -463,14 +463,7 @@ export function main(init: Init): void {
         if (mw.maximized) {
             window.maximize();
         }
-        // Relay window's maximize/unmaximize events to the renderer (as a single event with a flag)
-        window.on("maximize", (event: BrowserWindowEvent) => {
-            event.sender.send(WindowIPC.WINDOW_MAXIMIZE, true);
-        });
-        window.on("unmaximize", (event: BrowserWindowEvent) => {
-            event.sender.send(WindowIPC.WINDOW_MAXIMIZE, false);
-        });
-        // Replay window's move event to the renderer
+
         window.on("move", () => {
             if (!window) {
                 throw new Error();
