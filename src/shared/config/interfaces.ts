@@ -16,18 +16,6 @@ export type IAppConfigData = {
     themeFolderPath: string;
     /** If the custom title bar should be used in MainWindow */
     useCustomTitlebar: boolean;
-    /**
-     * If the Server should be started, and closed, together with this application.
-     * The "server" is defined in "services.json".
-     */
-    startServer: boolean;
-    /**
-     * If the Redirector should be started, and closed, together with this application.
-     * The "redirector" (and "fiddler") is defined in "services.json".
-     */
-    startRedirector: boolean;
-    /** If Fiddler should be used instead of the Redirector (Windows only) */
-    useFiddler: boolean;
     /** If games flagged as "extreme" should be hidden (mainly for parental control) */
     disableExtremeGames: boolean;
     /** If games flagged as "broken" should be hidden */

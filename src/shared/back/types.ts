@@ -3,10 +3,7 @@ import { IAppConfigData } from "../config/interfaces";
 import { IAdditionalApplicationInfo, IGameInfo } from "../game/interfaces";
 import {
     GamePlaylist,
-    IService,
-    ProcessAction,
     ExecMapping,
-    GamePropSuggestions,
 } from "../interfaces";
 import { LangContainer, LangFile } from "../lang";
 import { ILogEntry, ILogPreEntry } from "../Log/interface";
@@ -56,7 +53,6 @@ export enum BackOut {
     BROWSE_CHANGE,
     IMAGE_CHANGE,
     LOG_ENTRY_ADDED,
-    SERVICE_CHANGE,
     LANGUAGE_CHANGE,
     LANGUAGE_LIST_CHANGE,
     THEME_CHANGE,
@@ -119,7 +115,6 @@ export type GetRendererInitDataResponse = {
     preferences: IAppPreferencesData;
     fileServerPort: number;
     log: ILogEntry[];
-    services: IService[];
     languages: LangFile[];
     language: LangContainer;
     themes: Theme[];
@@ -266,13 +261,6 @@ export type LogEntryAddedData = {
     entry: ILogEntry;
     index: number;
 };
-
-export type ServiceActionData = {
-    action: ProcessAction;
-    id: string;
-};
-
-export type ServiceChangeData = IService;
 
 export type LanguageChangeData = LangContainer;
 

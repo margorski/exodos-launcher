@@ -134,8 +134,6 @@ const langTemplate = {
         "renameImagesIdToTitleDesc",
         "createMissingFolders",
         "createMissingFoldersDesc",
-        "servicesHeader",
-        "servicesMissing",
         "running",
         "stopped",
         "killing",

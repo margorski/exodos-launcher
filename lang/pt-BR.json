@@ -128,8 +128,6 @@
     "renameImagesIdToTitleDesc": "Encontrar todas as imagens dos jogos com os IDs dos jogos no nome do ficheiro e renomear-las para usar o título do jogo",
     "createMissingFolders": "Criar Pastas em Falta",
     "createMissingFoldersDesc": "Encontrar todas as pastas em falta na estrutura da pasta do eXoDOS e criá-las",
-    "servicesHeader": "Serviços de Plano de Fundo",
-    "servicesMissing": "Não há serviços.",
     "running": "Em execução",
     "stopped": "Parado",
     "killing": "Encerrando",

@@ -16,12 +16,10 @@ type OwnProps = {};
 export type LogsPageProps = OwnProps & WithPreferencesProps;
 
 const labels = [
-    "Background Services",
     "Game Launcher",
     "Language",
     "Redirector",
     "Router",
-    "Curation",
 ];
 
 export interface LogsPage {

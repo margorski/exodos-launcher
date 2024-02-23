@@ -25,7 +25,6 @@ import {
     IpcMainEvent,
     session,
     shell,
-    WebContents,
 } from "electron";
 import * as fs from "fs";
 import * as path from "path";
@@ -78,8 +77,6 @@ export function main(init: Init): void {
 
     startup();
 
-    // -- Functions --
-
     function startup() {
         // Add app event listener(s)
         app.once("ready", onAppReady);
@@ -107,7 +104,7 @@ export function main(init: Init): void {
                     new Promise((resolve) => {
                         fs.readFile(
                             path.join(state.mainFolderPath, ".version"),
-                            (error, data) => {
+                            (_, data) => {
                                 state._version = data
                                     ? parseInt(
                                           data.toString().replace(/[^\d]/g, ""),
@@ -229,7 +226,7 @@ export function main(init: Init): void {
                 // Send init message
                 .then((ws) =>
                     timeout(
-                        new Promise((resolve, reject) => {
+                        new Promise((resolve, _) => {
                             ws.onmessage = (event) => {
                                 const res: WrappedResponse = JSON.parse(
                                     event.data.toString()
@@ -304,7 +301,7 @@ export function main(init: Init): void {
         }
         // Reject all permission requests since we don't need any permissions.
         session.defaultSession.setPermissionRequestHandler(
-            (webContents, permission, callback) => callback(false)
+            (_, __, callback) => callback(false)
         );
         // Ignore proxy settings with chromium APIs (makes WebSockets not close when the Redirector changes proxy settings)
         session.defaultSession.setProxy({
@@ -312,41 +309,6 @@ export function main(init: Init): void {
             proxyRules: "",
             proxyBypassRules: "",
         });
-        // Stop non-local resources from being fetched (as long as their response has at least one header?)
-        // Only allow local scripts to execute (Not sure what this allows? "file://"? "localhost"?)
-        // (TypeScript type information is missing, check the link below for the type info)
-        // https://github.com/electron/electron/blob/master/docs/api/web-request.md#webrequestonheadersreceivedfilter-listener
-        // session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-        //   let url: URL | undefined;
-        //   try {
-        //     url = new URL(details.url);
-        //   } catch (e) {
-        //     /* Do nothing. */
-        //   }
-        //   // Don't accept any connections other than to the back
-        //   const remoteHostname = state.backHost.hostname;
-        //   if (
-        //     url &&
-        //     (url.hostname === remoteHostname ||
-        //       ((url.hostname === "localhost" || url.hostname === "127.0.0.1") && // Treat "localhost" and "127.0.0.1" as the same hostname
-        //         (remoteHostname === "localhost" || remoteHostname === "127.0.0.1")))
-        //   ) {
-        //     callback({
-        //       ...details.responseHeaders,
-        //       responseHeaders: Object.assign({
-        //         "Content-Security-Policy": ["default-src 'self'"],
-        //       }),
-        //     });
-        //   } else {
-        //     callback({
-        //       ...details.responseHeaders,
-        //       responseHeaders: Object.assign({
-        //         "Content-Security-Policy": ["default-src 'self'"],
-        //       }),
-        //       cancel: true,
-        //     });
-        //   }
-        // });
     }
 
     function onAppWindowAllClosed(): void {
@@ -368,7 +330,7 @@ export function main(init: Init): void {
     }
 
     function onAppWebContentsCreated(
-        event: Electron.Event,
+        _event: Electron.Event,
         webContents: Electron.WebContents
     ): void {
         // Open links to web pages in the OS-es default browser
@@ -526,12 +488,3 @@ export function main(init: Init): void {
 
     function noop() {}
 }
-
-/**
- * Type of the event emitted by BrowserWindow for the "maximize" and "unmaximize" events.
- * This type is not defined by Electron, so I guess I have to do it here instead.
- */
-type BrowserWindowEvent = {
-    preventDefault: () => void;
-    sender: WebContents;
-};

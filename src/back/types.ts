@@ -8,7 +8,6 @@ import { IGameInfo } from "@shared/game/interfaces";
 import {
     ExecMapping,
     GamePlaylist,
-    IBackProcessInfo,
 } from "@shared/interfaces";
 import { LangContainer, LangFile } from "@shared/lang";
 import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
@@ -16,7 +15,6 @@ import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { IAppPreferencesData } from "@shared/preferences/interfaces";
 import { Theme } from "@shared/ThemeFile";
 import { GameManagerState } from "./game/types";
-import { ManagedChildProcess } from "./ManagedChildProcess";
 import { EventQueue } from "./util/EventQueue";
 
 export type BackState = {
@@ -39,8 +37,6 @@ export type BackState = {
     initEmitter: InitEmitter;
     queries: Record<string, BackQueryChache>;
     log: ILogEntry[];
-    serviceInfo?: ServiceFileData;
-    services: Record<string, ManagedChildProcess>;
     languageQueue: EventQueue;
     languages: LangFile[];
     languageContainer: LangContainer;
@@ -81,16 +77,6 @@ interface EmitterPart<
     off(event: E, listener: F): this;
     emit(event: E, ...args: Parameters<F>): boolean;
 }
-
-export type ServiceFileData = {
-    redirector?: IBackProcessInfo;
-    fiddler?: IBackProcessInfo;
-    server?: IBackProcessInfo;
-    /** Processes to run before the launcher starts. */
-    start: IBackProcessInfo[];
-    /** Processes to run when the launcher closes. */
-    stop: IBackProcessInfo[];
-};
 
 export type ThemeListItem = Theme & {
     /**

@@ -128,8 +128,6 @@
     "renameImagesIdToTitleDesc": "파일명에 ID가 있는 게임 이미지들을 모두 찾아 ID대신 제목을 쓰게 바꿉니다",
     "createMissingFolders": "빠진 폴더들 만들기",
     "createMissingFoldersDesc": "플래시포인트 폴더구조에서 빠진 모든 파일들을 찾아 만듭니다",
-    "servicesHeader": "백그라운드 서비스",
-    "servicesMissing": "서비스가 없습니다.",
     "running": "실행 중",
     "stopped": "중지됨",
     "killing": "종료중",

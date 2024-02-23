@@ -64,9 +64,6 @@ export interface IMainWindowExternal {
         offset: number;
     };
 
-    /** Current status of the services. */
-    services: IService[];
-
     /** If the launcher is running in development mode (using something like "npm run start"). */
     isDev: boolean;
 
@@ -159,36 +156,6 @@ export type IBackProcessInfo = {
      * (This does not do anything for "start" and "stop" processes)
      */
     kill: boolean;
-};
-
-/** State of a managed process. */
-export enum ProcessState {
-    /** The process is not running. */
-    STOPPED,
-    /** The process is running. */
-    RUNNING,
-    /** The process is being killed (it has been requested to terminate, but it hasn't been terminated yet). */
-    KILLING,
-}
-
-/** Actions that can be performed on a service. */
-export enum ProcessAction {
-    /** Start the process if it is stopped */
-    START,
-    /** Stop the process if it is running */
-    STOP,
-    /** Stop the process if it is running, then start the process */
-    RESTART,
-}
-
-/** Object describing the state of a service. */
-export type IService = {
-    id: string;
-    name: string;
-    state: ProcessState;
-    pid: number;
-    startTime: number;
-    info: IBackProcessInfo;
 };
 
 export type GamePlaylist = GamePlaylistContent & {

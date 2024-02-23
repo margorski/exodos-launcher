@@ -131,8 +131,6 @@
     "renameImagesIdToTitleDesc": "Find all game images with the games ID in their filename and rename them to use its title instead",
     "createMissingFolders": "Create Missing Folders",
     "createMissingFoldersDesc": "Find all missing folders in the eXoDOS folder structure and create them",
-    "servicesHeader": "Background Services",
-    "servicesMissing": "There are no services.",
     "running": "Running",
     "stopped": "Stopped",
     "killing": "Killing",

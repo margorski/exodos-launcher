@@ -26,9 +26,7 @@ import { IMainWindowExternal } from "@shared/interfaces";
  */
 (window.External as IMainWindowExternal) = {
     installed: createErrorProxy("installed"),
-
     version: createErrorProxy("version"),
-
     platform: (process.platform + "") as NodeJS.Platform, // (Coerce to string to make sure its not a remote object)
 
     minimize() {
@@ -75,8 +73,6 @@ import { IMainWindowExternal } from "@shared/interfaces";
         entries: [],
         offset: 0,
     },
-
-    services: createErrorProxy("services"),
 
     isDev,
 
@@ -148,7 +144,6 @@ const onInit = (async () => {
                             window.External.fileServerPort =
                                 response.data.fileServerPort;
                             window.External.log.entries = response.data.log;
-                            window.External.services = response.data.services;
                             window.External.initialLang =
                                 response.data.language;
                             window.External.initialLangList =

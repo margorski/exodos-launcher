@@ -128,8 +128,6 @@
     "renameImagesIdToTitleDesc": "Hitta alla spelbilder med ett ID i sitt filnamn och döp om dem så att de använder spelets titel istället",
     "createMissingFolders": "Skapa saknade mappar",
     "createMissingFoldersDesc": "Hitta alla mappar som saknas i eXoDOSs katalogstruktur och skapa dessa",
-    "servicesHeader": "Bakgrundsprocesser",
-    "servicesMissing": "Det finns inga processer.",
     "running": "Igång",
     "stopped": "Stoppad",
     "killing": "Stoppar",

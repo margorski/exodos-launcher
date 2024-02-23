@@ -32,8 +32,6 @@ type ConfigPageState = {
     exodosPath: string;
     /** If the "use custom title bar" checkbox is checked. */
     useCustomTitlebar: boolean;
-    /** If the "use fiddler" checkbox is checked. */
-    useFiddler: boolean;
     /** Array of native platforms */
     nativePlatforms: string[];
 };
@@ -62,7 +60,6 @@ export class ConfigPage extends React.Component<
             isExodosPathValid: undefined,
             exodosPath: configData.exodosPath,
             useCustomTitlebar: configData.useCustomTitlebar,
-            useFiddler: configData.useFiddler,
             nativePlatforms: configData.nativePlatforms,
         };
     }
@@ -199,41 +196,6 @@ export class ConfigPage extends React.Component<
                                 </div>
                                 <div className="setting__row__bottom">
                                     <p>{strings.exodosPathDesc}</p>
-                                </div>
-                            </div>
-                            {/* Redirector / Fiddler */}
-                            <div className="setting__row">
-                                <div className="setting__row__top">
-                                    <div className="setting__row__title">
-                                        <p>{strings.redirector}</p>
-                                    </div>
-                                    <div className="setting__row__content setting__row__content--redirector">
-                                        <div>
-                                            <input
-                                                type="radio"
-                                                checked={!this.state.useFiddler}
-                                                onChange={
-                                                    this
-                                                        .onRedirectorRedirectorChange
-                                                }
-                                            />
-                                            <p>{strings.redirector}</p>
-                                        </div>
-                                        <div>
-                                            <input
-                                                type="radio"
-                                                checked={this.state.useFiddler}
-                                                onChange={
-                                                    this
-                                                        .onRedirectorFiddlerChange
-                                                }
-                                            />
-                                            <p>{strings.redirectorFiddler}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="setting__row__bottom">
-                                    <p>{strings.redirectorDesc}</p>
                                 </div>
                             </div>
                             {/* Native Platforms */}
@@ -482,17 +444,6 @@ export class ConfigPage extends React.Component<
         this.setState({ nativePlatforms: nativePlatforms });
     };
 
-    onRedirectorRedirectorChange = (
-        event: React.ChangeEvent<HTMLInputElement>,
-    ): void => {
-        this.setState({ useFiddler: !event.target.checked });
-    };
-    onRedirectorFiddlerChange = (
-        event: React.ChangeEvent<HTMLInputElement>,
-    ): void => {
-        this.setState({ useFiddler: event.target.checked });
-    };
-
     /** When the "Exodos Folder Path" input text is changed. */
     onExodosPathChange = async (filePath: string): Promise<void> => {
         this.setState({ exodosPath: filePath });
@@ -546,7 +497,6 @@ export class ConfigPage extends React.Component<
             {
                 exodosPath: this.state.exodosPath,
                 useCustomTitlebar: this.state.useCustomTitlebar,
-                useFiddler: this.state.useFiddler,
             },
             () => {
                 window.External.restart();
