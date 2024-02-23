@@ -1,5 +1,5 @@
 import { GameParser } from "@shared/game/GameParser";
-import { IGameCollection, IGameInfo } from "@shared/game/interfaces";
+import { IGameInfo } from "@shared/game/interfaces";
 import {
     GamePlatform,
     IRawPlatformFile,
@@ -9,23 +9,15 @@ import * as fastXmlParser from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
 import { promisify } from "util";
-import { copyError, walkSync } from "../util/misc";
+import { copyError } from "../util/misc";
 import {
     GameManagerState,
     LoadPlatformError,
-    RemoveGameResult,
-    UpdateMetaOptions,
-    UpdateMetaResult,
 } from "./types";
 
-const mkdir = promisify(fs.mkdir);
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
-const writeFile = promisify(fs.writeFile);
-
-const UNKNOWN_LIBRARY = "unknown";
-const UNKNOWN_PLATFORM = "unknown";
 
 export namespace GameManager {
     export async function loadPlatforms(
@@ -133,226 +125,6 @@ export namespace GameManager {
                 return game;
             }
         }
-    }
-
-    /**
-     * Add or update a game and its add-apps.
-     * Notes:
-     * - The platform will be automatically selected or created
-     * - All games and add-apps with duplicate IDs will be deleted (from all platforms)
-     * - New games and add-apps will be pushed to the end of their platform
-     * - Existing games and add-apps will retain their position in the platform file
-     */
-    export function updateMeta(
-        state: GameManagerState,
-        opts: UpdateMetaOptions,
-    ): UpdateMetaResult {
-        const edited: GamePlatform[] = []; // All platforms that were edited and need to be saved
-
-        // Delete all games with the same ID and the add-apps that belongs to them
-        const result = removeGameAndAddApps(state, opts.game.id);
-        edited.push(...result.edited);
-
-        // Add the game and add-apps to the platform they belong to (create one if it doesn't exist)
-        const libraryName = opts.game.library || UNKNOWN_LIBRARY;
-        const platformName = opts.game.platform || UNKNOWN_PLATFORM;
-
-        const platformIndex = state.platforms.findIndex(
-            (p) => p.name === platformName && p.library === libraryName,
-        );
-        const platform = state.platforms[platformIndex];
-        if (platform) {
-            // Get game index
-            let gameIndex = result.gameIndices[platformIndex][0];
-            if (typeof gameIndex !== "number") {
-                gameIndex = platform.collection.games.length;
-            }
-            // Insert game
-            state.log(
-                `Insert Game (ID: "${opts.game.id}", index: ${gameIndex}, platform: "${platform.name}", library: "${platform.library}")`,
-            );
-            platform.collection.games.splice(gameIndex, 0, opts.game);
-            platform.data.LaunchBox.Game.splice(
-                gameIndex,
-                0,
-                GameParser.reverseParseGame(opts.game),
-            );
-
-            // Insert app-apps
-            for (let addApp of opts.addApps) {
-                // Get app-app index
-                let index = result.addAppIndices[platformIndex][addApp.id];
-                if (typeof index !== "number") {
-                    index = platform.collection.additionalApplications.length;
-                }
-                // Insert app-app
-                state.log(
-                    `Insert AddApp (ID: "${addApp.id}", index: ${index}, platform: "${platform.name}", library: "${platform.library}")`,
-                );
-                platform.collection.additionalApplications.splice(
-                    index,
-                    0,
-                    addApp,
-                );
-                platform.data.LaunchBox.AdditionalApplication.splice(
-                    index,
-                    0,
-                    GameParser.reverseParseAdditionalApplication(addApp),
-                );
-            }
-
-            edited.push(platform);
-        } else {
-            const newCollection: IGameCollection = {
-                games: [opts.game],
-                additionalApplications: [...opts.addApps],
-            };
-            const platform: GamePlatform = {
-                filePath: path.join(
-                    state.platformsPath,
-                    libraryName,
-                    platformName + ".xml",
-                ),
-                name: platformName,
-                library: libraryName,
-                collection: newCollection,
-                data: createRawFromCollection(newCollection),
-            };
-            state.platforms.push(platform);
-            edited.push(platform);
-        }
-
-        return {
-            edited: removeDupes(edited),
-        };
-    }
-
-    /**
-     * Remove all games with a given ID and all add-apps that belongs to it.
-     * @param state State to remove games and add-apps from.
-     * @param opts ID of the game to remove.
-     */
-    export function removeGameAndAddApps(
-        state: GameManagerState,
-        gameId: string,
-    ): RemoveGameResult {
-        const edited: GamePlatform[] = []; // All platforms that were edited and need to be saved
-        const gameIndices: number[][] = [];
-        const addAppIndices: Record<string, number>[] = [];
-
-        // Delete all games with the same ID and the add-apps that belongs to them
-        for (let i = 0; i < state.platforms.length; i++) {
-            const platform = state.platforms[i];
-            let changed = false;
-
-            const games = platform.collection.games;
-            for (let j = games.length - 1; j >= 0; j--) {
-                if (games[j].id === gameId) {
-                    state.log(
-                        `Remove Game (ID: "${gameId}", index: ${j}, platform: "${platform.name}", library: "${platform.library}")`,
-                    );
-                    changed = true;
-                    games.splice(j, 1);
-                }
-            }
-
-            const addApps = platform.collection.additionalApplications;
-            for (let j = addApps.length - 1; j >= 0; j--) {
-                if (addApps[j].gameId === gameId) {
-                    state.log(
-                        `Remove AddApp (ID: "${addApps[j].id}", index: ${j}, platform: "${platform.name}", library: "${platform.library}")`,
-                    );
-                    changed = true;
-                    addApps.splice(j, 1);
-                }
-            }
-
-            const gameInd = LaunchBox.removeGame(platform.data, gameId);
-            gameIndices.push(gameInd);
-            if (gameInd.length > 0) {
-                changed = true;
-            }
-
-            const addAppInd = LaunchBox.removeAddAppsOfGame(
-                platform.data,
-                gameId,
-            );
-            addAppIndices.push(addAppInd);
-            if (addAppInd.length > 0) {
-                changed = true;
-            }
-
-            if (changed) {
-                edited.push(platform);
-            }
-        }
-
-        return {
-            edited: removeDupes(edited),
-            gameIndices,
-            addAppIndices,
-        };
-    }
-
-    /**
-     * Save a set of platforms to their files.
-     * All platforms are synchronously parsed into the file content, then asynchronously saved to disk.
-     * Note: Saving multiple large platforms at once can use up a large amount of memory.
-     * @param state State that the platforms belongs to.
-     * @param platform Platforms to save.
-     */
-    export function savePlatforms(
-        state: GameManagerState,
-        platforms: GamePlatform[],
-    ): Promise<void> {
-        return Promise.all(
-            platforms.map((p) => savePlatformToFile(state, p)),
-        ).then(() => undefined);
-    }
-
-    function savePlatformToFile(
-        state: GameManagerState,
-        platform: GamePlatform,
-    ): Promise<void> {
-        // Parse data into XML
-        const parser = new fastXmlParser.j2xParser({
-            ignoreAttributes: true, // Attributes are never used, this might increase performance?
-            supressEmptyNode: true, // Empty tags are self closed ("<Tag />" instead of "<Tag></Tag>")
-            format: true, // Breaks XML into multiple lines and indents it
-        });
-        const parsedData = parser.parse(platform.data);
-        // Save data to the platform's file
-        return state.saveQueue.push(async () => {
-            const extra = `(platform: "${platform.name}", library: "${platform.library}", file: "${platform.filePath}")`;
-            try {
-                state.log(`Saving platform to file ${extra}`);
-                await mkdir(path.dirname(platform.filePath), {
-                    recursive: true,
-                });
-                await writeFile(platform.filePath, parsedData);
-                state.log(`Save successful ${extra}`);
-            } catch (error) {
-                state.log(`Save failed ${extra}\n${error}`);
-                throw error;
-            }
-        }, true);
-    }
-
-    /** Create a new raw platform with the same data as a parsed platform */
-    function createRawFromCollection(
-        collection: IGameCollection,
-    ): IRawPlatformFile {
-        return {
-            LaunchBox: {
-                Game: collection.games.map((game) =>
-                    GameParser.reverseParseGame(game),
-                ),
-                AdditionalApplication: collection.additionalApplications.map(
-                    (addApp) =>
-                        GameParser.reverseParseAdditionalApplication(addApp),
-                ),
-            },
-        };
     }
 }
 
@@ -467,11 +239,4 @@ function removeDupes<T>(array: T[]): T[] {
         }
     }
     return result;
-}
-
-/** Run a series of asynchronous functions one at a time. */
-async function serial(funcs: Array<() => void>): Promise<void> {
-    for (let i = 0; i < funcs.length; i++) {
-        await funcs[i]();
-    }
 }
