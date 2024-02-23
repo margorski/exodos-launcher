@@ -1,4 +1,3 @@
-/** platform.ts is suggestion.ts modified for retreival of platform type */
 import { GameCollection } from "@shared/game/GameCollection";
 
 export function getPlatforms(collection: GameCollection): string[] {

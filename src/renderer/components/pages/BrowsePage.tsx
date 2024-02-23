@@ -1,5 +1,3 @@
-import { dialog, shell } from "@electron/remote";
-import * as fs from "fs";
 import * as React from "react";
 import {
     BackIn,
@@ -12,7 +10,6 @@ import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import {
     GamePlaylist,
     GamePlaylistEntry,
-    GamePropSuggestions,
 } from "@shared/interfaces";
 import { LangContainer } from "@shared/lang";
 import { memoizeOne } from "@shared/memoize";
@@ -23,14 +20,13 @@ import { ConnectedRightBrowseSidebar } from "../../containers/ConnectedRightBrow
 import { WithPreferencesProps } from "../../containers/withPreferences";
 import { GAMES } from "../../interfaces";
 import { SearchQuery } from "../../store/search";
-import { gameIdDataType, gameScaleSpan, getGamePath } from "../../Util";
+import { gameScaleSpan } from "../../Util";
 import { LangContext } from "../../util/lang";
 import { GameGrid } from "../GameGrid";
 import { GameList } from "../GameList";
 import { GameOrderChangeEvent } from "../GameOrder";
 import { InputElement } from "../InputField";
 import { ResizableSidebar, SidebarResizeEvent } from "../ResizableSidebar";
-import { openContextMenu } from "@main/Util";
 
 type Pick<T, K extends keyof T> = { [P in K]: T[P] };
 type StateCallback1 = Pick<
@@ -42,7 +38,6 @@ type OwnProps = {
     games: GAMES | undefined;
     gamesTotal: number;
     playlists: GamePlaylist[];
-    suggestions: Partial<GamePropSuggestions>;
     playlistIconCache: Record<string, string>;
     onRequestGames: (start: number, end: number) => void;
     onQuickSearch: (search: string) => void;
@@ -250,8 +245,6 @@ export class BrowsePage extends React.Component<
                                     )}
                                     onGameSelect={this.onGameSelect}
                                     onGameLaunch={this.onGameLaunch}
-                                    onGameDragStart={this.onGameDragStart}
-                                    onGameDragEnd={this.onGameDragEnd}
                                     onRequestGames={this.props.onRequestGames}
                                     orderBy={order.orderBy}
                                     orderReverse={order.orderReverse}
@@ -277,8 +270,6 @@ export class BrowsePage extends React.Component<
                                     )}
                                     onGameSelect={this.onGameSelect}
                                     onGameLaunch={this.onGameLaunch}
-                                    onGameDragStart={this.onGameDragStart}
-                                    onGameDragEnd={this.onGameDragEnd}
                                     onRequestGames={this.props.onRequestGames}
                                     orderBy={order.orderBy}
                                     orderReverse={order.orderReverse}
@@ -305,7 +296,6 @@ export class BrowsePage extends React.Component<
                         onDeselectPlaylist={this.onRightSidebarDeselectPlaylist}
                         gamePlaylistEntry={gamePlaylistEntry}
                         isInstalled={this.isCurrentGameInstalled()}
-                        suggestions={this.props.suggestions}
                     />
                 </ResizableSidebar>
             </div>
@@ -363,52 +353,6 @@ export class BrowsePage extends React.Component<
             );
         }
     );
-
-    private onGameContextMenuMemo = memoizeOne((strings: LangContainer) => {
-        return (gameId: string) => {
-            return openContextMenu([
-                {
-                    /* File Location */
-                    label: strings.menu.openFileLocation,
-                    enabled: !window.External.isBackRemote, // (Local "back" only)
-                    click: () => {
-                        window.External.back.send<
-                            GetGameResponseData,
-                            GetGameData
-                        >(BackIn.GET_GAME, { id: gameId }, (res) => {
-                            if (res.data && res.data.game) {
-                                const gamePath = getGamePath(
-                                    res.data.game,
-                                    window.External.config.fullExodosPath
-                                );
-                                if (gamePath) {
-                                    fs.stat(gamePath, (error) => {
-                                        if (!error) {
-                                            shell.showItemInFolder(gamePath);
-                                        } else {
-                                            const opts: Electron.MessageBoxOptions =
-                                                {
-                                                    type: "warning",
-                                                    message: "",
-                                                    buttons: ["Ok"],
-                                                };
-                                            opts.title = "Unexpected error";
-                                            opts.message =
-                                                "Failed to check the game file.\n" +
-                                                "If you see this, please report it back to us (a screenshot would be great)!\n\n" +
-                                                `Error: ${error}\n`;
-                                            opts.message += `Path: "${gamePath}"\n\nNote: If the path is too long, some portion will be replaced with three dots ("...").`;
-                                            dialog.showMessageBox(opts);
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    },
-                },
-            ]);
-        };
-    });
 
     /** Deselect without clearing search (Right sidebar will search itself) */
     onRightSidebarDeselectPlaylist = (): void => {
@@ -496,16 +440,6 @@ export class BrowsePage extends React.Component<
             this._prevQuickSearchUpdate = now;
             return timedOut;
         }
-    };
-
-    onGameDragStart = (event: React.DragEvent, gameId: string): void => {
-        this.setState({ draggedGameId: gameId });
-        event.dataTransfer.setData(gameIdDataType, gameId);
-    };
-
-    onGameDragEnd = (event: React.DragEvent, gameId: string): void => {
-        this.setState({ draggedGameId: undefined });
-        event.dataTransfer.clearData(gameIdDataType);
     };
 
     /** Replace the "current game" with the selected game (in the appropriate circumstances) */
@@ -683,18 +617,15 @@ type FileReaderResult = (typeof FileReader)["prototype"]["result"];
  * This will reject if the request or conversion fails.
  * @param url URL of content to convert.
  */
-function toDataURL(url: string): Promise<FileReaderResult> {
-    return fetch(url)
-        .then((response) => response.blob())
-        .then(
-            (blob) =>
-                new Promise<FileReaderResult>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        resolve(reader.result);
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                })
-        );
+async function toDataURL(url: string): Promise<FileReaderResult> {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return await new Promise<FileReaderResult>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            resolve(reader.result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
 }

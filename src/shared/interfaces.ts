@@ -196,29 +196,6 @@ export type ExecMapping = {
     darwin?: string;
 };
 
-/** Game properties that will have suggestions gathered and displayed. */
-export type SuggestionProps =
-    | "tags"
-    | "platform"
-    | "playMode"
-    | "status"
-    | "applicationPath"
-    | "library";
-
-/** Temporarily used to store the suggestions for performance reasons. */
-export type GamePropSuggestionsMap = {
-    /** A map of suggestions for a single game property. */
-    [P in SuggestionProps]: {
-        /** The key is the suggestion value. */
-        [key: string]: true; // (Some arbitrary true-y value, it is only used to confirm that the key exists)
-    };
-};
-
-/** Suggestions for game properties organized by property. */
-export type GamePropSuggestions = {
-    [P in SuggestionProps]: string[];
-};
-
 export type ExodosBackendInfo = {
     changelog: string;
     version: string;

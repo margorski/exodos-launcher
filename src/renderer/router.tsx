@@ -5,7 +5,6 @@ import { BrowsePageLayout } from "@shared/BrowsePageLayout";
 import {
     ExodosBackendInfo,
     GamePlaylist,
-    GamePropSuggestions,
 } from "@shared/interfaces";
 import { LangFile } from "@shared/lang";
 import { Theme } from "@shared/ThemeFile";
@@ -30,7 +29,6 @@ export type AppRouterProps = {
     games: GAMES | undefined;
     gamesTotal: number;
     playlists: GamePlaylist[];
-    suggestions: Partial<GamePropSuggestions>;
     appPaths: Record<string, string>;
     platforms: Record<string, string[]>;
     platformsFlat: string[];
@@ -70,7 +68,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
             games: this.props.games,
             gamesTotal: this.props.gamesTotal,
             playlists: this.props.playlists,
-            suggestions: this.props.suggestions,
             playlistIconCache: this.props.playlistIconCache,
             onRequestGames: this.props.onRequestGames,
             onQuickSearch: this.props.onQuickSearch,

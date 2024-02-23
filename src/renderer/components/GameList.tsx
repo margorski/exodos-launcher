@@ -7,7 +7,6 @@ import {
     ScrollIndices,
     ScrollParams,
 } from "react-virtualized";
-import { ViewGame } from "@shared/back/types";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { GAMES } from "../interfaces";
 import { findElementAncestor } from "../Util";
@@ -43,9 +42,9 @@ export type GameListProps = {
     /** Called when the user attempts to open a context menu (at a game). */
     onContextMenu?: (gameId: string) => void;
     /** Called when the user starts to drag a game. */
-    onGameDragStart: (event: React.DragEvent, gameId: string) => void;
+    onGameDragStart?: (event: React.DragEvent, gameId: string) => void;
     /** Called when the user stops dragging a game (when they release it). */
-    onGameDragEnd: (event: React.DragEvent, gameId: string) => void;
+    onGameDragEnd?: (event: React.DragEvent, gameId: string) => void;
     // React-Virtualized pass-through props (their values are not used for anything other than updating the grid when changed)
     orderBy?: GameOrderBy;
     orderReverse?: GameOrderReverse;
@@ -110,7 +109,6 @@ export class GameList extends React.Component<GameListProps> {
                                 >
                                     {({
                                         onSectionRendered,
-                                        scrollToColumn,
                                         scrollToRow,
                                     }) => (
                                         <List
@@ -210,20 +208,20 @@ export class GameList extends React.Component<GameListProps> {
 
     /** When a row is clicked. */
     onGameSelect = (
-        event: React.MouseEvent,
+        _: React.MouseEvent,
         gameId: string | undefined,
     ): void => {
         this.props.onGameSelect(gameId);
     };
 
     /** When a row is double clicked. */
-    onGameLaunch = (event: React.MouseEvent, gameId: string): void => {
+    onGameLaunch = (_: React.MouseEvent, gameId: string): void => {
         this.props.onGameLaunch(gameId);
     };
 
     /** When a row is right clicked. */
     onGameContextMenu = (
-        event: React.MouseEvent<HTMLDivElement>,
+        _: React.MouseEvent<HTMLDivElement>,
         gameId: string,
     ): void => {
         if (this.props.onContextMenu) this.props.onContextMenu(gameId);
@@ -231,12 +229,12 @@ export class GameList extends React.Component<GameListProps> {
 
     /** When a row is starting to be dragged. */
     onGameDragStart = (event: React.DragEvent, gameId: string): void => {
-        this.props.onGameDragStart(event, gameId);
+        this.props.onGameDragStart?.(event, gameId);
     };
 
     /** When a row is ending being dragged. */
     onGameDragEnd = (event: React.DragEvent, gameId: string): void => {
-        this.props.onGameDragEnd(event, gameId);
+        this.props.onGameDragEnd?.(event, gameId);
     };
 
     /** When a row is selected. */
@@ -289,18 +287,4 @@ function findGameIndex(
         }
     }
     return -1;
-}
-
-function findGame(
-    games: GAMES | undefined,
-    gameId: string | undefined,
-): ViewGame | undefined {
-    if (gameId !== undefined && games) {
-        for (let index in games) {
-            const game = games[index];
-            if (game && game.id === gameId) {
-                return game;
-            }
-        }
-    }
 }

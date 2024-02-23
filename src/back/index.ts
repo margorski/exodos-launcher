@@ -117,12 +117,7 @@ const state: BackState = {
   configFolder: createErrorProxy("configFolder"),
   exePath: createErrorProxy("exePath"),
   localeCode: createErrorProxy("countryCode"),
-  gameManager: {
-    platforms: [],
-    platformsPath: "",
-    saveQueue: new EventQueue(),
-    log: (content) => log({ source: "GameManager", content }),
-  },
+  gameManager: new GameManager(),
   messageQueue: [],
   isHandling: false,
   messageEmitter: new EventEmitter() as any,
@@ -133,7 +128,7 @@ const state: BackState = {
   },
   initEmitter: new EventEmitter() as any,
   queries: {},
-  log: [],
+  logs: [],
   languageQueue: new EventQueue(),
   languages: [],
   languageContainer: getDefaultLocalization(), // Cache of the latest lang container - used by back when it needs lang strings
@@ -160,7 +155,7 @@ function getDosPlatform() {
 }
 
 function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
-  const dosPlatform = getDosPlatform();
+  const dosPlatform =  getDosPlatform();
   if (!dosPlatform) {
     console.log(
       "Cannot create installed game playlist. MS-DOS platform not loaded yet."
@@ -333,7 +328,7 @@ async function onProcessMessage(message: any, _: any): Promise<void> {
   } catch (err) {
     console.log("chdir: " + err);
   }
- 
+
   const loadLanguages = async () => {
     const langFolder = "lang";
     console.log(`Loading languages...`);
@@ -494,7 +489,7 @@ async function onProcessMessage(message: any, _: any): Promise<void> {
   await loadPlaylists();
 
   // Init Game Manager
-  state.gameManager.platformsPath = path.join(
+  const platformsPath = path.join(
     state.config.exodosPath,
     state.config.platformFolderPath
   );
@@ -516,7 +511,7 @@ async function onProcessMessage(message: any, _: any): Promise<void> {
     });
   }
 
-  GameManager.loadPlatforms(state.gameManager, thumbnails)
+  state.gameManager.loadPlatforms(platformsPath, thumbnails)
     .then((errors) => {
       if (errors.length > 0) {
         console.error(
@@ -774,7 +769,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             preferences: state.preferences,
             config: state.config,
             fileServerPort: state.fileServerPort,
-            log: state.log,
+            log: state.logs,
             languages: state.languages,
             language: state.languageContainer,
             themes: state.themeFiles.map((theme) => ({
@@ -1441,8 +1436,6 @@ function exit() {
           resolve();
         })
       ),
-      // Wait for game manager to complete all saves
-      state.gameManager.saveQueue.push(() => { }, true),
     ]).then(() => {
       process.exit();
     });
@@ -1494,14 +1487,14 @@ function log(preEntry: ILogPreEntry, id?: string): void {
   // fs.appendFile('./launcher.log', stringifyLogEntriesRaw([entry]), () => {
   //   console.error('Failed to write to log file');
   // });
-  state.log.push(entry);
+  state.logs.push(entry);
 
   broadcast({
     id: id || "",
     type: BackOut.LOG_ENTRY_ADDED,
     data: {
       entry,
-      index: state.log.length - 1,
+      index: state.logs.length - 1,
     },
   });
 }

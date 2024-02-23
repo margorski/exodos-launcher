@@ -34,7 +34,6 @@ import { UNKNOWN_LIBRARY } from "@shared/game/interfaces";
 import {
   ExodosBackendInfo,
   GamePlaylist,
-  GamePropSuggestions,
   WindowIPC,
 } from "@shared/interfaces";
 import { LangContainer, LangFile } from "@shared/lang";
@@ -95,7 +94,6 @@ export type AppState = {
   libraries: string[];
   playlists: GamePlaylist[];
   playlistIconCache: Record<string, string>; // [PLAYLIST_ID] = ICON_BLOB_URL
-  suggestions: Partial<GamePropSuggestions>;
   appPaths: Record<string, string>;
   platforms: Record<string, string[]>;
   loaded: { [key in BackInit]: boolean };
@@ -168,7 +166,6 @@ export class App extends React.Component<AppProps, AppState> {
       libraries: libraries,
       playlists: window.External.initialPlaylists || [],
       playlistIconCache: {},
-      suggestions: {},
       appPaths: {},
       platforms: platforms,
       loaded: {
@@ -766,7 +763,6 @@ export class App extends React.Component<AppProps, AppState> {
       games: view && view.games,
       gamesTotal: view ? view.total : 0,
       playlists: playlists,
-      suggestions: this.state.suggestions,
       appPaths: this.state.appPaths,
       platforms: this.state.platforms,
       platformsFlat: this.flattenPlatformsMemo(this.state.platforms),

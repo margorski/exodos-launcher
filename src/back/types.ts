@@ -14,8 +14,8 @@ import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { IAppPreferencesData } from "@shared/preferences/interfaces";
 import { Theme } from "@shared/ThemeFile";
-import { GameManagerState } from "./game/types";
 import { EventQueue } from "./util/EventQueue";
+import { GameManager } from "./game/GameManager";
 
 export type BackState = {
     isInit: boolean;
@@ -29,14 +29,14 @@ export type BackState = {
     configFolder: string;
     exePath: string;
     localeCode: string;
-    gameManager: GameManagerState;
+    gameManager: GameManager;
     messageQueue: WebSocket.MessageEvent[];
     isHandling: boolean;
     messageEmitter: MessageEmitter;
     init: { [key in BackInit]: boolean };
     initEmitter: InitEmitter;
     queries: Record<string, BackQueryChache>;
-    log: ILogEntry[];
+    logs: ILogEntry[];
     languageQueue: EventQueue;
     languages: LangFile[];
     languageContainer: LangContainer;
