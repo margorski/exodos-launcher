@@ -1,11 +1,10 @@
 import * as React from "react";
-import { LangContainer } from "@shared/lang";
 import { formatString } from "@shared/utils/StringFormatter";
-import { LangContext } from "../util/lang";
 import { ConfirmElement, ConfirmElementArgs } from "./ConfirmElement";
 import { ImagePreview } from "./ImagePreview";
 import { OpenIcon } from "./OpenIcon";
 import { SimpleButton } from "./SimpleButton";
+import { englishTranslation } from "@renderer/lang/en";
 
 type GameImageSplitProps = {
     /** Localized name of image (for button). */
@@ -32,7 +31,6 @@ type GameImageSplitState = {
 };
 
 export interface GameImageSplit {
-    context: LangContainer;
 }
 
 /**
@@ -53,7 +51,7 @@ export class GameImageSplit extends React.Component<
     }
 
     render() {
-        const strings = this.context.misc;
+        const strings = englishTranslation.misc;
         const { disabled, imgSrc, text, showHeaders } = this.props;
         const { hover, showPreview } = this.state;
         // Class name
@@ -94,7 +92,7 @@ export class GameImageSplit extends React.Component<
                         <ConfirmElement
                             onConfirm={this.onRemoveClick}
                             children={renderDeleteImageButton}
-                            extra={[strings, text, !!disabled]}
+                            extra={[text, !!disabled]}
                         />
                         {showPreview ? (
                             <ImagePreview
@@ -134,7 +132,7 @@ export class GameImageSplit extends React.Component<
         this.props.onDrop(event);
     };
 
-    onDragLeave = (event: React.DragEvent): void => {
+    onDragLeave = (_: React.DragEvent): void => {
         if (this.state.hover) {
             this.setState({ hover: false });
         }
@@ -161,8 +159,6 @@ export class GameImageSplit extends React.Component<
     onPreviewCancel = () => {
         this.setState({ showPreview: false });
     };
-
-    static contextType = LangContext;
 }
 
 function renderDeleteImageButton({
@@ -170,8 +166,10 @@ function renderDeleteImageButton({
     activationCounter,
     reset,
     extra,
-}: ConfirmElementArgs<[LangContainer["misc"], string, boolean]>): JSX.Element {
-    const [strings, text, disabled] = extra;
+}: ConfirmElementArgs<[string, boolean]>): JSX.Element {
+    const [text, disabled] = extra;
+    const strings = englishTranslation.misc;
+
     return (
         <div
             className={

@@ -1,13 +1,12 @@
 import * as React from "react";
 import { GamePlaylist } from "@shared/interfaces";
-import { LangContainer } from "@shared/lang";
 import { memoizeOne } from "@shared/memoize";
 import { WithPreferencesProps } from "../containers/withPreferences";
-import { LangContext } from "../util/lang";
 import { InputElement } from "./InputField";
 import { OpenIcon } from "./OpenIcon";
 import { PlaylistItemContent } from "./PlaylistContent";
 import { PlaylistItem } from "./PlaylistItem";
+import { englishTranslation } from "@renderer/lang/en";
 
 type OwnProps = {
     playlists: GamePlaylist[];
@@ -28,13 +27,12 @@ type OwnProps = {
 export type LeftBrowseSidebarProps = OwnProps & WithPreferencesProps;
 
 export interface LeftBrowseSidebar {
-    context: LangContainer;
 }
 
 /** Sidebar on the left side of BrowsePage. */
 export class LeftBrowseSidebar extends React.Component<LeftBrowseSidebarProps> {
     render() {
-        const strings = this.context.browse;
+        const strings = englishTranslation.browse;
         const {
             currentPlaylist,
             onShowAllClick,
@@ -123,6 +121,4 @@ export class LeftBrowseSidebar extends React.Component<LeftBrowseSidebarProps> {
             return elements;
         }
     );
-
-    static contextType = LangContext;
 }

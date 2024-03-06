@@ -84,8 +84,6 @@ import { IMainWindowExternal } from "@shared/interfaces";
 
     backUrl: createErrorProxy("backUrl"),
 
-    initialLang: createErrorProxy("initialLang"),
-    initialLangList: createErrorProxy("initialLangList"),
     initialThemes: createErrorProxy("initialThemes"),
     initialPlaylists: createErrorProxy("initialPlaylists"),
     initialPlatforms: createErrorProxy("initialPlatforms"),
@@ -144,10 +142,6 @@ const onInit = (async () => {
                             window.External.fileServerPort =
                                 response.data.fileServerPort;
                             window.External.log.entries = response.data.log;
-                            window.External.initialLang =
-                                response.data.language;
-                            window.External.initialLangList =
-                                response.data.languages;
                             window.External.initialThemes =
                                 response.data.themes;
                             window.External.initialPlaylists =

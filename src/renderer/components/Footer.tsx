@@ -4,10 +4,9 @@ import {
     parseBrowsePageLayout,
     stringifyBrowsePageLayout,
 } from "@shared/BrowsePageLayout";
-import { LangContainer } from "@shared/lang";
 import { WithPreferencesProps } from "../containers/withPreferences";
 import { gameScaleSpan } from "../Util";
-import { LangContext } from "../util/lang";
+import { englishTranslation } from "@renderer/lang/en";
 
 type OwnProps = {
     /** Total number of games. */
@@ -29,7 +28,6 @@ type OwnProps = {
 export type FooterProps = OwnProps & WithPreferencesProps;
 
 export interface Footer {
-    context: LangContainer;
 }
 
 /** The footer that is always visible at the bottom of the main window. */
@@ -47,12 +45,11 @@ export class Footer extends React.Component<FooterProps> {
     }
 
     render() {
-        const strings = this.context.app;
+        const strings = englishTranslation.app;
         const {
             currentCount,
             currentLabel,
             layout,
-            preferencesData,
             scaleSliderValue,
             totalCount,
         } = this.props;
@@ -191,6 +188,4 @@ export class Footer extends React.Component<FooterProps> {
             this.scaleSliderChange(this.scaleSliderRef.current);
         }
     }
-
-    static contextType = LangContext;
 }

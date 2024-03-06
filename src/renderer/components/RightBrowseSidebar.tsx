@@ -13,7 +13,6 @@ import {
   GamePlaylistEntry,
   PickType,
 } from "@shared/interfaces";
-import { LangContainer } from "@shared/lang";
 import { WithPreferencesProps } from "../containers/withPreferences";
 import { WithSearchProps } from "../containers/withSearch";
 import {
@@ -21,13 +20,13 @@ import {
   getGameScreenshotsUrls,
   resourceExists,
 } from "../Util";
-import { LangContext } from "../util/lang";
 import { DropdownInputField } from "./DropdownInputField";
 import { ImagePreview } from "./ImagePreview";
 import { InputField } from "./InputField";
 import { RightBrowseSidebarAddApp } from "./RightBrowseSidebarAddApp";
 import { getFileServerURL } from "@shared/Util";
 import { openContextMenu } from "@main/Util";
+import { englishTranslation } from "@renderer/lang/en";
 
 type OwnProps = {
   /** Currently selected game (if any) */
@@ -57,7 +56,6 @@ type RightBrowseSidebarState = {
 };
 
 export interface RightBrowseSidebar {
-  context: LangContainer;
 }
 
 /** Sidebar on the right side of BrowsePage. */
@@ -174,7 +172,7 @@ export class RightBrowseSidebar extends React.Component<
   }
 
   render() {
-    const strings = this.context.browse;
+    const strings = englishTranslation.browse; 
     const game: IGameInfo | undefined = this.props.currentGame;
 
     // TODO
@@ -479,7 +477,7 @@ export class RightBrowseSidebar extends React.Component<
     const template: MenuItemConstructorOptions[] = [];
     if (currentGame) {
       template.push({
-        label: this.context.menu.viewThumbnailInFolder,
+        label: englishTranslation.menu.viewThumbnailInFolder,
         click: () => {
           shell.showItemInFolder(
             getGameImagePath(LOGOS, currentGame.id).replace(
@@ -491,7 +489,7 @@ export class RightBrowseSidebar extends React.Component<
         enabled: true,
       });
       template.push({
-        label: this.context.menu.viewScreenshotInFolder,
+        label: englishTranslation.menu.viewScreenshotInFolder,
         click: () => {
           shell.showItemInFolder(
             getGameImagePath(SCREENSHOTS, currentGame.id).replace(
@@ -598,6 +596,4 @@ export class RightBrowseSidebar extends React.Component<
       }
     };
   }
-
-  static contextType = LangContext;
 }

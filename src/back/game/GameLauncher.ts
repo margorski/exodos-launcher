@@ -1,6 +1,6 @@
+import { LogFunc, OpenDialogFunc, OpenExternalFunc } from "@back/types";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { ExecMapping } from "@shared/interfaces";
-import { LangContainer } from "@shared/lang";
 import {
     fixSlashes,
     getFilename,
@@ -12,7 +12,6 @@ import { ChildProcess, exec } from "child_process";
 import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as path from "path";
-import { LogFunc, OpenDialogFunc, OpenExternalFunc } from "./types";
 
 export type LaunchAddAppOpts = LaunchBaseOpts & {
     addApp: IAdditionalApplicationInfo;
@@ -28,7 +27,6 @@ export type LaunchGameOpts = LaunchBaseOpts & {
 type LaunchBaseOpts = {
     fpPath: string;
     execMappings: ExecMapping[];
-    lang: LangContainer;
     log: LogFunc;
     openDialog: OpenDialogFunc;
     openExternal: OpenExternalFunc;
@@ -174,7 +172,6 @@ export namespace GameLauncher {
                 fpPath: opts.fpPath,
                 native: opts.native,
                 execMappings: opts.execMappings,
-                lang: opts.lang,
                 log: opts.log,
                 openDialog: opts.openDialog,
                 openExternal: opts.openExternal,

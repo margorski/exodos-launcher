@@ -1,7 +1,6 @@
 import * as React from "react";
-import { LangContainer } from "@shared/lang";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
-import { LangContext } from "../util/lang";
+import { englishTranslation } from "@renderer/lang/en";
 
 export type GameOrderProps = {
     /** Called when the either the property to order by, or what way to order in, is changed. */
@@ -19,7 +18,6 @@ export type GameOrderChangeEvent = {
 };
 
 export interface GameOrder {
-    context: LangContainer;
 }
 
 /**
@@ -28,7 +26,7 @@ export interface GameOrder {
  */
 export class GameOrder extends React.Component<GameOrderProps> {
     render() {
-        const strings = this.context.filter;
+        const strings = englishTranslation.filter;
         return (
             <>
                 {/* Order By */}
@@ -78,8 +76,6 @@ export class GameOrder extends React.Component<GameOrderProps> {
             });
         }
     }
-
-    static contextType = LangContext;
 }
 
 /**

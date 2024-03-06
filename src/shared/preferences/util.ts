@@ -1,4 +1,3 @@
-import { autoCode } from "@shared/lang";
 import { BackIn } from "../back/types";
 import { BrowsePageLayout } from "../BrowsePageLayout";
 import { ARCADE } from "../constants";
@@ -38,8 +37,6 @@ export const defaultPreferencesData: Readonly<IAppPreferencesData> =
         browsePageGameScale: 0.087,
         browsePageShowExtreme: false,
         enableEditing: false,
-        fallbackLanguage: "en",
-        currentLanguage: autoCode,
         browsePageLayout: BrowsePageLayout.list,
         browsePageShowLeftSidebar: true,
         browsePageShowRightSidebar: true,
@@ -93,8 +90,6 @@ export function overwritePreferenceData(
         (v) => (source.browsePageShowExtreme = !!v)
     );
     parser.prop("enableEditing", (v) => (source.enableEditing = !!v));
-    parser.prop("fallbackLanguage", (v) => (source.fallbackLanguage = str(v)));
-    parser.prop("currentLanguage", (v) => (source.currentLanguage = str(v)));
     parser.prop("browsePageLayout", (v) => (source.browsePageLayout = num(v)));
     parser.prop(
         "browsePageShowLeftSidebar",

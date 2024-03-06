@@ -1,8 +1,7 @@
 import * as React from "react";
 import { IAdditionalApplicationInfo } from "@shared/game/interfaces";
-import { LangContainer } from "@shared/lang";
-import { LangContext } from "../util/lang";
 import { InputField } from "./InputField";
+import { englishTranslation } from "@renderer/lang/en";
 
 export type RightBrowseSidebarAddAppProps = {
     /** Additional Application to show and edit */
@@ -11,13 +10,12 @@ export type RightBrowseSidebarAddAppProps = {
 };
 
 export interface RightBrowseSidebarAddApp {
-    context: LangContainer;
 }
 
 /** Displays an additional application for a game in the right sidebar of BrowsePage. */
 export class RightBrowseSidebarAddApp extends React.Component<RightBrowseSidebarAddAppProps> {
     render() {
-        const strings = this.context.browse;
+        const strings = englishTranslation.browse;
         const { addApp } = this.props;
         return (
             <div className="browse-right-sidebar__additional-application">
@@ -43,6 +41,4 @@ export class RightBrowseSidebarAddApp extends React.Component<RightBrowseSidebar
             this.props.onLaunch(this.props.addApp);
         }
     };
-
-    static contextType = LangContext;
 }

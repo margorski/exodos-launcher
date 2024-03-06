@@ -1,7 +1,6 @@
 import { OpenDialogOptions } from "electron";
 import { SharedSocket } from "./back/SharedSocket";
 import { IAppConfigData } from "./config/interfaces";
-import { LangContainer, LangFile } from "./lang";
 import { ILogEntry } from "./Log/interface";
 import { IAppPreferencesData } from "./preferences/interfaces";
 import { Theme } from "./ThemeFile";
@@ -79,8 +78,6 @@ export interface IMainWindowExternal {
     /** URL of the back websocket server. */
     backUrl: URL;
 
-    initialLang: LangContainer;
-    initialLangList: LangFile[];
     initialThemes: Theme[];
     initialPlaylists?: GamePlaylist[];
     initialPlatforms: Record<string, string[]>;

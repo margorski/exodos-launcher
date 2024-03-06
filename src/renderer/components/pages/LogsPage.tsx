@@ -1,15 +1,14 @@
 import * as React from "react";
 import { BackOut, WrappedResponse } from "@shared/back/types";
 import { ArgumentTypesOf } from "@shared/interfaces";
-import { LangContainer } from "@shared/lang";
 import { stringifyLogEntries } from "@shared/Log/LogCommon";
 import { memoizeOne } from "@shared/memoize";
 import { updatePreferencesData } from "@shared/preferences/util";
 import { shallowStrictEquals } from "@shared/Util";
 import { WithPreferencesProps } from "../../containers/withPreferences";
-import { LangContext } from "../../util/lang";
 import { Dropdown } from "../Dropdown";
 import { LogData } from "../LogData";
+import { englishTranslation } from "@renderer/lang/en";
 
 type OwnProps = {};
 
@@ -23,7 +22,6 @@ const labels = [
 ];
 
 export interface LogsPage {
-    context: LangContainer;
 }
 
 /** Page displaying this launcher's log. */
@@ -48,7 +46,7 @@ export class LogsPage extends React.Component<LogsPageProps> {
     }
 
     render() {
-        const strings = this.context.logs;
+        const strings = englishTranslation.logs;
         const {
             preferencesData: { showLogSource },
         } = this.props;
@@ -156,8 +154,6 @@ export class LogsPage extends React.Component<LogsPageProps> {
             this.forceUpdate();
         }
     };
-
-    static contextType = LangContext;
 }
 
 /**

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ProgressData } from "../context/ProgressContext";
-import { LangContext } from "../util/lang";
+import { englishTranslation } from "@renderer/lang/en";
 
 export type ProgressComponentProps = {
     /** Data to read from. */
@@ -55,7 +55,7 @@ export function StatusBar(props: ProgressComponentProps) {
 
 /** Large top text `Percent% Complete`, medium progress bar, small underneath primary text. */
 export function ProgressBar(props: ProgressComponentProps) {
-    const strings = React.useContext(LangContext);
+    const strings = englishTranslation;
     const barCssProps: React.CSSProperties = React.useMemo(
         () => ({
             width: `${props.progressData.percentDone}%`,

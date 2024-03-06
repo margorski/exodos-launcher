@@ -1,5 +1,4 @@
 import { ViewGame } from "@shared/back/types";
-import { UpgradeStage } from "./upgrade/types";
 
 export type GAMES = Record<number, ViewGame | undefined>;
 

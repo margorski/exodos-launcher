@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useCallback, useMemo } from "react";
 import { GamePlaylist } from "@shared/interfaces";
-import { LangContext } from "../util/lang";
 import { InputElement, InputField } from "./InputField";
+import { englishTranslation } from "@renderer/lang/en";
 
 export type PlaylistItemProps = {
     playlist: GamePlaylist;
@@ -16,7 +16,7 @@ export type PlaylistItemProps = {
 };
 
 export function PlaylistItem(props: PlaylistItemProps) {
-    const strings = React.useContext(LangContext).playlist;
+    const strings = englishTranslation.playlist;
 
     const onHeadClick = useCallback(() => {
         props.onHeadClick(props.playlist.filename, props.selected);

@@ -6,7 +6,6 @@ import {
     ExodosBackendInfo,
     GamePlaylist,
 } from "@shared/interfaces";
-import { LangFile } from "@shared/lang";
 import { Theme } from "@shared/ThemeFile";
 import { GameOrderChangeEvent } from "./components/GameOrder";
 import { NotFoundPage } from "./components/pages/NotFoundPage";
@@ -49,7 +48,6 @@ export type AppRouterProps = {
     wasNewGameClicked: boolean;
     gameLibrary: string;
     themeList: Theme[];
-    languages: LangFile[];
     updateInfo: UpdateInfo | undefined;
     exodosBackendInfo: ExodosBackendInfo | undefined;
 };
@@ -82,7 +80,6 @@ export class AppRouter extends React.Component<AppRouterProps> {
         };
         const configProps: ConnectedConfigPageProps = {
             themeList: this.props.themeList,
-            availableLangs: this.props.languages,
             platforms: this.props.platformsFlat,
             localeCode: this.props.localeCode,
         };

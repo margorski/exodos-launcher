@@ -16,8 +16,6 @@ import {
   GetGamesTotalResponseData,
   GetPlaylistResponse,
   InitEventData,
-  LanguageChangeData,
-  LanguageListChangeData,
   LaunchGameData,
   LocaleUpdateData,
   LogEntryAddedData,
@@ -36,7 +34,6 @@ import {
   GamePlaylist,
   WindowIPC,
 } from "@shared/interfaces";
-import { LangContainer, LangFile } from "@shared/lang";
 import { getLibraryItemTitle } from "@shared/library/util";
 import { memoizeOne } from "@shared/memoize";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
@@ -55,7 +52,6 @@ import { Paths } from "./Paths";
 import { AppRouter, AppRouterProps } from "./router";
 import { SearchQuery } from "./store/search";
 import { joinLibraryRoute } from "./Util";
-import { LangContext } from "./util/lang";
 import { debounce } from "@shared/utils/debounce";
 import { WithRouterProps } from "./containers/withRouter";
 // Auto updater works only with .appImage distribution. We are using .tar.gz
@@ -112,10 +108,6 @@ export type AppState = {
   gameLayout: BrowsePageLayout;
   /** If the "New Game" button was clicked (silly way of passing the event from the footer the the browse page). */
   wasNewGameClicked: boolean;
-  /** Current language container. */
-  lang: LangContainer;
-  /** Current list of available language files. */
-  langList: LangFile[];
   /** Info of the update, if one was found */
   updateInfo: UpdateInfo | undefined;
   /** Exodos backend info for displaying at homepage  */
@@ -179,8 +171,6 @@ export class App extends React.Component<AppProps, AppState> {
       stopRender: false,
       gameScale: preferencesData.browsePageGameScale,
       gameLayout: preferencesData.browsePageLayout,
-      lang: window.External.initialLang,
-      langList: window.External.initialLangList,
       wasNewGameClicked: false,
       updateInfo: undefined,
       order,
@@ -589,20 +579,6 @@ export class App extends React.Component<AppProps, AppState> {
           }
           break;
 
-        case BackOut.LANGUAGE_CHANGE:
-          {
-            const resData: LanguageChangeData = res.data;
-            this.setState({ lang: resData });
-          }
-          break;
-
-        case BackOut.LANGUAGE_LIST_CHANGE:
-          {
-            const resData: LanguageListChangeData = res.data;
-            this.setState({ langList: resData });
-          }
-          break;
-
         case BackOut.THEME_CHANGE:
           {
             const resData: ThemeChangeData = res.data;
@@ -782,13 +758,12 @@ export class App extends React.Component<AppProps, AppState> {
       wasNewGameClicked: this.state.wasNewGameClicked,
       gameLibrary: libraryPath,
       themeList: this.state.themeList,
-      languages: this.state.langList,
       updateInfo: this.state.updateInfo,
       exodosBackendInfo: this.state.exodosBackendInfo,
     };
     // Render
     return (
-      <LangContext.Provider value={this.state.lang}>
+      <>
         {!this.state.stopRender ? (
           <>
             {/* Splash screen */}
@@ -838,7 +813,6 @@ export class App extends React.Component<AppProps, AppState> {
                     libraryPath &&
                     getLibraryItemTitle(
                       libraryPath,
-                      this.state.lang.libraries
                     )
                   }
                   currentCount={view ? view.total : 0}
@@ -853,7 +827,7 @@ export class App extends React.Component<AppProps, AppState> {
             ) : undefined}
           </>
         ) : undefined}
-      </LangContext.Provider>
+      </>
     );
   }
 

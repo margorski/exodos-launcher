@@ -1,12 +1,10 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { LangContainer } from "@shared/lang";
 import { getLibraryItemTitle } from "@shared/library/util";
 import { WithPreferencesProps } from "../containers/withPreferences";
 import { Paths } from "../Paths";
 import { SearchQuery } from "../store/search";
 import { joinLibraryRoute } from "../Util";
-import { LangContext } from "../util/lang";
 import { GameOrder, GameOrderChangeEvent } from "./GameOrder";
 import { OpenIcon } from "./OpenIcon";
 import { ExodosStateData } from "@shared/back/types";
@@ -18,6 +16,7 @@ import {
     DefaultGameOrderBy,
     DefaultGameOrderReverse,
 } from "@shared/order/interfaces";
+import { englishTranslation } from "@renderer/lang/en";
 
 type OwnProps = {
     /** The most recent search query. */
@@ -46,7 +45,6 @@ type HeaderState = {
 };
 
 export interface Header {
-    context: LangContainer;
 }
 
 /** The header that is always visible at the top of the main window (just below the title bar). */
@@ -80,7 +78,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
     }
 
     render() {
-        const strings = this.context.app;
+        const strings = englishTranslation.app;
         const {
             preferencesData: {
                 browsePageShowLeftSidebar,
@@ -110,7 +108,6 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                                 key={`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`}
                                 title={getLibraryItemTitle(
                                     `${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`,
-                                    this.context.libraries
                                 )}
                                 link={joinLibraryRoute(
                                     `${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`
@@ -122,7 +119,6 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                                 key={`${EXODOS_GAMES_PLATFORM_NAME}.xml`}
                                 title={getLibraryItemTitle(
                                     `${EXODOS_GAMES_PLATFORM_NAME}.xml`,
-                                    this.context.libraries
                                 )}
                                 link={joinLibraryRoute(
                                     `${EXODOS_GAMES_PLATFORM_NAME}.xml`
@@ -233,8 +229,6 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
         this.setState({ searchText: "" });
         this.props.onSearch("", false);
     };
-
-    static contextType = LangContext;
 }
 
 /** An item in the header menu. Used as buttons to switch between tabs/pages. */

@@ -9,7 +9,6 @@ import {
     ExecMapping,
     GamePlaylist,
 } from "@shared/interfaces";
-import { LangContainer, LangFile } from "@shared/lang";
 import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { IAppPreferencesData } from "@shared/preferences/interfaces";
@@ -18,7 +17,7 @@ import { EventQueue } from "./util/EventQueue";
 import { GameManager } from "./game/GameManager";
 
 export type BackState = {
-    isInit: boolean;
+    isInitialized: boolean;
     isExit: boolean;
     server: WebSocket.Server;
     fileServer: Server;
@@ -37,9 +36,6 @@ export type BackState = {
     initEmitter: InitEmitter;
     queries: Record<string, BackQueryChache>;
     logs: ILogEntry[];
-    languageQueue: EventQueue;
-    languages: LangFile[];
-    languageContainer: LangContainer;
     themeFiles: ThemeListItem[];
     playlistQueue: EventQueue;
     playlists: GamePlaylist[];
