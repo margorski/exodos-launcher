@@ -5,16 +5,13 @@ import * as WebSocket from "ws";
 import { BackInit, ViewGame, WrappedRequest } from "@shared/back/types";
 import { IAppConfigData } from "@shared/config/interfaces";
 import { IGameInfo } from "@shared/game/interfaces";
-import {
-    ExecMapping,
-    GamePlaylist,
-} from "@shared/interfaces";
+import { ExecMapping } from "@shared/interfaces";
 import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { IAppPreferencesData } from "@shared/preferences/interfaces";
 import { Theme } from "@shared/ThemeFile";
-import { EventQueue } from "./util/EventQueue";
 import { GameManager } from "./game/GameManager";
+import { PlaylistManager } from "./playlist/PlaylistHelper";
 
 export type BackState = {
     isInitialized: boolean;
@@ -34,16 +31,15 @@ export type BackState = {
     messageEmitter: MessageEmitter;
     init: { [key in BackInit]: boolean };
     initEmitter: InitEmitter;
-    queries: Record<string, BackQueryChache>;
+    queries: Record<string, BackQueryCache>;
     logs: ILogEntry[];
     themeFiles: ThemeListItem[];
-    playlistQueue: EventQueue;
-    playlists: GamePlaylist[];
+    playlistManager: PlaylistManager;
     execMappings: ExecMapping[];
     installedGames: string[];
 };
 
-export type BackQueryChache = {
+export type BackQueryCache = {
     query: BackQuery;
     games: IGameInfo[];
     viewGames: ViewGame[];
