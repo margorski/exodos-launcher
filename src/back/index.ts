@@ -38,7 +38,6 @@ import {
     PlaylistUpdateData,
 } from "@shared/back/types";
 import { overwriteConfigData } from "@shared/config/util";
-import { EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
 import {
     FilterGameOpts,
     filterGames,
@@ -79,7 +78,8 @@ import { GameLauncher } from "./game/GameLauncher";
 import { BackQuery, BackQueryCache, BackState } from "./types";
 import { FolderWatcher } from "./util/FolderWatcher";
 import { walkSync, difObjects } from "./util/misc";
-import { PlaylistManager } from "./playlist/PlaylistHelper";
+import { PlaylistManager } from "./playlist/PlaylistManager";
+import { EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
 const send: Required<typeof process.send> = process.send
@@ -325,7 +325,7 @@ async function initialize(message: any, _: any): Promise<void> {
     state.init[BackInit.PLAYLISTS] = true;
     state.initEmitter.emit(BackInit.PLAYLISTS);
 
-    initializeGameManager();
+    await initializeGameManager();
 
     // Load Exec Mappings
     loadExecMappingsFile(
@@ -463,7 +463,7 @@ const startFileServer = async (acceptRemote: boolean): Promise<number> =>
         }
     });
 
-const initializeGameManager = () => {
+async function initializeGameManager() {
     const boxImagesPath = path.join(
         state.config.exodosPath,
         "Images/MS-DOS/Box - Front"
@@ -490,27 +490,28 @@ const initializeGameManager = () => {
     console.info(
         `Initializing gameManager with ${platformsPath} path and ${thumbnails.length} thumbnails`
     );
-    state.gameManager
-        .loadPlatforms(platformsPath, thumbnails)
-        .then((errors) => {
-            if (errors.length > 0) {
-                console.error(
-                    `${errors.length} platform(s) failed to load. Errors:`
-                );
-                for (let error of errors) {
-                    console.error(error);
-                }
-            }
-        })
-        .catch((error) => {
-            console.error(error);
-        })
-        .finally(() => {
-            state.init[BackInit.GAMES] = true;
-            state.initEmitter.emit(BackInit.GAMES);
-            addInstalledGamesPlaylist(false);
+    try {
+        const errors = await state.gameManager.init({
+            platformsPath,
+            thumbnails,
         });
-};
+        if (errors.length > 0) {
+            console.error(
+                `${errors.length} platform(s) throwfailed to load. Errors:`
+            );
+            for (let e of errors) {
+                console.error(errors);
+            }
+        }
+    } catch (error) {
+        console.error(`Cannot load platforms, error: ${error}`);
+        return;
+    }
+
+    state.init[BackInit.GAMES] = true;
+    state.initEmitter.emit(BackInit.GAMES);
+    addInstalledGamesPlaylist(false);
+}
 
 function onConnect(
     this: WebSocket.Server,

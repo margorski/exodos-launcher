@@ -11,7 +11,7 @@ import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { IAppPreferencesData } from "@shared/preferences/interfaces";
 import { Theme } from "@shared/ThemeFile";
 import { GameManager } from "./game/GameManager";
-import { PlaylistManager } from "./playlist/PlaylistHelper";
+import { PlaylistManager } from "./playlist/PlaylistManager";
 
 export type BackState = {
     isInitialized: boolean;

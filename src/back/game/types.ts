@@ -3,6 +3,7 @@ import { IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylist } from "@shared/interfaces";
 import { GamePlatform } from "@shared/platform/interfaces";
 import { ErrorCopy } from "../util/misc";
+import { PlaylistManager } from "@back/playlist/PlaylistManager";
 
 export type SearchCache = {
     query: SearchCacheQuery;
@@ -18,10 +19,9 @@ export type SearchCacheQuery = {
 };
 
 export type GameManagerState = {
-    /** All working platforms */
     platforms: GamePlatform[];
-    /** Platforms path, used to build new platforms later */
     platformsPath: string;
+    playlistManager: PlaylistManager;
 };
 
 export type LoadPlatformError = ErrorCopy & {
