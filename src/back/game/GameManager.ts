@@ -8,19 +8,23 @@ import { promisify } from "util";
 import { copyError } from "../util/misc";
 import { GameManagerState, LoadPlatformError } from "./types";
 import { EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
-import { PlaylistManager } from "@back/playlist/PlaylistManager";
+import {
+    PlaylistManager,
+    PlaylistUpdatedFunc,
+} from "@back/playlist/PlaylistManager";
 import * as LaunchBoxHelper from "./LaunchBoxHelper";
+import { LogFunc } from "@back/types";
 
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
 
-// LOAD PLATFORMS
-// LOAD PLAYLISTS
-
 export interface IGameManagerOpts {
     platformsPath: string;
+    playlistFolder: string;
     thumbnails: IThumbnailsInfo[];
+    onPlaylistAddOrUpdate: PlaylistUpdatedFunc;
+    log: LogFunc;
 }
 
 export class GameManager {
@@ -34,6 +38,10 @@ export class GameManager {
         return this._state.platforms;
     }
 
+    public get playlistManager() {
+        return this._state.playlistManager;
+    }
+
     // TODO Add supported platforms loaded from json file with options
     public get dosPlatform() {
         return this._state.platforms.find(
@@ -41,10 +49,26 @@ export class GameManager {
         );
     }
 
-    public init(opts: IGameManagerOpts) {
+    public async init(opts: IGameManagerOpts) {
+        await this.loadPlaylists(
+            opts.playlistFolder,
+            opts.onPlaylistAddOrUpdate,
+            opts.log
+        );
         return this.loadPlatforms(opts.platformsPath, opts.thumbnails);
     }
 
+    private loadPlaylists(
+        playlistFolder: string,
+        onPlaylistAddOrUpdate: PlaylistUpdatedFunc,
+        log: LogFunc
+    ) {
+        return this._state.playlistManager.load({
+            playlistFolder,
+            log,
+            onPlaylistAddOrUpdate,
+        });
+    }
     private async loadPlatforms(
         platformsPath: string,
         images: IThumbnailsInfo[]

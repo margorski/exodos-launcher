@@ -112,7 +112,6 @@ const state: BackState = {
     initEmitter: new EventEmitter() as any,
     logs: [],
     themeFiles: [],
-    playlistManager: new PlaylistManager(),
     execMappings: [],
     installedGames: [],
     queries: {},
@@ -146,14 +145,16 @@ function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
         .filter((g) => g) as GamePlaylistEntry[];
 
     const playlistDummyFilename = "installedgamesdummyfile";
-    var existingPlaylistIndex = state.playlistManager.playlists.findIndex(
-        (p) => p.filename === playlistDummyFilename
-    );
+    var existingPlaylistIndex =
+        state.gameManager.playlistManager.playlists.findIndex(
+            (p) => p.filename === playlistDummyFilename
+        );
     if (existingPlaylistIndex !== -1) {
-        state.playlistManager.playlists[existingPlaylistIndex].games =
-            gamesList;
+        state.gameManager.playlistManager.playlists[
+            existingPlaylistIndex
+        ].games = gamesList;
     } else
-        state.playlistManager.playlists.unshift({
+        state.gameManager.playlistManager.playlists.unshift({
             title: "Installed games",
             description: "A list of installed games.",
             author: "",
@@ -176,7 +177,7 @@ function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
         broadcast<PlaylistUpdateData>({
             id: "",
             type: BackOut.PLAYLIST_UPDATE,
-            data: state.playlistManager.playlists[0],
+            data: state.gameManager.playlistManager.playlists[0],
         });
     }
 }
@@ -297,33 +298,6 @@ async function initialize(message: any, _: any): Promise<void> {
     } catch (err) {
         console.log("chdir: " + err);
     }
-
-    const playlistFolder = path.join(
-        state.config.exodosPath,
-        state.config.playlistFolderPath
-    );
-
-    await state.playlistManager.load({
-        playlistFolder,
-        log,
-        onPlaylistAddOrUpdate: function (playlist: GamePlaylist): void {
-            // Clear all query caches that uses this playlist
-            const hashes = Object.keys(state.queries);
-            for (let hash of hashes) {
-                const cache = state.queries[hash];
-                if (cache.query.playlistId === playlist.filename) {
-                    delete state.queries[hash]; // Clear query from cache
-                }
-            }
-            broadcast<PlaylistUpdateData>({
-                id: "",
-                type: BackOut.PLAYLIST_UPDATE,
-                data: playlist,
-            });
-        },
-    });
-    state.init[BackInit.PLAYLISTS] = true;
-    state.initEmitter.emit(BackInit.PLAYLISTS);
 
     await initializeGameManager();
 
@@ -482,17 +456,40 @@ async function initializeGameManager() {
         });
     }
 
+    const playlistFolder = path.join(
+        state.config.exodosPath,
+        state.config.playlistFolderPath
+    );
+
     const platformsPath = path.join(
         state.config.exodosPath,
         state.config.platformFolderPath
     );
+    const onPlaylistAddOrUpdate = function (playlist: GamePlaylist): void {
+        // Clear all query caches that uses this playlist
+        const hashes = Object.keys(state.queries);
+        for (let hash of hashes) {
+            const cache = state.queries[hash];
+            if (cache.query.playlistId === playlist.filename) {
+                delete state.queries[hash]; // Clear query from cache
+            }
+        }
+        broadcast<PlaylistUpdateData>({
+            id: "",
+            type: BackOut.PLAYLIST_UPDATE,
+            data: playlist,
+        });
+    };
 
     console.info(
-        `Initializing gameManager with ${platformsPath} path and ${thumbnails.length} thumbnails`
+        `Initializing gameManager with ${platformsPath}  path and ${thumbnails.length} thumbnails`
     );
     try {
         const errors = await state.gameManager.init({
             platformsPath,
+            playlistFolder,
+            onPlaylistAddOrUpdate,
+            log,
             thumbnails,
         });
         if (errors.length > 0) {
@@ -507,6 +504,9 @@ async function initializeGameManager() {
         console.error(`Cannot load platforms, error: ${error}`);
         return;
     }
+
+    state.init[BackInit.PLAYLISTS] = true;
+    state.initEmitter.emit(BackInit.PLAYLISTS);
 
     state.init[BackInit.GAMES] = true;
     state.initEmitter.emit(BackInit.GAMES);
@@ -614,7 +614,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                             meta: theme.meta,
                         })),
                         playlists: state.init[BackInit.PLAYLISTS]
-                            ? state.playlistManager.playlists
+                            ? state.gameManager.playlistManager.playlists
                             : undefined,
                         platforms: platforms,
                         localeCode: state.localeCode,
@@ -1043,7 +1043,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 respond<GetPlaylistResponse>(event.target, {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
-                    data: state.playlistManager.playlists,
+                    data: state.gameManager.playlistManager.playlists,
                 });
             }
             break;
@@ -1345,7 +1345,7 @@ function searchGames(opts: SearchGamesOpts): IGameInfo[] {
 }
 // TODO: Move to game manager
 function queryGames(query: BackQuery): BackQueryCache {
-    const playlist = state.playlistManager.playlists.find(
+    const playlist = state.gameManager.playlistManager.playlists.find(
         (p) => p.filename === query.playlistId
     );
     const results = searchGames({

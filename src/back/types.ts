@@ -11,7 +11,6 @@ import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { IAppPreferencesData } from "@shared/preferences/interfaces";
 import { Theme } from "@shared/ThemeFile";
 import { GameManager } from "./game/GameManager";
-import { PlaylistManager } from "./playlist/PlaylistManager";
 
 export type BackState = {
     isInitialized: boolean;
@@ -34,7 +33,6 @@ export type BackState = {
     queries: Record<string, BackQueryCache>;
     logs: ILogEntry[];
     themeFiles: ThemeListItem[];
-    playlistManager: PlaylistManager;
     execMappings: ExecMapping[];
     installedGames: string[];
 };

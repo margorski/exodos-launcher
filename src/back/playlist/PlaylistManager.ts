@@ -5,10 +5,11 @@ import { PlaylistFile } from "./PlaylistFile";
 import { LogFunc } from "@back/types";
 import { GamePlaylist } from "@shared/interfaces";
 
+export type PlaylistUpdatedFunc = (playlist: GamePlaylist) => void;
 export interface PlaylistManagerOpts {
     playlistFolder: string;
     log: LogFunc;
-    onPlaylistAddOrUpdate: (playlist: GamePlaylist) => void;
+    onPlaylistAddOrUpdate: PlaylistUpdatedFunc;
 }
 
 export class PlaylistManager {
