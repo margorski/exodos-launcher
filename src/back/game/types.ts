@@ -22,6 +22,7 @@ export type GameManagerState = {
     platforms: GamePlatform[];
     platformsPath: string;
     playlistManager: PlaylistManager;
+    installedGames: string[];
 };
 
 export type LoadPlatformError = ErrorCopy & {

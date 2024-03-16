@@ -7,11 +7,6 @@ import { SearchQuery } from "../store/search";
 import { joinLibraryRoute } from "../Util";
 import { GameOrder, GameOrderChangeEvent } from "./GameOrder";
 import { OpenIcon } from "./OpenIcon";
-import { ExodosStateData } from "@shared/back/types";
-import {
-    EXODOS_GAMES_PLATFORM_NAME,
-    EXODOS_MAGAZINES_PLATFORM_NAME,
-} from "@shared/constants";
 import {
     DefaultGameOrderBy,
     DefaultGameOrderReverse,
@@ -25,7 +20,6 @@ type OwnProps = {
     order: GameOrderChangeEvent;
     /** Array of library routes */
     libraries: string[];
-    exodosState: ExodosStateData;
     /** Called when a search is made. */
     onSearch: (text: string, redirect: boolean) => void;
     /** Called when any of the ordering parameters are changed (by the header or a sub-component). */
@@ -44,8 +38,7 @@ type HeaderState = {
     searchText: string;
 };
 
-export interface Header {
-}
+export interface Header {}
 
 /** The header that is always visible at the top of the main window (just below the title bar). */
 export class Header extends React.Component<HeaderProps, HeaderState> {
@@ -90,12 +83,6 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
             libraries,
         } = this.props;
         const { searchText } = this.state;
-        const gamesTabEnabled =
-            this.props.exodosState.gamesEnabled &&
-            libraries.includes(`${EXODOS_GAMES_PLATFORM_NAME}.xml`);
-        const magazinesTabEnabled =
-            this.props.exodosState.magazinesEnabled &&
-            libraries.includes(`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`);
 
         return (
             <div className="header">
@@ -103,28 +90,13 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                 <div className="header__wrap">
                     <ul className="header__menu">
                         <MenuItem title={strings.home} link={Paths.HOME} />
-                        {magazinesTabEnabled ? (
+                        {libraries.map((library) => (
                             <MenuItem
-                                key={`${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`}
-                                title={getLibraryItemTitle(
-                                    `${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`,
-                                )}
-                                link={joinLibraryRoute(
-                                    `${EXODOS_MAGAZINES_PLATFORM_NAME}.xml`
-                                )}
+                                key={library}
+                                title={getLibraryItemTitle(library)}
+                                link={joinLibraryRoute(library)}
                             />
-                        ) : null}
-                        {gamesTabEnabled ? (
-                            <MenuItem
-                                key={`${EXODOS_GAMES_PLATFORM_NAME}.xml`}
-                                title={getLibraryItemTitle(
-                                    `${EXODOS_GAMES_PLATFORM_NAME}.xml`,
-                                )}
-                                link={joinLibraryRoute(
-                                    `${EXODOS_GAMES_PLATFORM_NAME}.xml`
-                                )}
-                            />
-                        ) : null}
+                        ))}
                         <MenuItem title={strings.logs} link={Paths.LOGS} />
                     </ul>
                 </div>

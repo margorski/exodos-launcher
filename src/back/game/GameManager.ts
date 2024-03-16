@@ -14,12 +14,15 @@ import {
 } from "@back/playlist/PlaylistManager";
 import * as LaunchBoxHelper from "./LaunchBoxHelper";
 import { LogFunc } from "@back/types";
+import { FolderWatcher } from "@back/util/FolderWatcher";
+import { GamePlaylistEntry } from "@shared/interfaces";
 
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
 
 export interface IGameManagerOpts {
+    exodosPath: string;
     platformsPath: string;
     playlistFolder: string;
     thumbnails: IThumbnailsInfo[];
@@ -31,6 +34,7 @@ export class GameManager {
     private _state: GameManagerState = {
         platforms: [],
         platformsPath: "",
+        installedGames: [],
         playlistManager: new PlaylistManager(),
     };
 
@@ -38,11 +42,10 @@ export class GameManager {
         return this._state.platforms;
     }
 
-    public get playlistManager() {
-        return this._state.playlistManager;
+    public get playlists() {
+        return this._state.playlistManager.playlists;
     }
 
-    // TODO Add supported platforms loaded from json file with options
     public get dosPlatform() {
         return this._state.platforms.find(
             (p) => p.name === EXODOS_GAMES_PLATFORM_NAME
@@ -50,25 +53,18 @@ export class GameManager {
     }
 
     public async init(opts: IGameManagerOpts) {
-        await this.loadPlaylists(
-            opts.playlistFolder,
-            opts.onPlaylistAddOrUpdate,
-            opts.log
+        await this._state.playlistManager.init({
+            ...opts,
+        });
+        const platformErrors = await this.loadPlatforms(
+            opts.platformsPath,
+            opts.thumbnails
         );
-        return this.loadPlatforms(opts.platformsPath, opts.thumbnails);
+        this.initExodosInstalledGamesWatcher(opts.exodosPath);
+
+        return platformErrors;
     }
 
-    private loadPlaylists(
-        playlistFolder: string,
-        onPlaylistAddOrUpdate: PlaylistUpdatedFunc,
-        log: LogFunc
-    ) {
-        return this._state.playlistManager.load({
-            playlistFolder,
-            log,
-            onPlaylistAddOrUpdate,
-        });
-    }
     private async loadPlatforms(
         platformsPath: string,
         images: IThumbnailsInfo[]
@@ -161,6 +157,84 @@ export class GameManager {
         );
 
         return errors;
+    }
+
+    private initExodosInstalledGamesWatcher(exodosPath: string) {
+        const gamesPath = path.resolve(path.join(exodosPath, "eXo/eXoDOS/"));
+
+        console.log(
+            `Initializing installed games watcher with ${gamesPath} path...`
+        );
+        const installedGamesWatcher = new FolderWatcher(gamesPath, {
+            recursionDepth: 0,
+        });
+
+        installedGamesWatcher
+            .on("ready", () => {
+                console.log("Installed games watcher is ready.");
+                installedGamesWatcher
+                    .on("add", (path) => {
+                        console.log(
+                            `Game ${path} added, rescan installed games.`
+                        );
+                        this.rescanInstalledGamesAndBroadcast(gamesPath);
+                    })
+                    .on("remove", (path) => {
+                        console.log(
+                            `Game ${path} has been removed, rescan installed games.`
+                        );
+                        this.rescanInstalledGamesAndBroadcast(gamesPath);
+                    });
+                this.rescanInstalledGamesAndBroadcast(gamesPath);
+                console.log("Initial scan complete. Ready for changes");
+            })
+            .on("error", (error) => console.log(`Watcher error: ${error}`));
+    }
+
+    private rescanInstalledGamesAndBroadcast(gamesPath: string) {
+        this._state.installedGames = this.rescanInstalledGames(gamesPath);
+        this.addInstalledGamesPlaylist();
+    }
+
+    private rescanInstalledGames(gamesPath: string) {
+        console.log(`Scanning for new games in ${gamesPath}`);
+
+        if (!fs.existsSync(gamesPath)) {
+            console.error(
+                `Directory ${gamesPath} doesn't exists, that could mean that exodos is not installed.`
+            );
+            return [];
+        }
+
+        const installedGames = fs
+            .readdirSync(gamesPath, { withFileTypes: true })
+            .filter((dirent) => dirent.isDirectory())
+            .filter((dirent) => dirent.name !== `!dos`)
+            .map((dirent) => dirent.name);
+        return installedGames;
+    }
+
+    private addInstalledGamesPlaylist() {
+        const dosPlatform = this.dosPlatform;
+        if (!dosPlatform) {
+            console.log(
+                "Cannot create installed game playlist. MS-DOS platform not loaded yet."
+            );
+            return;
+        }
+        const dosPlatformInstalledGames = this._state.installedGames
+            .map((gameName) => {
+                const gameInPlatform = dosPlatform.collection.games.find(
+                    (game) =>
+                        game.applicationPath.split("\\").includes(gameName)
+                );
+                if (gameInPlatform) return { id: gameInPlatform.id };
+                else return;
+            })
+            .filter((g) => g) as GamePlaylistEntry[];
+        this._state.playlistManager.addInstalledGamesPlaylist(
+            dosPlatformInstalledGames
+        );
     }
 
     public findPlatformByName(name: string): GamePlatform | undefined {

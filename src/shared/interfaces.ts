@@ -93,7 +93,7 @@ export interface IMainWindowExternal {
 /** Callback for Electron.dialog.showOpenDialog */
 export type ElectronOpenDialogCallback = (
     filePaths?: string[],
-    bookmarks?: string[],
+    bookmarks?: string[]
 ) => void;
 
 /** Obtain the return type of a function */

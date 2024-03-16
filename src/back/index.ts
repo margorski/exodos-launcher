@@ -8,7 +8,6 @@ import {
     BrowseViewIndexResponseData,
     BrowseViewPageData,
     BrowseViewPageResponseData,
-    ExodosStateData,
     GetAllGamesResponseData,
     GetExecData,
     GetGameData,
@@ -57,15 +56,12 @@ import {
     createErrorProxy,
     deepCopy,
     isErrorProxy,
-    getFilePathExtension,
     fixSlashes,
 } from "@shared/Util";
 import { Coerce } from "@shared/utils/Coerce";
 import { createHash } from "crypto";
 import { MessageBoxOptions, OpenExternalOptions } from "electron";
-import * as fs from "fs";
 import * as http from "http";
-import * as mime from "mime";
 import * as path from "path";
 import * as WebSocket from "ws";
 import { v4 as uuid } from "uuid";
@@ -76,10 +72,8 @@ import { loadExecMappingsFile } from "./Execs";
 import { GameManager } from "./game/GameManager";
 import { GameLauncher } from "./game/GameLauncher";
 import { BackQuery, BackQueryCache, BackState } from "./types";
-import { FolderWatcher } from "./util/FolderWatcher";
 import { walkSync, difObjects } from "./util/misc";
-import { PlaylistManager } from "./playlist/PlaylistManager";
-import { EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
+import { FileServer } from "./backend/fileServer";
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
 const send: Required<typeof process.send> = process.send
@@ -92,8 +86,7 @@ const state: BackState = {
     isInitialized: false,
     isExit: false,
     server: createErrorProxy("server"),
-    fileServer: new http.Server(onFileServerRequest),
-    fileServerPort: -1,
+    fileServer: undefined,
     secret: createErrorProxy("secret"),
     preferences: createErrorProxy("preferences"),
     config: createErrorProxy("config"),
@@ -113,7 +106,6 @@ const state: BackState = {
     logs: [],
     themeFiles: [],
     execMappings: [],
-    installedGames: [],
     queries: {},
 };
 
@@ -124,149 +116,6 @@ process.on("message", initialize);
 process.on("disconnect", () => {
     exit();
 });
-
-function addInstalledGamesPlaylist(doBroadcast: boolean = true) {
-    const dosPlatform = state.gameManager.dosPlatform;
-    if (!dosPlatform) {
-        console.log(
-            "Cannot create installed game playlist. MS-DOS platform not loaded yet."
-        );
-        return;
-    }
-
-    const gamesList = state.installedGames
-        .map((gameName) => {
-            const gameInPlatform = dosPlatform.collection.games.find((game) =>
-                game.applicationPath.split("\\").includes(gameName)
-            );
-            if (gameInPlatform) return { id: gameInPlatform.id };
-            else return;
-        })
-        .filter((g) => g) as GamePlaylistEntry[];
-
-    const playlistDummyFilename = "installedgamesdummyfile";
-    var existingPlaylistIndex =
-        state.gameManager.playlistManager.playlists.findIndex(
-            (p) => p.filename === playlistDummyFilename
-        );
-    if (existingPlaylistIndex !== -1) {
-        state.gameManager.playlistManager.playlists[
-            existingPlaylistIndex
-        ].games = gamesList;
-    } else
-        state.gameManager.playlistManager.playlists.unshift({
-            title: "Installed games",
-            description: "A list of installed games.",
-            author: "",
-            icon: "",
-            library: `${EXODOS_GAMES_PLATFORM_NAME}.xml`,
-            filename: playlistDummyFilename,
-            games: gamesList,
-        });
-
-    // Clear all query caches that uses this playlist
-    const hashes = Object.keys(state.queries);
-    for (let hash of hashes) {
-        const cache = state.queries[hash];
-        if (cache.query.playlistId === playlistDummyFilename) {
-            delete state.queries[hash]; // Clear query from cache
-        }
-    }
-
-    if (doBroadcast) {
-        broadcast<PlaylistUpdateData>({
-            id: "",
-            type: BackOut.PLAYLIST_UPDATE,
-            data: state.gameManager.playlistManager.playlists[0],
-        });
-    }
-}
-
-function initExodosMagazinesWatcher() {
-    const magazinesPath = path.resolve(
-        path.join(state.config.exodosPath, "eXo/Magazines/")
-    );
-
-    console.log(
-        `Checking if exodos magazines exists in path ${magazinesPath}...`
-    );
-    const magazinesPathExists = fs.existsSync(magazinesPath);
-    if (magazinesPathExists) {
-        console.log(`Found magazines, enabling magazines`);
-        broadcast<ExodosStateData>({
-            id: "",
-            type: BackOut.EXODOS_STATE_UPDATE,
-            data: {
-                magazinesEnabled: true,
-            },
-        });
-    } else {
-        console.log(`Magazines not found, disabling magazines`);
-    }
-}
-
-function initExodosInstalledGamesWatcher() {
-    const gamesPath = path.resolve(
-        path.join(state.config.exodosPath, "eXo/eXoDOS/")
-    );
-
-    console.log(
-        `Initializing installed games watcher with ${gamesPath} path...`
-    );
-    const installedGamesWatcher = new FolderWatcher(gamesPath, {
-        recursionDepth: 0,
-    });
-
-    installedGamesWatcher
-        .on("ready", () => {
-            console.log("Installed games watcher is ready.");
-            installedGamesWatcher
-                .on("add", (path) => {
-                    console.log(`Game ${path} added, rescan installed games.`);
-                    rescanInstalledGamesAndBroadcast(gamesPath);
-                })
-                .on("remove", (path) => {
-                    console.log(
-                        `Game ${path} has been removed, rescan installed games.`
-                    );
-                    rescanInstalledGamesAndBroadcast(gamesPath);
-                });
-            rescanInstalledGamesAndBroadcast(gamesPath);
-            console.log("Initial scan complete. Ready for changes");
-
-            broadcast<ExodosStateData>({
-                id: "",
-                type: BackOut.EXODOS_STATE_UPDATE,
-                data: {
-                    gamesEnabled: true,
-                },
-            });
-        })
-        .on("error", (error) => console.log(`Watcher error: ${error}`));
-}
-
-function rescanInstalledGamesAndBroadcast(gamesPath: string) {
-    state.installedGames = rescanInstalledGames(gamesPath);
-    addInstalledGamesPlaylist(true);
-}
-
-function rescanInstalledGames(gamesPath: string) {
-    console.log(`Scanning for new games in ${gamesPath}`);
-
-    if (!fs.existsSync(gamesPath)) {
-        console.error(
-            `Directory ${gamesPath} doesn't exists, that could mean that exodos is not installed.`
-        );
-        return [];
-    }
-
-    const installedGames = fs
-        .readdirSync(gamesPath, { withFileTypes: true })
-        .filter((dirent) => dirent.isDirectory())
-        .filter((dirent) => dirent.name !== `!dos`)
-        .map((dirent) => dirent.name);
-    return installedGames;
-}
 
 async function initialize(message: any, _: any): Promise<void> {
     if (state.isInitialized) {
@@ -320,7 +169,9 @@ async function initialize(message: any, _: any): Promise<void> {
             state.initEmitter.emit(BackInit.EXEC);
         });
 
-    state.fileServerPort = await startFileServer(content.acceptRemote);
+    state.fileServer = new FileServer(state.config, log);
+    await state.fileServer.start();
+
     const serverPort = await startMainServer(content.acceptRemote);
     if (serverPort < 0) {
         setImmediate(exit);
@@ -388,55 +239,6 @@ const startMainServer = async (acceptRemote: boolean): Promise<number> =>
         }
     });
 
-const startFileServer = async (acceptRemote: boolean): Promise<number> =>
-    new Promise<number>((resolve) => {
-        const minPort = state.config.imagesPortMin;
-        const maxPort = state.config.imagesPortMax;
-
-        let port = minPort - 1;
-        state.fileServer.once("listening", onceListening);
-        state.fileServer.on("error", onError);
-        tryListen();
-
-        function onceListening() {
-            done(undefined);
-        }
-        function onError(error: Error) {
-            if ((error as any).code === "EADDRINUSE") {
-                tryListen();
-            } else {
-                done(error);
-            }
-        }
-        function tryListen() {
-            if (port++ < maxPort) {
-                state.fileServer.listen(
-                    port,
-                    acceptRemote ? undefined : "localhost"
-                );
-            } else {
-                done(
-                    new Error(
-                        `All attempted ports are already in use (Ports: ${minPort} - ${maxPort}).`
-                    )
-                );
-            }
-        }
-        function done(error: Error | undefined) {
-            state.fileServer.off("listening", onceListening);
-            state.fileServer.off("error", onError);
-            if (error) {
-                log({
-                    source: "Back",
-                    content: "Failed to open HTTP server.\n" + error,
-                });
-                resolve(-1);
-            } else {
-                resolve(port);
-            }
-        }
-    });
-
 async function initializeGameManager() {
     const boxImagesPath = path.join(
         state.config.exodosPath,
@@ -486,6 +288,7 @@ async function initializeGameManager() {
     );
     try {
         const errors = await state.gameManager.init({
+            exodosPath: state.config.exodosPath,
             platformsPath,
             playlistFolder,
             onPlaylistAddOrUpdate,
@@ -510,7 +313,6 @@ async function initializeGameManager() {
 
     state.init[BackInit.GAMES] = true;
     state.initEmitter.emit(BackInit.GAMES);
-    addInstalledGamesPlaylist(false);
 }
 
 function onConnect(
@@ -607,23 +409,19 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     data: {
                         preferences: state.preferences,
                         config: state.config,
-                        fileServerPort: state.fileServerPort,
+                        fileServerPort: state.fileServer?.port ?? -1,
                         log: state.logs,
                         themes: state.themeFiles.map((theme) => ({
                             entryPath: theme.entryPath,
                             meta: theme.meta,
                         })),
                         playlists: state.init[BackInit.PLAYLISTS]
-                            ? state.gameManager.playlistManager.playlists
+                            ? state.gameManager.playlists
                             : undefined,
                         platforms: platforms,
                         localeCode: state.localeCode,
                     },
                 });
-                if (state.gameManager.dosPlatform) {
-                    initExodosInstalledGamesWatcher();
-                    initExodosMagazinesWatcher();
-                }
             }
             break;
 
@@ -1043,7 +841,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 respond<GetPlaylistResponse>(event.target, {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
-                    data: state.gameManager.playlistManager.playlists,
+                    data: state.gameManager.playlists,
                 });
             }
             break;
@@ -1057,153 +855,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 exit();
             }
             break;
-    }
-}
-// TODO: Move to file server
-function onFileServerRequest(
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-): void {
-    try {
-        let urlPath = decodeURIComponent(req.url || "");
-
-        // Remove the get parameters
-        const qIndex = urlPath.indexOf("?");
-        if (qIndex >= 0) {
-            urlPath = urlPath.substr(0, qIndex);
-        }
-
-        // Remove all leading slashes
-        for (let i = 0; i < urlPath.length; i++) {
-            if (urlPath[i] !== "/") {
-                urlPath = urlPath.substr(i);
-                break;
-            }
-        }
-
-        const index = urlPath.indexOf("/");
-        const firstItem = (
-            index >= 0 ? urlPath.substr(0, index) : urlPath
-        ).toLowerCase(); // First filename in the path string ("A/B/C" => "A" | "D" => "D")
-        switch (firstItem) {
-            // Image folder
-            case "images":
-                {
-                    const imageFolder = path.join(
-                        state.config.exodosPath,
-                        state.config.imageFolderPath
-                    );
-                    const filePath = path.join(
-                        imageFolder,
-                        urlPath.substr(index + 1)
-                    );
-                    if (filePath.startsWith(imageFolder)) {
-                        serveFile(req, res, filePath);
-                    }
-                }
-                break;
-
-            // Theme folder
-            case "themes":
-                {
-                    const themeFolder = path.join(
-                        state.config.exodosPath,
-                        state.config.themeFolderPath
-                    );
-                    const index = urlPath.indexOf("/");
-                    const relativeUrl =
-                        index >= 0 ? urlPath.substr(index + 1) : urlPath;
-                    const filePath = path.join(themeFolder, relativeUrl);
-                    if (filePath.startsWith(themeFolder)) {
-                        serveFile(req, res, filePath);
-                    }
-                }
-                break;
-
-            // Logos folder
-            case "logos":
-                {
-                    const logoFolder = path.join(
-                        state.config.exodosPath,
-                        state.config.logoFolderPath
-                    );
-                    const filePath = path.join(
-                        logoFolder,
-                        urlPath.substr(index + 1)
-                    );
-                    if (filePath.startsWith(logoFolder)) {
-                        serveFile(req, res, filePath);
-                    }
-                }
-                break;
-
-            // Exodos directory, serving html from there
-            case "exo": {
-                const extension = getFilePathExtension(urlPath);
-                if (
-                    extension.toLocaleLowerCase() === "html" ||
-                    extension.toLocaleLowerCase() === "htm" ||
-                    extension.toLocaleLowerCase() === "txt"
-                ) {
-                    const filePath = path.join(
-                        state.config.exodosPath,
-                        urlPath
-                    );
-                    serveFile(req, res, filePath);
-                } else {
-                    res.writeHead(404);
-                    res.end();
-                }
-                break;
-            }
-            // Nothing
-            default:
-                {
-                    res.writeHead(404);
-                    res.end();
-                }
-                break;
-        }
-    } catch (error) {
-        console.warn(error);
-    }
-}
-
-function serveFile(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    filePath: string
-): void {
-    if (req.method === "GET" || req.method === "HEAD") {
-        fs.stat(filePath, (error, stats) => {
-            if (error || (stats && !stats.isFile())) {
-                res.writeHead(404);
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": mime.getType(path.extname(filePath)) || "",
-                    "Content-Length": stats.size,
-                });
-                if (req.method === "GET") {
-                    const stream = fs.createReadStream(filePath);
-                    stream.on("error", (error) => {
-                        console.warn(
-                            `File server failed to stream file. ${error}`
-                        );
-                        stream.destroy(); // Calling "destroy" inside the "error" event seems like it could case an endless loop (although it hasn't thus far)
-                        if (!res.writableEnded) {
-                            res.end();
-                        }
-                    });
-                    stream.pipe(res);
-                } else {
-                    res.end();
-                }
-            }
-        });
-    } else {
-        res.writeHead(404);
-        res.end();
     }
 }
 
@@ -1229,7 +880,7 @@ function exit() {
                   ),
             // Close file server
             new Promise<void>((resolve) =>
-                state.fileServer.close((error) => {
+                state.fileServer?.server.close((error) => {
                     if (error) {
                         console.warn(
                             "An error occurred whie closing the file server.",
@@ -1345,7 +996,7 @@ function searchGames(opts: SearchGamesOpts): IGameInfo[] {
 }
 // TODO: Move to game manager
 function queryGames(query: BackQuery): BackQueryCache {
-    const playlist = state.gameManager.playlistManager.playlists.find(
+    const playlist = state.gameManager.playlists.find(
         (p) => p.filename === query.playlistId
     );
     const results = searchGames({

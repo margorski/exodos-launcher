@@ -3,7 +3,8 @@ import * as path from "path";
 
 import { PlaylistFile } from "./PlaylistFile";
 import { LogFunc } from "@back/types";
-import { GamePlaylist } from "@shared/interfaces";
+import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
+import { EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
 
 export type PlaylistUpdatedFunc = (playlist: GamePlaylist) => void;
 export interface PlaylistManagerOpts {
@@ -14,13 +15,16 @@ export interface PlaylistManagerOpts {
 
 export class PlaylistManager {
     private _initialized = false;
+    private _opts?: PlaylistManagerOpts;
+
     public readonly playlists: GamePlaylist[] = [];
 
-    async load(opts: PlaylistManagerOpts) {
+    async init(opts: PlaylistManagerOpts) {
         if (this._initialized) {
             console.log("PlaylistManager already initialized. Leaving.");
             return;
         }
+        this._opts = opts;
 
         console.log("Loading playlists...");
         try {
@@ -44,6 +48,31 @@ export class PlaylistManager {
                 content: `Error while loading playlist files. Error: ${error}`,
             });
         }
+    }
+
+    public addInstalledGamesPlaylist(games: GamePlaylistEntry[]) {
+        if (!this._initialized) {
+            console.log("PlaylistManager not initialized. Leaving");
+            return;
+        }
+
+        const playlistDummyFilename = "installedgamesdummyfile";
+        var existingPlaylistIndex = this.playlists.findIndex(
+            (p) => p.filename === playlistDummyFilename
+        );
+        if (existingPlaylistIndex !== -1)
+            this.playlists[existingPlaylistIndex].games = games;
+        else
+            this.playlists.unshift({
+                title: "Installed games",
+                description: "A list of installed games.",
+                author: "",
+                icon: "",
+                library: `${EXODOS_GAMES_PLATFORM_NAME}.xml`,
+                filename: playlistDummyFilename,
+                games: games,
+            });
+        this._opts?.onPlaylistAddOrUpdate(this.playlists[0]);
     }
 
     private async _onPlaylistAddOrChange(
