@@ -8,8 +8,6 @@ import { GameOrderBy, GameOrderReverse } from "../order/interfaces";
 export type IAppPreferencesData = {
     /** Scale of the games at the BrowsePage. */
     browsePageGameScale: number;
-    /** If "Extreme" games should be shown at the BrowsePage. */
-    browsePageShowExtreme: boolean;
     /** If editing games, additional applications and playlists should be allowed. */
     enableEditing: boolean;
     /** Layout of game collection at BrowsePage. */

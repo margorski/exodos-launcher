@@ -42,8 +42,6 @@ export type BackQueryCache = {
 };
 
 export type BackQuery = {
-    extreme: boolean;
-    broken: boolean;
     library: string;
     search: string;
     orderBy: GameOrderBy;

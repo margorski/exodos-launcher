@@ -13,8 +13,6 @@ export class GameInfo {
             publisher: "",
             platform: "",
             dateAdded: "",
-            broken: false,
-            extreme: false,
             playMode: "",
             status: "",
             notes: "",
@@ -42,7 +40,7 @@ export class GameInfo {
      */
     public static override(
         target: IGameInfo,
-        source: Partial<IGameInfo>,
+        source: Partial<IGameInfo>
     ): void {
         Object.assign(target, source);
     }

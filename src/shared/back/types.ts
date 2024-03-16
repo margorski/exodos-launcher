@@ -154,8 +154,6 @@ export type GetAllGamesResponseData = {
 
 export type RandomGamesData = {
     count: number;
-    broken: boolean;
-    extreme: boolean;
 };
 
 export type RandomGamesResponseData = IGameInfo[];
@@ -214,8 +212,6 @@ export type QuickSearchResponseData = {
 };
 
 type GameQuery = {
-    extreme: boolean;
-    broken: boolean;
     library: string;
     search: string;
     playlistId?: string;

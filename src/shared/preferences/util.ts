@@ -35,7 +35,6 @@ const { num, str } = Coerce;
 export const defaultPreferencesData: Readonly<IAppPreferencesData> =
     Object.freeze<IAppPreferencesData>({
         browsePageGameScale: 0.087,
-        browsePageShowExtreme: false,
         enableEditing: false,
         browsePageLayout: BrowsePageLayout.list,
         browsePageShowLeftSidebar: true,
@@ -84,10 +83,6 @@ export function overwritePreferenceData(
     parser.prop(
         "browsePageGameScale",
         (v) => (source.browsePageGameScale = num(v))
-    );
-    parser.prop(
-        "browsePageShowExtreme",
-        (v) => (source.browsePageShowExtreme = !!v)
     );
     parser.prop("enableEditing", (v) => (source.enableEditing = !!v));
     parser.prop("browsePageLayout", (v) => (source.browsePageLayout = num(v)));

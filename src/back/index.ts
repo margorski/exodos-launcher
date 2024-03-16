@@ -644,14 +644,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     );
                 }
 
-                if (!reqData.extreme) {
-                    allGames = allGames.filter((game) => !game.extreme);
-                }
-
-                if (!reqData.broken) {
-                    allGames = allGames.filter((game) => !game.broken);
-                }
-
                 const pickedGames: IGameInfo[] = [];
                 for (let i = 0; i < reqData.count; i++) {
                     const index = (Math.random() * allGames.length) | 0;
@@ -675,8 +667,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 const reqData: BrowseViewPageData = req.data;
 
                 const query: BackQuery = {
-                    extreme: reqData.query.extreme,
-                    broken: reqData.query.broken,
                     library: reqData.query.library,
                     search: reqData.query.search,
                     orderBy: reqData.query.orderBy as GameOrderBy,
@@ -707,8 +697,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 const reqData: BrowseViewIndexData = req.data;
 
                 const query: BackQuery = {
-                    extreme: reqData.query.extreme,
-                    broken: reqData.query.broken,
                     library: reqData.query.library,
                     search: reqData.query.search,
                     orderBy: reqData.query.orderBy as GameOrderBy,
@@ -746,8 +734,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 const reqData: QuickSearchData = req.data;
 
                 const query: BackQuery = {
-                    extreme: reqData.query.extreme,
-                    broken: reqData.query.broken,
                     library: reqData.query.library,
                     search: reqData.query.search,
                     orderBy: reqData.query.orderBy as GameOrderBy,
@@ -952,8 +938,6 @@ function log(preEntry: ILogPreEntry, id?: string): void {
 }
 
 type SearchGamesOpts = {
-    extreme: boolean;
-    broken: boolean;
     playlist?: GamePlaylist;
     /** String to use as a search query */
     query: string;
@@ -970,8 +954,6 @@ function searchGames(opts: SearchGamesOpts): IGameInfo[] {
     // Build opts from preferences and query
     const filterOpts: FilterGameOpts = {
         search: opts.query,
-        extreme: opts.extreme,
-        broken: opts.broken,
         playlist: opts.playlist,
     };
 
@@ -1000,8 +982,6 @@ function queryGames(query: BackQuery): BackQueryCache {
         (p) => p.filename === query.playlistId
     );
     const results = searchGames({
-        extreme: query.extreme,
-        broken: query.broken,
         query: query.search,
         orderBy: query.orderBy,
         orderReverse: query.orderReverse,

@@ -12,8 +12,6 @@ import { GameGridItem } from "./GameGridItem";
 import { GameItemContainer } from "./GameItemContainer";
 
 type RandomGamesProps = {
-    broken: boolean;
-    extreme: boolean;
     onLaunchGame: (gameId: string) => void;
 };
 
@@ -26,14 +24,12 @@ export function RandomGames(props: RandomGamesProps) {
             BackIn.RANDOM_GAMES,
             {
                 count: 5,
-                broken: props.broken,
-                extreme: props.extreme,
             },
             (res) => {
                 if (res.data) {
                     setGames(res.data);
                 }
-            },
+            }
         );
     }, []);
 
@@ -41,7 +37,7 @@ export function RandomGames(props: RandomGamesProps) {
         (event: React.MouseEvent, gameId: string) => {
             props.onLaunchGame(gameId);
         },
-        [props.onLaunchGame],
+        [props.onLaunchGame]
     );
 
     const gameItems = React.useMemo(
@@ -58,7 +54,7 @@ export function RandomGames(props: RandomGamesProps) {
                     isInstalled={false}
                 />
             )),
-        [games],
+        [games]
     );
 
     return (
@@ -80,7 +76,7 @@ function findGameId(element: EventTarget): string | undefined {
     const game = findElementAncestor(
         element as Element,
         (target) => GameGridItem.isElement(target),
-        true,
+        true
     );
     if (game) {
         return GameGridItem.getId(game);

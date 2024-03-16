@@ -19,8 +19,6 @@ const configDataDefaultBase: Readonly<IAppConfigData> = Object.freeze({
     platformFolderPath: "Data/Platforms",
     themeFolderPath: "Data/Themes",
     useCustomTitlebar: false,
-    disableExtremeGames: false,
-    showBrokenGames: false,
     backPortMin: 12001,
     backPortMax: 12100,
     imagesPortMin: 12101,
@@ -101,11 +99,6 @@ export function overwriteConfigData(
         (v) => (source.themeFolderPath = parseVarStr(str(v)))
     );
     parser.prop("useCustomTitlebar", (v) => (source.useCustomTitlebar = !!v));
-    parser.prop(
-        "disableExtremeGames",
-        (v) => (source.disableExtremeGames = !!v)
-    );
-    parser.prop("showBrokenGames", (v) => (source.showBrokenGames = !!v));
     parser.prop(
         "nativePlatforms",
         (v) => (source.nativePlatforms = strArray(v))

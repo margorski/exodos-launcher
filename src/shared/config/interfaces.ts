@@ -16,10 +16,6 @@ export type IAppConfigData = {
     themeFolderPath: string;
     /** If the custom title bar should be used in MainWindow */
     useCustomTitlebar: boolean;
-    /** If games flagged as "extreme" should be hidden (mainly for parental control) */
-    disableExtremeGames: boolean;
-    /** If games flagged as "broken" should be hidden */
-    showBrokenGames: boolean;
     /** Array of native locked platforms */
     nativePlatforms: string[];
     /** Lower limit of the range of ports that the back should listen on. */

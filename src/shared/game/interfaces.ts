@@ -32,10 +32,6 @@ export interface IPureGameInfo {
     dateAdded: string;
     /** Platform the game runs on (Flash, HTML5, Shockwave etc.) */
     platform: string;
-    /** If the game is "broken" or not */
-    broken: boolean;
-    /** Game is not suitable for children */
-    extreme: boolean;
     /** If the game is single player or multiplayer, and if the multiplayer is cooperative or not */
     playMode: string;
     /** How playable the game is */

@@ -106,7 +106,7 @@ function reverseOrder(compareFn: OrderFn): OrderFn {
 /** Get the order function for a given game order */
 function getOrderFunction(
     orderBy: GameOrderBy,
-    orderReverse: GameOrderReverse,
+    orderReverse: GameOrderReverse
 ): OrderFn {
     let orderFn: OrderFn;
     switch (orderBy) {
@@ -141,40 +141,6 @@ function getOrderFunction(
     return orderFn;
 }
 
-/** Return a new array with all broken games removed (if showBroken is false) */
-export function filterBroken(
-    showBroken: boolean,
-    games: IGameInfo[],
-): IGameInfo[] {
-    if (showBroken) {
-        return games;
-    }
-    const filteredGames: IGameInfo[] = [];
-    for (let game of games) {
-        if (!game.broken) {
-            filteredGames.push(game);
-        }
-    }
-    return filteredGames;
-}
-
-/** Return a new array with all extreme games removed (if showExtreme is false) */
-export function filterExtreme(
-    showExtreme: boolean,
-    games: IGameInfo[],
-): IGameInfo[] {
-    if (showExtreme) {
-        return games;
-    }
-    const filteredGames: IGameInfo[] = [];
-    for (let game of games) {
-        if (!game.extreme) {
-            filteredGames.push(game);
-        }
-    }
-    return filteredGames;
-}
-
 /**
  * Return a new array with all games that are not in the playlist removed (if playlist isn't undefined)
  * (This will add new games for the games in the playlist that are missing,
@@ -182,7 +148,7 @@ export function filterExtreme(
  */
 function filterPlaylist(
     playlist: GamePlaylist | undefined,
-    games: IGameInfo[],
+    games: IGameInfo[]
 ): IGameInfo[] {
     if (!playlist) {
         return games;
@@ -418,10 +384,6 @@ type FieldFilter = {
 export type FilterGameOpts = {
     /** Search query to filter by */
     search: string;
-    /** If extreme games should be included in the result. */
-    extreme: boolean;
-    /** If broken games should be included in the result. */
-    broken: boolean;
     /** Playlist to limit the results to (no playlist limit will be applied if undefined). */
     playlist?: GamePlaylist;
 };
@@ -441,18 +403,12 @@ export type OrderGamesOpts = {
  */
 export function filterGames(
     games: IGameInfo[],
-    opts: FilterGameOpts,
+    opts: FilterGameOpts
 ): IGameInfo[] {
     // @TODO Perhaps the new search system (filterSearch) could be used exclusively, so all the other
     //       filter functions could be removed?
     // Filter games
-    return filterSearch(
-        opts.search,
-        filterBroken(
-            opts.broken,
-            filterExtreme(opts.extreme, filterPlaylist(opts.playlist, games)),
-        ),
-    );
+    return filterSearch(opts.search, filterPlaylist(opts.playlist, games));
 }
 
 /**
@@ -473,7 +429,7 @@ export function orderGames(games: IGameInfo[], opts: OrderGamesOpts) {
  */
 export function orderGamesInPlaylist(
     games: IGameInfo[],
-    playlist: GamePlaylist,
+    playlist: GamePlaylist
 ): void {
     for (let i = 0; i < playlist.games.length; i++) {
         const id = playlist.games[i].id;

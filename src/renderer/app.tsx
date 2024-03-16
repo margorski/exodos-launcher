@@ -66,7 +66,6 @@ type View = {
     /** The most recent query used for this view. */
     query: {
         search: string;
-        extreme: boolean;
         orderBy: GameOrderBy;
         orderReverse: GameOrderReverse;
     };
@@ -131,7 +130,6 @@ export class App extends React.Component<AppProps, AppState> {
                 total: 0,
                 query: {
                     search: this.props.search.text,
-                    extreme: this.props.preferencesData.browsePageShowExtreme,
                     orderBy: order.orderBy,
                     orderReverse: order.orderReverse,
                 },
@@ -610,8 +608,6 @@ export class App extends React.Component<AppProps, AppState> {
             // Check if the search query has changed
             if (
                 view.query.search !== this.props.search.text ||
-                view.query.extreme !==
-                    this.props.preferencesData.browsePageShowExtreme ||
                 view.query.orderBy !== this.state.order.orderBy ||
                 view.query.orderReverse !== this.state.order.orderReverse
             ) {
@@ -625,9 +621,6 @@ export class App extends React.Component<AppProps, AppState> {
                                 query: {
                                     ...view.query,
                                     search: this.props.search.text,
-                                    extreme:
-                                        this.props.preferencesData
-                                            .browsePageShowExtreme,
                                     orderBy: this.state.order.orderBy,
                                     orderReverse: this.state.order.orderReverse,
                                 },
@@ -914,8 +907,6 @@ export class App extends React.Component<AppProps, AppState> {
                 {
                     gameId: view.selectedGameId,
                     query: {
-                        extreme: view.query.extreme,
-                        broken: window.External.config.data.showBrokenGames,
                         library: library,
                         search: view.query.search,
                         playlistId: view && view.selectedPlaylistId,
@@ -981,8 +972,6 @@ export class App extends React.Component<AppProps, AppState> {
                     offset: pageMin * VIEW_PAGE_SIZE,
                     limit: (pageMax - pageMin + 1) * VIEW_PAGE_SIZE,
                     query: {
-                        extreme: view.query.extreme,
-                        broken: window.External.config.data.showBrokenGames,
                         library: library,
                         search: view.query.search,
                         playlistId: view && view.selectedPlaylistId,
@@ -1025,8 +1014,6 @@ export class App extends React.Component<AppProps, AppState> {
             {
                 search: search,
                 query: {
-                    extreme: this.props.preferencesData.browsePageShowExtreme,
-                    broken: window.External.config.data.showBrokenGames,
                     library: library,
                     search: this.props.search.text, // view.query.search,
                     playlistId: view && view.selectedPlaylistId,
