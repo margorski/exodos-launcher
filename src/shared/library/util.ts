@@ -4,6 +4,5 @@ import { removeFileExtension } from "@shared/Util";
  * @param item Item to get title of.
  */
 export function getLibraryItemTitle(library: string): string {
-    console.log(library);
     return removeFileExtension(library);
 }

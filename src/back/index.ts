@@ -30,20 +30,14 @@ import {
     RandomGamesResponseData,
     SetLocaleData,
     UpdateConfigData,
-    ViewGame,
     WrappedRequest,
     WrappedResponse,
     LaunchExodosContentData,
     PlaylistUpdateData,
 } from "@shared/back/types";
 import { overwriteConfigData } from "@shared/config/util";
-import {
-    FilterGameOpts,
-    filterGames,
-    orderGames,
-} from "@shared/game/GameFilter";
-import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
-import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
+import { IGameInfo } from "@shared/game/interfaces";
+import { GamePlaylist } from "@shared/interfaces";
 import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { IThumbnailsInfo } from "@shared/platform/interfaces";
@@ -71,7 +65,7 @@ import { ConfigFile } from "./config/ConfigFile";
 import { loadExecMappingsFile } from "./Execs";
 import { GameManager } from "./game/GameManager";
 import { GameLauncher } from "./game/GameLauncher";
-import { BackQuery, BackQueryCache, BackState } from "./types";
+import { BackQuery, BackState } from "./types";
 import { walkSync, difObjects } from "./util/misc";
 import { FileServer } from "./backend/fileServer";
 // Make sure the process.send function is available
@@ -456,7 +450,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 respond<GetGamesTotalResponseData>(event.target, {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
-                    data: countGames(),
+                    data: state.gameManager.countGames(),
                 });
             }
             break;
@@ -497,7 +491,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                         (item) => item.id === reqData.id
                     );
                     if (addApp) {
-                        const game = findGame(addApp.gameId);
+                        const game = state.gameManager.findGame(addApp.gameId);
                         GameLauncher.launchAdditionalApplication({
                             addApp,
                             fpPath: path.resolve(state.config.exodosPath),
@@ -546,8 +540,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             {
                 const reqData: LaunchGameData = req.data;
 
-                const game = findGame(reqData.id);
-                const addApps = findAddApps(reqData.id);
+                const game = state.gameManager.findGame(reqData.id);
+                const addApps = state.gameManager.findAddApps(reqData.id);
 
                 if (game) {
                     GameLauncher.launchGame({
@@ -575,8 +569,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         case BackIn.LAUNCH_GAME_SETUP:
             {
                 const reqData: LaunchGameData = req.data;
-                const game = findGame(reqData.id);
-                const addApps = findAddApps(reqData.id);
+                const game = state.gameManager.findGame(reqData.id);
+                const addApps = state.gameManager.findAddApps(reqData.id);
 
                 if (game) {
                     GameLauncher.launchGameSetup({
@@ -609,8 +603,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
                     data: {
-                        game: findGame(reqData.id),
-                        addApps: findAddApps(reqData.id),
+                        game: state.gameManager.findGame(reqData.id),
+                        addApps: state.gameManager.findAddApps(reqData.id),
                     },
                 });
             }
@@ -675,7 +669,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     playlistId: reqData.query.playlistId,
                 };
 
-                var cache = queryGames(query);
+                var cache = state.gameManager.queryGames(query);
 
                 respond<BrowseViewPageResponseData>(event.target, {
                     id: req.id,
@@ -710,7 +704,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     .digest("base64");
                 let cache = state.queries[hash];
                 if (!cache) {
-                    state.queries[hash] = cache = queryGames(query);
+                    state.queries[hash] = cache =
+                        state.gameManager.queryGames(query);
                 } // @TODO Start clearing the cache if it gets too full
 
                 let index = -1;
@@ -747,7 +742,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     .digest("base64");
                 let cache = state.queries[hash];
                 if (!cache) {
-                    state.queries[hash] = cache = queryGames(query);
+                    state.queries[hash] = cache =
+                        state.gameManager.queryGames(query);
                 }
 
                 let result: string | undefined;
@@ -937,109 +933,6 @@ function log(preEntry: ILogPreEntry, id?: string): void {
     });
 }
 
-type SearchGamesOpts = {
-    playlist?: GamePlaylist;
-    /** String to use as a search query */
-    query: string;
-    /** The field to order the games by. */
-    orderBy: GameOrderBy;
-    /** The way to order the games. */
-    orderReverse: GameOrderReverse;
-    /** Library to search (all if none) */
-    library?: string;
-};
-
-// TODO: Move to GameManager
-function searchGames(opts: SearchGamesOpts): IGameInfo[] {
-    // Build opts from preferences and query
-    const filterOpts: FilterGameOpts = {
-        search: opts.query,
-        playlist: opts.playlist,
-    };
-
-    // Filter games
-    const platforms = state.gameManager.platforms;
-    let foundGames: IGameInfo[] = [];
-    for (let i = 0; i < platforms.length; i++) {
-        // If library matches filter, or no library filter given, filter this platforms games
-        if (!opts.library || platforms[i].library === opts.library) {
-            foundGames = foundGames.concat(
-                filterGames(platforms[i].collection.games, filterOpts)
-            );
-        }
-    }
-    // Order games
-    orderGames(foundGames, {
-        orderBy: opts.orderBy,
-        orderReverse: opts.orderReverse,
-    });
-
-    return foundGames;
-}
-// TODO: Move to game manager
-function queryGames(query: BackQuery): BackQueryCache {
-    const playlist = state.gameManager.playlists.find(
-        (p) => p.filename === query.playlistId
-    );
-    const results = searchGames({
-        query: query.search,
-        orderBy: query.orderBy,
-        orderReverse: query.orderReverse,
-        library: query.library,
-        playlist: playlist,
-    });
-
-    const viewGames: ViewGame[] = [];
-    for (let i = 0; i < results.length; i++) {
-        const g = results[i];
-        viewGames[i] = {
-            id: g.id,
-            title: g.title,
-            convertedTitle: g.convertedTitle,
-            platform: g.platform,
-            genre: g.tags,
-            developer: g.developer,
-            publisher: g.publisher,
-            releaseDate: g.releaseDate,
-            thumbnailPath: g.thumbnailPath,
-        };
-    }
-
-    return {
-        query: query,
-        games: results,
-        viewGames: viewGames,
-    };
-}
-
-/** Find the game with the specified ID. */
-function findGame(gameId: string): IGameInfo | undefined {
-    const platforms = state.gameManager.platforms;
-    for (let i = 0; i < platforms.length; i++) {
-        const games = platforms[i].collection.games;
-        for (let j = 0; j < games.length; j++) {
-            if (games[j].id === gameId) {
-                return games[j];
-            }
-        }
-    }
-}
-
-/** Find all add apps with the specified game ID. */
-function findAddApps(gameId: string): IAdditionalApplicationInfo[] {
-    const result: IAdditionalApplicationInfo[] = [];
-    const platforms = state.gameManager.platforms;
-    for (let i = 0; i < platforms.length; i++) {
-        const addApps = platforms[i].collection.additionalApplications;
-        for (let j = 0; j < addApps.length; j++) {
-            if (addApps[j].gameId === gameId) {
-                result.push(addApps[j]);
-            }
-        }
-    }
-    return result;
-}
-
 function openDialog(target: WebSocket) {
     return (options: MessageBoxOptions) => {
         return new Promise<number>((resolve, _) => {
@@ -1087,15 +980,6 @@ function openExternal(target: WebSocket) {
             });
         });
     };
-}
-
-function countGames(): number {
-    let count = 0;
-    const platforms = state.gameManager.platforms;
-    for (let i = 0; i < platforms.length; i++) {
-        count += platforms[i].collection.games.length;
-    }
-    return count;
 }
 
 function parseWrappedRequest(

@@ -1,5 +1,5 @@
 import { GameParser } from "@shared/game/GameParser";
-import { IGameInfo } from "@shared/game/interfaces";
+import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { GamePlatform, IThumbnailsInfo } from "@shared/platform/interfaces";
 import * as fastXmlParser from "fast-xml-parser";
 import * as fs from "fs";
@@ -13,13 +13,32 @@ import {
     PlaylistUpdatedFunc,
 } from "@back/playlist/PlaylistManager";
 import * as LaunchBoxHelper from "./LaunchBoxHelper";
-import { LogFunc } from "@back/types";
+import { BackQuery, BackQueryCache, LogFunc } from "@back/types";
 import { FolderWatcher } from "@back/util/FolderWatcher";
-import { GamePlaylistEntry } from "@shared/interfaces";
+import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
+import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
+import {
+    FilterGameOpts,
+    filterGames,
+    orderGames,
+} from "@shared/game/GameFilter";
+import { ViewGame } from "@shared/back/types";
 
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
+
+export type SearchGamesOpts = {
+    playlist?: GamePlaylist;
+    /** String to use as a search query */
+    query: string;
+    /** The field to order the games by. */
+    orderBy: GameOrderBy;
+    /** The way to order the games. */
+    orderReverse: GameOrderReverse;
+    /** Library to search (all if none) */
+    library?: string;
+};
 
 export interface IGameManagerOpts {
     exodosPath: string;
@@ -60,9 +79,110 @@ export class GameManager {
             opts.platformsPath,
             opts.thumbnails
         );
-        this.initExodosInstalledGamesWatcher(opts.exodosPath);
+        this._initExodosInstalledGamesWatcher(opts.exodosPath);
 
         return platformErrors;
+    }
+
+    public findPlatformByName(name: string): GamePlatform | undefined {
+        return this._state.platforms.find((p) => p.name === name);
+    }
+
+    public searchGames(opts: SearchGamesOpts): IGameInfo[] {
+        // Build opts from preferences and query
+        const filterOpts: FilterGameOpts = {
+            search: opts.query,
+            playlist: opts.playlist,
+        };
+
+        // Filter games
+        const platforms = this.platforms;
+        let foundGames: IGameInfo[] = [];
+        for (let i = 0; i < platforms.length; i++) {
+            // If library matches filter, or no library filter given, filter this platforms games
+            if (!opts.library || platforms[i].library === opts.library) {
+                foundGames = foundGames.concat(
+                    filterGames(platforms[i].collection.games, filterOpts)
+                );
+            }
+        }
+        // Order games
+        orderGames(foundGames, {
+            orderBy: opts.orderBy,
+            orderReverse: opts.orderReverse,
+        });
+
+        return foundGames;
+    }
+
+    public queryGames(query: BackQuery): BackQueryCache {
+        const playlist = this.playlists.find(
+            (p) => p.filename === query.playlistId
+        );
+        const results = this.searchGames({
+            query: query.search,
+            orderBy: query.orderBy,
+            orderReverse: query.orderReverse,
+            library: query.library,
+            playlist: playlist,
+        });
+
+        const viewGames: ViewGame[] = [];
+        for (let i = 0; i < results.length; i++) {
+            const g = results[i];
+            viewGames[i] = {
+                id: g.id,
+                title: g.title,
+                convertedTitle: g.convertedTitle,
+                platform: g.platform,
+                genre: g.tags,
+                developer: g.developer,
+                publisher: g.publisher,
+                releaseDate: g.releaseDate,
+                thumbnailPath: g.thumbnailPath,
+            };
+        }
+
+        return {
+            query: query,
+            games: results,
+            viewGames: viewGames,
+        };
+    }
+
+    public findGame(gameId: string): IGameInfo | undefined {
+        const platforms = this.platforms;
+        for (let i = 0; i < platforms.length; i++) {
+            const games = platforms[i].collection.games;
+            for (let j = 0; j < games.length; j++) {
+                if (games[j].id === gameId) {
+                    return games[j];
+                }
+            }
+        }
+    }
+
+    public findAddApps(gameId: string): IAdditionalApplicationInfo[] {
+        const result: IAdditionalApplicationInfo[] = [];
+        const platforms = this.platforms;
+        for (let i = 0; i < platforms.length; i++) {
+            const addApps = platforms[i].collection.additionalApplications;
+            for (let j = 0; j < addApps.length; j++) {
+                if (addApps[j].gameId === gameId) {
+                    result.push(addApps[j]);
+                }
+            }
+        }
+        return result;
+    }
+
+    public countGames(): number {
+        let count = 0;
+        const platforms = this.platforms;
+        for (let i = 0; i < platforms.length; i++) {
+            count += platforms[i].collection.games.length;
+        }
+        return count;
     }
 
     private async loadPlatforms(
@@ -159,7 +279,7 @@ export class GameManager {
         return errors;
     }
 
-    private initExodosInstalledGamesWatcher(exodosPath: string) {
+    private _initExodosInstalledGamesWatcher(exodosPath: string) {
         const gamesPath = path.resolve(path.join(exodosPath, "eXo/eXoDOS/"));
 
         console.log(
@@ -193,7 +313,7 @@ export class GameManager {
 
     private rescanInstalledGamesAndBroadcast(gamesPath: string) {
         this._state.installedGames = this.rescanInstalledGames(gamesPath);
-        this.addInstalledGamesPlaylist();
+        this._addInstalledGamesPlaylist();
     }
 
     private rescanInstalledGames(gamesPath: string) {
@@ -214,7 +334,8 @@ export class GameManager {
         return installedGames;
     }
 
-    private addInstalledGamesPlaylist() {
+    // TODO: Change to per platform
+    private _addInstalledGamesPlaylist() {
         const dosPlatform = this.dosPlatform;
         if (!dosPlatform) {
             console.log(
@@ -235,22 +356,5 @@ export class GameManager {
         this._state.playlistManager.addInstalledGamesPlaylist(
             dosPlatformInstalledGames
         );
-    }
-
-    public findPlatformByName(name: string): GamePlatform | undefined {
-        return this._state.platforms.find((p) => p.name === name);
-    }
-
-    /** (Similar to Array.find(), but it looks through all platforms) */
-    public findGame(
-        predicate: (this: undefined, game: IGameInfo, index: number) => boolean
-    ): IGameInfo | undefined {
-        for (let i = 0; i < this._state.platforms.length; i++) {
-            const game =
-                this._state.platforms[i].collection.games.find(predicate);
-            if (game) {
-                return game;
-            }
-        }
     }
 }
