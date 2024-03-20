@@ -41,16 +41,6 @@ export namespace PlaylistFile {
         });
     }
 
-    /**
-     * Save the data to a file asynchronously.
-     * @param filePath Path of the file.
-     * @param data Data to save to the file.
-     */
-    export function saveFile(filePath: string, data: GamePlaylistContent): any {
-        console.log("Playlists writing option disabled");
-        return;
-    }
-
     function parseGamePlaylist(
         data: any,
         onError?: (error: string) => void
@@ -77,7 +67,11 @@ export namespace PlaylistFile {
             icon: "",
             library: "",
             games: playlistGames.map((game: any) => {
-                return { id: game.GameId, notes: "" };
+                return {
+                    id: game.GameId,
+                    title: game.GameTitle,
+                    platform: game.GamePlatform,
+                };
             }),
         };
 
@@ -98,6 +92,15 @@ export namespace PlaylistFile {
         parser.prop("games").array((item) => {
             playlist.games.push(parseGamePlaylistEntry(item));
         });
+
+        // When playlist library is not set, deduce it from the games.
+        if (!playlist.library) {
+            const gameDeductedPlatform = playlist.games.find(
+                (g) => !!g.platform
+            )?.platform;
+            if (gameDeductedPlatform)
+                playlist.library = `${gameDeductedPlatform}.xml`;
+        }
         return playlist;
     }
 
@@ -106,10 +109,12 @@ export namespace PlaylistFile {
     ): GamePlaylistEntry {
         let parsed: GamePlaylistEntry = {
             id: "",
-            notes: "",
+            platform: "",
+            title: "",
         };
         parser.prop("id", (v) => (parsed.id = str(v)));
-        parser.prop("notes", (v) => (parsed.notes = str(v)));
+        parser.prop("title", (v) => (parsed.title = str(v)));
+        parser.prop("platform", (v) => (parsed.platform = str(v)));
         return parsed;
     }
 }

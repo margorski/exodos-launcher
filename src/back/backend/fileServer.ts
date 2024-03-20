@@ -69,7 +69,6 @@ export class FileServer {
             const firstItem = (
                 index >= 0 ? urlPath.substr(0, index) : urlPath
             ).toLowerCase(); // First filename in the path string ("A/B/C" => "A" | "D" => "D")
-            console.log(firstItem);
             switch (firstItem) {
                 // Image folder
                 case "images":

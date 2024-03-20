@@ -178,10 +178,9 @@ export type GamePlaylistContent = {
 
 /** An entry inside a Playlist file. */
 export type GamePlaylistEntry = {
-    /* GameID of game. */
     id: string;
-    /* Optional notes related to the game (probably about why the game is in the playlist). */
-    notes?: string;
+    title: string;
+    platform: string;
 };
 
 export type ExecMapping = {

@@ -1,3 +1,4 @@
+import { IPlatformConfig } from "@back/platform/platformConfig";
 import { IGameCollection } from "../game/interfaces";
 
 export type PlatformInfo = {
@@ -12,6 +13,7 @@ export type GamePlatform = {
     library: string;
     data: IRawPlatformFile;
     collection: IGameCollection;
+    configuration?: IPlatformConfig;
 };
 
 export type IRawPlatformFile = {

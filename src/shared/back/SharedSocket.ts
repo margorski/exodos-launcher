@@ -48,7 +48,6 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
         this.socket.onmessage = this.onMessage;
         this.socket.onerror = this.onError;
         this.socket.onclose = this.onClose;
-        this.socket.onopen = this.onOpen;
         this.ensureConnection();
     }
 
@@ -71,10 +70,6 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
             `SharedSocket Closed (Code: ${event.code}, Clean: ${event.wasClean}, Reason: "${event.reason}", URL: "${this.url}").`
         );
         this.reconnect();
-    };
-
-    private onOpen = (event: Event): void => {
-        // console.log('SharedSocket Open:', event);
     };
 
     public send<T, U = any>(
@@ -120,7 +115,6 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
         request: WrappedRequest<U>,
         callback?: (res: WrappedResponse<T>) => void
     ): boolean {
-        // console.log('OUT', request);
         if (this.socket && this.socket.readyState === this.socketCon.OPEN) {
             // Register callback
             if (callback) {

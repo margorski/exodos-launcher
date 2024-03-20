@@ -7,7 +7,6 @@ import * as path from "path";
 import { promisify } from "util";
 import { copyError } from "../util/misc";
 import { GameManagerState, LoadPlatformError } from "./types";
-import { EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
 import {
     PlaylistManager,
     PlaylistUpdatedFunc,
@@ -23,6 +22,7 @@ import {
     orderGames,
 } from "@shared/game/GameFilter";
 import { ViewGame } from "@shared/back/types";
+import { platformConfigs } from "@back/platform/platformConfig";
 
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
@@ -63,12 +63,6 @@ export class GameManager {
 
     public get playlists() {
         return this._state.playlistManager.playlists;
-    }
-
-    public get dosPlatform() {
-        return this._state.platforms.find(
-            (p) => p.name === EXODOS_GAMES_PLATFORM_NAME
-        );
     }
 
     public async init(opts: IGameManagerOpts) {
@@ -205,10 +199,17 @@ export class GameManager {
                         platformFileExt.toLowerCase().endsWith(".xml") &&
                         (await stat(platformFile)).isFile()
                     ) {
+                        const name = path.basename(
+                            platformFile,
+                            platformFileExt
+                        );
                         platforms.push({
-                            name: path.basename(platformFile, platformFileExt),
+                            name: name,
                             filePath: platformFile,
                             library: libraryName,
+                            configuration: platformConfigs.find(
+                                (p) => p.name === name
+                            ),
                             data: {
                                 LaunchBox: {
                                     Game: [],
@@ -313,7 +314,9 @@ export class GameManager {
 
     private rescanInstalledGamesAndBroadcast(gamesPath: string) {
         this._state.installedGames = this.rescanInstalledGames(gamesPath);
-        this._addInstalledGamesPlaylist();
+        this.platforms
+            .filter((p) => p.configuration?.gamesPlatform)
+            .forEach((p) => this._addInstalledGamesPlaylist(p));
     }
 
     private rescanInstalledGames(gamesPath: string) {
@@ -334,27 +337,19 @@ export class GameManager {
         return installedGames;
     }
 
-    // TODO: Change to per platform
-    private _addInstalledGamesPlaylist() {
-        const dosPlatform = this.dosPlatform;
-        if (!dosPlatform) {
-            console.log(
-                "Cannot create installed game playlist. MS-DOS platform not loaded yet."
-            );
-            return;
-        }
-        const dosPlatformInstalledGames = this._state.installedGames
+    private _addInstalledGamesPlaylist(platform: GamePlatform) {
+        const platformInstalledGames = this._state.installedGames
             .map((gameName) => {
-                const gameInPlatform = dosPlatform.collection.games.find(
-                    (game) =>
-                        game.applicationPath.split("\\").includes(gameName)
+                const gameInPlatform = platform.collection.games.find((game) =>
+                    game.applicationPath.split("\\").includes(gameName)
                 );
                 if (gameInPlatform) return { id: gameInPlatform.id };
                 else return;
             })
             .filter((g) => g) as GamePlaylistEntry[];
         this._state.playlistManager.addInstalledGamesPlaylist(
-            dosPlatformInstalledGames
+            platformInstalledGames,
+            platform
         );
     }
 }

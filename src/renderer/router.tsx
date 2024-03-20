@@ -2,10 +2,7 @@ import { UpdateInfo } from "electron-updater";
 import * as React from "react";
 import { Route, Routes } from "react-router-dom";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
-import {
-    ExodosBackendInfo,
-    GamePlaylist,
-} from "@shared/interfaces";
+import { ExodosBackendInfo, GamePlaylist } from "@shared/interfaces";
 import { Theme } from "@shared/ThemeFile";
 import { GameOrderChangeEvent } from "./components/GameOrder";
 import { NotFoundPage } from "./components/pages/NotFoundPage";

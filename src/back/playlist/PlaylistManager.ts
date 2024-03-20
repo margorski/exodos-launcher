@@ -4,7 +4,7 @@ import * as path from "path";
 import { PlaylistFile } from "./PlaylistFile";
 import { LogFunc } from "@back/types";
 import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
-import { EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
+import { GamePlatform } from "@shared/platform/interfaces";
 
 export type PlaylistUpdatedFunc = (playlist: GamePlaylist) => void;
 export interface PlaylistManagerOpts {
@@ -34,7 +34,10 @@ export class PlaylistManager {
                 })
             )
                 .filter(
-                    (dirent) => dirent.isFile() && dirent.name.endsWith(".xml")
+                    (dirent) =>
+                        dirent.isFile() &&
+                        !dirent.name.toLowerCase().startsWith("installed") &&
+                        dirent.name.endsWith(".xml")
                 )
                 .map((dirent) => dirent.name);
             console.log(`Found ${playlistFiles.length} playlists`);
@@ -50,29 +53,30 @@ export class PlaylistManager {
         }
     }
 
-    public addInstalledGamesPlaylist(games: GamePlaylistEntry[]) {
+    public addInstalledGamesPlaylist(
+        games: GamePlaylistEntry[],
+        platform: GamePlatform
+    ) {
         if (!this._initialized) {
             console.log("PlaylistManager not initialized. Leaving");
             return;
         }
 
-        const playlistDummyFilename = "installedgamesdummyfile";
-        var existingPlaylistIndex = this.playlists.findIndex(
+        const playlistDummyFilename = `${platform.name}_installedgames`;
+        const playlist = this.playlists.find(
             (p) => p.filename === playlistDummyFilename
-        );
-        if (existingPlaylistIndex !== -1)
-            this.playlists[existingPlaylistIndex].games = games;
-        else
-            this.playlists.unshift({
-                title: "Installed games",
-                description: "A list of installed games.",
-                author: "",
-                icon: "",
-                library: `${EXODOS_GAMES_PLATFORM_NAME}.xml`,
-                filename: playlistDummyFilename,
-                games: games,
-            });
-        this._opts?.onPlaylistAddOrUpdate(this.playlists[0]);
+        ) ?? {
+            title: "Installed games",
+            description: "A list of installed games.",
+            author: "",
+            icon: "",
+            library: platform.library,
+            filename: playlistDummyFilename,
+            games: games,
+        };
+        playlist.games = games;
+        this.playlists.unshift(playlist);
+        this._opts?.onPlaylistAddOrUpdate(playlist);
     }
 
     private async _onPlaylistAddOrChange(

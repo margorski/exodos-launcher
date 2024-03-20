@@ -72,16 +72,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
 
     render() {
         const strings = englishTranslation.app;
-        const {
-            preferencesData: {
-                browsePageShowLeftSidebar,
-                browsePageShowRightSidebar,
-                enableEditing,
-                showDeveloperTab,
-            },
-            onOrderChange,
-            libraries,
-        } = this.props;
+        const { onOrderChange, libraries } = this.props;
         const { searchText } = this.state;
 
         return (

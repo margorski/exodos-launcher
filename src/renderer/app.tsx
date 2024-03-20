@@ -26,7 +26,7 @@ import {
     ThemeListChangeData,
 } from "@shared/back/types";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
-import { APP_TITLE, EXODOS_GAMES_PLATFORM_NAME } from "@shared/constants";
+import { APP_TITLE } from "@shared/constants";
 import { UNKNOWN_LIBRARY } from "@shared/game/interfaces";
 import { ExodosBackendInfo, GamePlaylist, WindowIPC } from "@shared/interfaces";
 import { getLibraryItemTitle } from "@shared/library/util";
@@ -1068,21 +1068,18 @@ export class App extends React.Component<AppProps, AppState> {
     }
 
     orderAndFilterPlaylistsMemo = memoizeOne(
-        (playlists: GamePlaylist[], libraryPath: string) => {
-            return libraryPath === `${EXODOS_GAMES_PLATFORM_NAME}.xml`
-                ? playlists
-                      // filter some old and deprecated playlist still existing in app
-                      .filter((p) => p.title !== "Installed eXoDOS Games")
-                      .sort((a, b) => {
-                          if (a.title < b.title) {
-                              return -1;
-                          }
-                          if (a.title > b.title) {
-                              return 1;
-                          }
-                          return 0;
-                      })
-                : [];
+        (playlists: GamePlaylist[], currentPlatform: string) => {
+            return playlists
+                .filter((p) => p.library && p.library === currentPlatform)
+                .sort((a, b) => {
+                    if (a.title < b.title) {
+                        return -1;
+                    }
+                    if (a.title > b.title) {
+                        return 1;
+                    }
+                    return 0;
+                });
         }
     );
 

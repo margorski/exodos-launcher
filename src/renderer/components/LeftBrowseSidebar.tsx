@@ -26,9 +26,6 @@ type OwnProps = {
 
 export type LeftBrowseSidebarProps = OwnProps & WithPreferencesProps;
 
-export interface LeftBrowseSidebar {
-}
-
 /** Sidebar on the left side of BrowsePage. */
 export class LeftBrowseSidebar extends React.Component<LeftBrowseSidebarProps> {
     render() {
