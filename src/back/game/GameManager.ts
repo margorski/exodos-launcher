@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as chokidar from "chokidar";
 import { promisify } from "util";
-import { copyError } from "../util/misc";
+import { copyError, walkSync } from "../util/misc";
 import { GameManagerState, LoadPlatformError } from "./types";
 import {
     PlaylistManager,
@@ -44,7 +44,6 @@ export interface IGameManagerOpts {
     exodosPath: string;
     platformsPath: string;
     playlistFolder: string;
-    thumbnails: IThumbnailsInfo[];
     onPlaylistAddOrUpdate: PlaylistUpdatedFunc;
     log: LogFunc;
 }
@@ -71,7 +70,7 @@ export class GameManager {
         });
         const platformErrors = await this.loadPlatforms(
             opts.platformsPath,
-            opts.thumbnails
+            opts.exodosPath
         );
         this.platforms
             .filter((p) => p.configuration?.gamesPlatform)
@@ -185,7 +184,7 @@ export class GameManager {
 
     private async loadPlatforms(
         platformsPath: string,
-        images: IThumbnailsInfo[]
+        exodosPath: string
     ): Promise<LoadPlatformError[]> {
         this._state.platformsPath = platformsPath;
         const platforms: GamePlatform[] = [];
@@ -263,8 +262,12 @@ export class GameManager {
                         data,
                         platform.library
                     );
+                    const thumbnails = this._getThumbnailsForPlatform(
+                        exodosPath,
+                        platform
+                    );
                     platform.collection.games.forEach((g) => {
-                        const imagesForGame = images.find(
+                        const imagesForGame = thumbnails.find(
                             (i) => i.GameName == g.title
                         );
                         if (imagesForGame)
@@ -282,6 +285,36 @@ export class GameManager {
         );
 
         return errors;
+    }
+
+    private _getThumbnailsForPlatform(
+        exodosPath: string,
+        platform: GamePlatform
+    ): IThumbnailsInfo[] {
+        // TODO: Move to GameManager, take path from platform data
+        const boxImagesPath = path.join(
+            exodosPath,
+            `Images/${platform.name}/Box - Front`
+        );
+
+        console.info(
+            `Loading thumbnails from "${boxImagesPath}" path for ${platform.name} platform.`
+        );
+        const thumbnails: IThumbnailsInfo[] = [];
+        try {
+            for (const s of walkSync(boxImagesPath)) {
+                // filename to id
+                const coverPath = s.path.replace("../", "");
+                thumbnails.push({
+                    GameName: s.filename.replace("_", ":").split("-0")[0],
+                    BoxThumbnail: coverPath,
+                });
+            }
+        } catch (e) {
+            console.error(`Error while loading thumbnails: ${e}`);
+            console.error(`Thumbnails not loaded.`);
+        }
+        return thumbnails;
     }
 
     private _initExodosInstalledGamesWatcher(

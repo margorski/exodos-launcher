@@ -8,7 +8,7 @@ export interface IPlatformConfig {
     gamesSubdirectory: string;
 }
 
-// configs are m
+// TODO: move that to json and load on start, that will allow to create platforms by users.
 export const platformConfigs: IPlatformConfig[] = [
     {
         filename: "MS-DOS",
