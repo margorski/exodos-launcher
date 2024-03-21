@@ -4,6 +4,7 @@ import { GamePlatform, IThumbnailsInfo } from "@shared/platform/interfaces";
 import * as fastXmlParser from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
+import * as chokidar from "chokidar";
 import { promisify } from "util";
 import { copyError } from "../util/misc";
 import { GameManagerState, LoadPlatformError } from "./types";
@@ -13,7 +14,6 @@ import {
 } from "@back/playlist/PlaylistManager";
 import * as LaunchBoxHelper from "./LaunchBoxHelper";
 import { BackQuery, BackQueryCache, LogFunc } from "@back/types";
-import { FolderWatcher } from "@back/util/FolderWatcher";
 import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import {
@@ -73,7 +73,11 @@ export class GameManager {
             opts.platformsPath,
             opts.thumbnails
         );
-        this._initExodosInstalledGamesWatcher(opts.exodosPath);
+        this.platforms
+            .filter((p) => p.configuration?.gamesPlatform)
+            .forEach((p) =>
+                this._initExodosInstalledGamesWatcher(p, opts.exodosPath)
+            );
 
         return platformErrors;
     }
@@ -208,7 +212,7 @@ export class GameManager {
                             filePath: platformFile,
                             library: libraryName,
                             configuration: platformConfigs.find(
-                                (p) => p.name === name
+                                (p) => p.filename === name
                             ),
                             data: {
                                 LaunchBox: {
@@ -280,27 +284,37 @@ export class GameManager {
         return errors;
     }
 
-    private _initExodosInstalledGamesWatcher(exodosPath: string) {
-        const gamesPath = path.resolve(path.join(exodosPath, "eXo/eXoDOS/"));
+    private _initExodosInstalledGamesWatcher(
+        platform: GamePlatform,
+        exodosPath: string
+    ) {
+        const gamesPath = path.resolve(
+            path.join(
+                exodosPath,
+                `eXo/${platform.configuration?.gamesSubdirectory}/`
+            )
+        );
 
         console.log(
             `Initializing installed games watcher with ${gamesPath} path...`
         );
-        const installedGamesWatcher = new FolderWatcher(gamesPath, {
-            recursionDepth: 0,
+        const t = chokidar.watch;
+        const installedGamesWatcher = chokidar.watch(gamesPath, {
+            depth: 0,
+            persistent: true,
         });
 
         installedGamesWatcher
             .on("ready", () => {
                 console.log("Installed games watcher is ready.");
                 installedGamesWatcher
-                    .on("add", (path) => {
+                    .on("addDir", (path) => {
                         console.log(
                             `Game ${path} added, rescan installed games.`
                         );
                         this.rescanInstalledGamesAndBroadcast(gamesPath);
                     })
-                    .on("remove", (path) => {
+                    .on("unlinkDir", (path) => {
                         console.log(
                             `Game ${path} has been removed, rescan installed games.`
                         );
@@ -332,7 +346,7 @@ export class GameManager {
         const installedGames = fs
             .readdirSync(gamesPath, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
-            .filter((dirent) => dirent.name !== `!dos`)
+            .filter((dirent) => !dirent.name.startsWith("!"))
             .map((dirent) => dirent.name);
         return installedGames;
     }

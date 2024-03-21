@@ -10,7 +10,6 @@ import {
 } from "@shared/Util";
 import { ChildProcess, exec } from "child_process";
 import { EventEmitter } from "events";
-import * as fs from "fs";
 import * as path from "path";
 
 export type LaunchAddAppOpts = LaunchBaseOpts & {
@@ -32,51 +31,8 @@ type LaunchBaseOpts = {
     openExternal: OpenExternalFunc;
 };
 
-type TerminalCommand = {
-    executableName: string;
-    needsQuotesAroundPath: boolean;
-};
-
 export namespace GameLauncher {
-    const terminalEmulatorCommands: TerminalCommand[] = [
-        { executableName: `gnome-terminal`, needsQuotesAroundPath: true },
-        { executableName: `konsole`, needsQuotesAroundPath: false },
-        { executableName: `xfce4-terminal`, needsQuotesAroundPath: true },
-        { executableName: `xterm`, needsQuotesAroundPath: false },
-        { executableName: `uxterm`, needsQuotesAroundPath: false },
-        { executableName: `Eterm`, needsQuotesAroundPath: false },
-        { executableName: `x-terminal-emulator`, needsQuotesAroundPath: false },
-        { executableName: `mate-terminal`, needsQuotesAroundPath: true },
-        { executableName: `terminator`, needsQuotesAroundPath: true },
-        { executableName: `urxvt`, needsQuotesAroundPath: false },
-        { executableName: `rxvt`, needsQuotesAroundPath: false },
-        { executableName: `termit`, needsQuotesAroundPath: true },
-        { executableName: `aterm`, needsQuotesAroundPath: false },
-        { executableName: `lxterminal`, needsQuotesAroundPath: true },
-        { executableName: `terminology`, needsQuotesAroundPath: true },
-        { executableName: `tilix`, needsQuotesAroundPath: true },
-        { executableName: `kitty`, needsQuotesAroundPath: false },
-    ];
-    const BIN_DIRECTORY = `/usr/bin/`;
     const logSource = "Game Launcher";
-
-    let terminalEmulator: TerminalCommand;
-
-    function findAndSetExistingTerminalEmulator() {
-        console.log("Searching for existing terminal emulator...");
-        for (var te of terminalEmulatorCommands) {
-            if (fs.existsSync(`${BIN_DIRECTORY}${te.executableName}`)) {
-                console.log(
-                    `Found ${te.executableName}. Setting as default terminal-emulator.`
-                );
-                terminalEmulator = te;
-                return;
-            }
-        }
-        console.error(`Cannot find any terminal-emulator in system.`);
-        return "";
-    }
-    findAndSetExistingTerminalEmulator();
 
     export function launchCommand(
         appPath: string,
@@ -208,11 +164,7 @@ export namespace GameLauncher {
         } catch (e) {
             opts.log({
                 source: logSource,
-                content: `Launch Game "${
-                    opts.game.title
-                }" Cannot find terminal-emulator, please install any from given list: ${terminalEmulatorCommands
-                    .map((te) => te.executableName)
-                    .join(", ")}.`,
+                content: `Launch Game "${opts.game.title}" failed. Error: ${e}`,
             });
             return;
         }
@@ -238,7 +190,7 @@ export namespace GameLauncher {
         let proc: ChildProcess;
         const setupPath = opts.game.applicationPath.replace(
             getFilename(opts.game.applicationPath),
-            "install.sh"
+            "install.command"
         );
         const gamePath: string = fixSlashes(
             path.join(
@@ -275,7 +227,7 @@ export namespace GameLauncher {
 
         // Bat files won't work on Wine, force a .sh file on non-Windows platforms instead. Sh File may not exist.
         if (platform !== "win32" && filePath.endsWith(".bat")) {
-            return filePath.substring(0, filePath.length - 4) + ".sh";
+            return filePath.substring(0, filePath.length - 4) + ".command";
         }
 
         // Skip mapping if on Windows or Native application was not requested
@@ -300,20 +252,13 @@ export namespace GameLauncher {
     }
 
     function createCommand(filename: string, args: string): string {
-        if (!terminalEmulator) {
-            throw "Terminal emulator command not set. Probably default emulator was not found on system.";
-        }
-
-        const isBashFile = filename.toLocaleLowerCase().endsWith(".sh");
-        const linuxTerminalEmulatorCommand = isBashFile
-            ? `${terminalEmulator.executableName} -e`
-            : `xdg-open`;
-        // Escape filename and args
         let escFilename: string = escapeShell(filename);
-        if (isBashFile && terminalEmulator.needsQuotesAroundPath)
-            escFilename = `"${escFilename}"`;
         let escArgs: string = escapeLinuxArgs(args);
-        return `${linuxTerminalEmulatorCommand}  ${escFilename} ${escArgs}`;
+
+        const isCommandFile = filename.toLocaleLowerCase().endsWith(".command");
+        const commandWithArguments = `${escFilename} ${escArgs}`;
+        if (isCommandFile) return commandWithArguments;
+        else return `xdg-open ${commandWithArguments}`;
     }
 
     function logProcessOutput(proc: ChildProcess, log: LogFunc): void {

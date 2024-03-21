@@ -167,7 +167,7 @@ export class BrowsePage extends React.Component<
         const order = this.props.order || BrowsePage.defaultOrder;
         const isGamesPlatform =
             platformConfigs.find(
-                (pc) => `${pc.name}.xml` === this.props.gameLibrary
+                (pc) => `${pc.filename}.xml` === this.props.gameLibrary
             )?.gamesPlatform ?? false;
 
         // Find the selected game in the selected playlist

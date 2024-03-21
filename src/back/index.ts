@@ -234,6 +234,7 @@ const startMainServer = async (acceptRemote: boolean): Promise<number> =>
     });
 
 async function initializeGameManager() {
+    // TODO: Move to GameManager, take path from platform data
     const boxImagesPath = path.join(
         state.config.exodosPath,
         "Images/MS-DOS/Box - Front"
@@ -241,15 +242,18 @@ async function initializeGameManager() {
 
     console.info(`Loading thumbnails from ${boxImagesPath} path.`);
     const thumbnails: IThumbnailsInfo[] = [];
-    for (const s of walkSync(boxImagesPath)) {
-        // filename to id
-        const coverPath = s.path.replace("../", "");
-        thumbnails.push({
-            GameName: s.filename.replace("_", ":").split("-0")[0],
-            BoxThumbnail: coverPath,
-            Box3dThumbnail: "",
-            TitleThumbnail: "",
-        });
+    try {
+        for (const s of walkSync(boxImagesPath)) {
+            // filename to id
+            const coverPath = s.path.replace("../", "");
+            thumbnails.push({
+                GameName: s.filename.replace("_", ":").split("-0")[0],
+                BoxThumbnail: coverPath,
+            });
+        }
+    } catch (e) {
+        console.error(`Error while loading thumbnails: ${e}`);
+        console.error(`Thumbnails not loaded.`);
     }
 
     const playlistFolder = path.join(

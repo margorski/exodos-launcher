@@ -76,8 +76,6 @@ export type IRawAdditionalApplicationInfo = {
 export type IThumbnailsInfo = {
     GameName: string;
     BoxThumbnail: string;
-    TitleThumbnail: string;
-    Box3dThumbnail: string;
 };
 
 export type IFileInfo = {
