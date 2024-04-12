@@ -527,21 +527,6 @@ export class RightBrowseSidebar extends React.Component<
         }
     }
 
-    onAddAppDelete = (addAppId: string): void => {
-        const addApps = this.props.currentAddApps;
-        if (!addApps) {
-            throw new Error("editAddApps is missing.");
-        }
-        const index = addApps.findIndex((addApp) => addApp.id === addAppId);
-        if (index === -1) {
-            throw new Error(
-                "Cant remove additional application because it was not found."
-            );
-        }
-        addApps.splice(index, 1);
-        this.forceUpdate();
-    };
-
     onScreenshotClick = (screenshotUrl: string): void => {
         this.setState({ screenshotPreviewUrl: screenshotUrl });
     };
