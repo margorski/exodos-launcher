@@ -462,31 +462,24 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             {
                 const reqData: LaunchAddAppData = req.data;
 
-                const platforms = state.gameManager.platforms;
-                for (let i = 0; i < platforms.length; i++) {
-                    const addApp = platforms[
-                        i
-                    ].collection.additionalApplications.find(
-                        (item) => item.id === reqData.id
-                    );
-                    if (addApp) {
-                        const game = state.gameManager.findGame(addApp.gameId);
-                        GameLauncher.launchAdditionalApplication({
-                            addApp,
-                            fpPath: path.resolve(state.config.exodosPath),
-                            native:
-                                (game &&
-                                    state.config.nativePlatforms.some(
-                                        (p) => p === game.platform
-                                    )) ||
-                                false,
-                            execMappings: state.execMappings,
-                            log: log,
-                            openDialog: openDialog(event.target),
-                            openExternal: openExternal(event.target),
-                        });
-                        break;
-                    }
+                const addApp = state.gameManager.findAddApp(reqData.id);
+                if (addApp) {
+                    const game = state.gameManager.findGame(addApp.gameId);
+                    GameLauncher.launchAdditionalApplication({
+                        addApp,
+                        fpPath: path.resolve(state.config.exodosPath),
+                        native:
+                            (game &&
+                                state.config.nativePlatforms.some(
+                                    (p) => p === game.platform
+                                )) ||
+                            false,
+                        execMappings: state.execMappings,
+                        log: log,
+                        openDialog: openDialog(event.target),
+                        openExternal: openExternal(event.target),
+                    });
+                    break;
                 }
 
                 respond(event.target, {
@@ -519,9 +512,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             {
                 const reqData: LaunchGameData = req.data;
 
-                const game = state.gameManager.findGame(reqData.id);
-                const addApps = state.gameManager.findAddApps(reqData.id);
-
+                const { game, addApps } = state.gameManager.getGame(reqData.id);
                 if (game) {
                     GameLauncher.launchGame({
                         game,
@@ -548,8 +539,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         case BackIn.LAUNCH_GAME_SETUP:
             {
                 const reqData: LaunchGameData = req.data;
-                const game = state.gameManager.findGame(reqData.id);
-                const addApps = state.gameManager.findAddApps(reqData.id);
+                const { game, addApps } = state.gameManager.getGame(reqData.id);
 
                 if (game) {
                     GameLauncher.launchGameSetup({
@@ -577,14 +567,11 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         case BackIn.GET_GAME:
             {
                 const reqData: GetGameData = req.data;
-
+                const data = state.gameManager.getGame(reqData.id);
                 respond<GetGameResponseData>(event.target, {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
-                    data: {
-                        game: state.gameManager.findGame(reqData.id),
-                        addApps: state.gameManager.findAddApps(reqData.id),
-                    },
+                    data,
                 });
             }
             break;

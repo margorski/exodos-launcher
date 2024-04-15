@@ -49,6 +49,10 @@ export interface IGameManagerOpts {
 }
 
 export class GameManager {
+    EXTRAS_DIR = "Extras";
+
+    private _opts?: IGameManagerOpts;
+
     private _state: GameManagerState = {
         platforms: [],
         platformsPath: "",
@@ -57,14 +61,24 @@ export class GameManager {
     };
 
     public get platforms() {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
         return this._state.platforms;
     }
 
     public get playlists() {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
         return this._state.playlistManager.playlists;
     }
 
+    public get initialized() {
+        return !!this._opts;
+    }
+
     public async init(opts: IGameManagerOpts) {
+        if (this.initialized)
+            throw new Error("GameManager already initialized.");
+        this._opts = opts;
+
         await this._state.playlistManager.init({
             ...opts,
         });
@@ -82,10 +96,12 @@ export class GameManager {
     }
 
     public findPlatformByName(name: string): GamePlatform | undefined {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
         return this._state.platforms.find((p) => p.name === name);
     }
 
     public searchGames(opts: SearchGamesOpts): IGameInfo[] {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
         // Build opts from preferences and query
         const filterOpts: FilterGameOpts = {
             search: opts.query,
@@ -113,6 +129,7 @@ export class GameManager {
     }
 
     public queryGames(query: BackQuery): BackQueryCache {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
         const playlist = this.playlists.find(
             (p) => p.filename === query.playlistId
         );
@@ -148,6 +165,7 @@ export class GameManager {
     }
 
     public findGame(gameId: string): IGameInfo | undefined {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
         const platforms = this.platforms;
         for (let i = 0; i < platforms.length; i++) {
             const games = platforms[i].collection.games;
@@ -159,7 +177,44 @@ export class GameManager {
         }
     }
 
-    public findAddApps(gameId: string): IAdditionalApplicationInfo[] {
+    public getGame(gameId: string): {
+        game: IGameInfo;
+        addApps: IAdditionalApplicationInfo[];
+    } {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
+
+        const game = this.findGame(gameId);
+        if (!game) throw new Error(`Game with id ${gameId} not found.`);
+
+        return {
+            game: game,
+            addApps: this._findAddAppsForGame(game),
+        };
+    }
+
+    public findAddApp(id: string): IAdditionalApplicationInfo | undefined {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
+        const platforms = this._state.platforms;
+
+        for (let i = 0; i < platforms.length; i++) {
+            const addApp = platforms[i].collection.additionalApplications.find(
+                (item) => item.id === id
+            );
+            if (addApp) return addApp;
+        }
+    }
+
+    private _findAddAppsForGame(game: IGameInfo): IAdditionalApplicationInfo[] {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
+        return [
+            ...this._getXMLAdditionalApps(game.id),
+            ...this._parseExtras(game),
+        ];
+    }
+
+    private _getXMLAdditionalApps(
+        gameId: string
+    ): IAdditionalApplicationInfo[] {
         const result: IAdditionalApplicationInfo[] = [];
         const platforms = this.platforms;
         for (let i = 0; i < platforms.length; i++) {
@@ -173,7 +228,66 @@ export class GameManager {
         return result;
     }
 
+    private _parseExtras(game: IGameInfo): IAdditionalApplicationInfo[] {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
+        if (!game?.applicationPath)
+            throw new Error("Game application path not set. Invalid data.");
+
+        const relativeExtras = path.join(
+            game?.applicationPath.split("\\").slice(0, -1).join("/"),
+            this.EXTRAS_DIR
+        );
+        const gameExtrasPath = path.join(
+            this._opts?.exodosPath!,
+            relativeExtras
+        );
+
+        try {
+            const dir = fs.readdirSync(gameExtrasPath);
+            const files = dir.filter((f) =>
+                fs.statSync(path.join(gameExtrasPath, f)).isFile()
+            );
+
+            const ignoredExtensions = ["bat", "bsh", "msh", ""];
+            return files
+                .filter(
+                    (f) => !ignoredExtensions.includes(f.split(".")?.[1] ?? "")
+                )
+                .map((f) => {
+                    const name = f.split(".")[0];
+                    const id = this._getExtrasId(game.id, f);
+                    const addApp = this.findAddApp(id);
+                    if (addApp) return addApp;
+                    else {
+                        const addApp = {
+                            applicationPath: path.join(relativeExtras, f),
+                            autoRunBefore: false,
+                            gameId: game.id,
+                            id: this._getExtrasId(game.id, f),
+                            launchCommand: ``,
+                            name,
+                            waitForExit: false,
+                        };
+                        this.findPlatformByName(
+                            game.platform
+                        )?.collection.additionalApplications.push(addApp);
+                        return addApp;
+                    }
+                });
+        } catch (e) {
+            console.error(
+                `Error while reading extras directory: ${gameExtrasPath} Error: ${e}`
+            );
+            return [];
+        }
+    }
+
+    private _getExtrasId(gameId: string, filename: string): string {
+        return `${gameId}-${filename}`;
+    }
+
     public countGames(): number {
+        if (!this.initialized) throw new Error("GameManager not initialized.");
         let count = 0;
         const platforms = this.platforms;
         for (let i = 0; i < platforms.length; i++) {
