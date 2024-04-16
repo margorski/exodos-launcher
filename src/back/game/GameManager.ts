@@ -55,6 +55,7 @@ export class GameManager {
 
     private _state: GameManagerState = {
         platforms: [],
+        extrasInitializedGames: new Set(),
         platformsPath: "",
         installedGames: [],
         playlistManager: new PlaylistManager(),
@@ -188,7 +189,7 @@ export class GameManager {
 
         return {
             game: game,
-            addApps: this._findAddAppsForGame(game),
+            addApps: this._getAddAppsForGame(game),
         };
     }
 
@@ -204,12 +205,13 @@ export class GameManager {
         }
     }
 
-    private _findAddAppsForGame(game: IGameInfo): IAdditionalApplicationInfo[] {
+    private _getAddAppsForGame(game: IGameInfo): IAdditionalApplicationInfo[] {
         if (!this.initialized) throw new Error("GameManager not initialized.");
-        return [
-            ...this._getXMLAdditionalApps(game.id),
-            ...this._parseExtras(game),
-        ];
+
+        if (!this._state.extrasInitializedGames.has(game.id))
+            this._initializeExtrasForGame(game);
+
+        return [...this._getXMLAdditionalApps(game.id)];
     }
 
     private _getXMLAdditionalApps(
@@ -228,7 +230,7 @@ export class GameManager {
         return result;
     }
 
-    private _parseExtras(game: IGameInfo): IAdditionalApplicationInfo[] {
+    private _initializeExtrasForGame(game: IGameInfo) {
         if (!this.initialized) throw new Error("GameManager not initialized.");
         if (!game?.applicationPath)
             throw new Error("Game application path not set. Invalid data.");
@@ -249,7 +251,7 @@ export class GameManager {
             );
 
             const ignoredExtensions = ["bat", "bsh", "msh", ""];
-            return files
+            files
                 .filter(
                     (f) => !ignoredExtensions.includes(f.split(".")?.[1] ?? "")
                 )
@@ -274,6 +276,7 @@ export class GameManager {
                         return addApp;
                     }
                 });
+            this._state.extrasInitializedGames.add(game.id);
         } catch (e) {
             console.error(
                 `Error while reading extras directory: ${gameExtrasPath} Error: ${e}`
