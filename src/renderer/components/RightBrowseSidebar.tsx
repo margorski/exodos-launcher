@@ -228,6 +228,113 @@ export class RightBrowseSidebar extends React.Component<
                         </div>
                     </div>
                     {/* -- Most Fields -- */}
+                    <div className="browse-right-sidebar__section">
+                        <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
+                            <p>{strings.tags}: </p>
+                            <DropdownInputField
+                                text={game.tags}
+                                placeholder={strings.noTags}
+                                className="browse-right-sidebar__searchable"
+                                onChange={this.onTagsChange}
+                                items={[]}
+                                onItemSelect={(text) => {
+                                    game.tags = text;
+                                    this.forceUpdate();
+                                }}
+                                onClick={this.onTagsClick}
+                            />
+                        </div>
+                        <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
+                            <p>{strings.series}: </p>
+                            <InputField
+                                text={game.series}
+                                placeholder={strings.noSeries}
+                                className="browse-right-sidebar__searchable"
+                                onChange={this.onSeriesChange}
+                                onClick={this.onSeriesClick}
+                            />
+                        </div>
+                        <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
+                            <p>{strings.developer}: </p>
+                            <InputField
+                                text={game.developer}
+                                placeholder={strings.noDeveloper}
+                                className="browse-right-sidebar__searchable"
+                                onChange={this.onDeveloperChange}
+                                onClick={this.onDeveloperClick}
+                            />
+                        </div>
+                        <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
+                            <p>{strings.publisher}: </p>
+                            <InputField
+                                text={game.publisher}
+                                placeholder={strings.noPublisher}
+                                className="browse-right-sidebar__searchable"
+                                onChange={this.onPublisherChange}
+                                onClick={this.onPublisherClick}
+                            />
+                        </div>
+                        <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
+                            <p>{strings.source}: </p>
+                            <InputField
+                                text={game.source}
+                                placeholder={strings.noSource}
+                                onChange={this.onSourceChange}
+                                className="browse-right-sidebar__searchable"
+                                onClick={this.onSourceClick}
+                            />
+                        </div>
+                        <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
+                            <p>{strings.platform}: </p>
+                            <DropdownInputField
+                                text={game.platform}
+                                placeholder={strings.noPlatform}
+                                onChange={this.onPlatformChange}
+                                className="browse-right-sidebar__searchable"
+                                items={[]}
+                                onItemSelect={(text) => {
+                                    game.platform = text;
+                                    this.forceUpdate();
+                                }}
+                                onClick={this.onPlatformClick}
+                            />
+                        </div>
+                        <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
+                            <p>{strings.playMode}: </p>
+                            <DropdownInputField
+                                text={game.playMode}
+                                placeholder={strings.noPlayMode}
+                                onChange={this.onPlayModeChange}
+                                className="browse-right-sidebar__searchable"
+                                items={[]}
+                                onItemSelect={(text) => {
+                                    game.playMode = text;
+                                    this.forceUpdate();
+                                }}
+                                onClick={this.onPlayModeClick}
+                            />
+                        </div>
+                        <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
+                            <p>{strings.releaseYear}: </p>
+                            <InputField
+                                text={new Date(game.releaseDate)
+                                    .getFullYear()
+                                    .toString()}
+                                placeholder={strings.noReleaseDate}
+                                onChange={this.onReleaseDateChange}
+                                className="browse-right-sidebar__searchable"
+                                onClick={() =>
+                                    this.props.onSearch(
+                                        `releaseDate:${new Date(
+                                            game.releaseDate
+                                        )
+                                            .getFullYear()
+                                            .toString()}`
+                                    )
+                                }
+                            />
+                        </div>
+                    </div>
                     {/* -- Screenshot -- */}
                     <div className="browse-right-sidebar__section">
                         {this.state.screenshots.map((s, idx) => (
