@@ -45,6 +45,7 @@ export interface IPureGameInfo {
     /** Path to the application that runs the game */
     applicationPath: string;
     /** Command line argument(s) passed to the application to launch the game */
+    rootFolder: string;
     launchCommand: string;
     /** Date of when the game was released */
     releaseDate: string;

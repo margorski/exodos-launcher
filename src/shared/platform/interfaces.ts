@@ -1,5 +1,5 @@
-import { IPlatformConfig } from "@back/platform/platformConfig";
 import { IGameCollection } from "../game/interfaces";
+import { removeLowestDirectory } from "../../shared/Util";
 
 export type PlatformInfo = {
     name: string;
@@ -7,14 +7,22 @@ export type PlatformInfo = {
     size: number;
 };
 
-export type GamePlatform = {
-    filePath: string;
-    name: string;
-    library: string;
-    data: IRawPlatformFile;
-    collection: IGameCollection;
-    configuration?: IPlatformConfig;
-};
+export class GamePlatform {
+    collection: IGameCollection = {
+        additionalApplications: [],
+        games: [],
+    };
+
+    constructor(
+        public readonly name: string,
+        public readonly filePath: string
+    ) {}
+
+    get gamesDirectory(): string {
+        const gameDirectory = this.collection.games[0].rootFolder;
+        return removeLowestDirectory(gameDirectory, 2);
+    }
+}
 
 export type IRawPlatformFile = {
     LaunchBox: IRawPlatform;
@@ -47,6 +55,7 @@ export type IRawGameInfo = {
     Genre?: string; // (String) - Tags / Genres
     Source?: string; // (String)
     ApplicationPath?: string; // (String)
+    RootFolder?: string; // (String)
     CommandLine?: string; // (String) - Launch Command
     ReleaseDate?: string; // (Nullable<DateTime>)
     Version?: string; // (String)
@@ -73,7 +82,7 @@ export type IRawAdditionalApplicationInfo = {
     WaitForExit?: boolean; // (Boolean)
 };
 
-export type IThumbnailsInfo = {
+export type IImageInfo = {
     GameName: string;
     BoxThumbnail: string;
 };

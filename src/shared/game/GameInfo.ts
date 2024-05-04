@@ -19,6 +19,7 @@ export class GameInfo {
             tags: "",
             source: "",
             applicationPath: "",
+            rootFolder: "",
             launchCommand: "",
             releaseDate: "",
             version: "",

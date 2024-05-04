@@ -170,6 +170,10 @@ export class SharedSocket<T extends Socket> extends EventEmitter {
                 this.socket.close();
                 this.socket = undefined;
             }
+            if (!this.url) {
+                console.log("No URL set! Leaving.");
+                return;
+            }
             console.log("Reconnecting to " + this.url);
             // Connect
             SharedSocket.connect(this.socketCon, this.url, this.secret)

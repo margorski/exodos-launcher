@@ -40,7 +40,7 @@ import { IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylist } from "@shared/interfaces";
 import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
-import { IThumbnailsInfo } from "@shared/platform/interfaces";
+import { IImageInfo } from "@shared/platform/interfaces";
 import { PreferencesFile } from "@shared/preferences/PreferencesFile";
 import {
     defaultPreferencesData,
@@ -66,7 +66,7 @@ import { loadExecMappingsFile } from "./Execs";
 import { GameManager } from "./game/GameManager";
 import { GameLauncher } from "./game/GameLauncher";
 import { BackQuery, BackState } from "./types";
-import { walkSync, difObjects } from "./util/misc";
+import { difObjects } from "./util/misc";
 import { FileServer } from "./backend/fileServer";
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
@@ -370,10 +370,10 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 const platforms: Record<string, string[]> = {};
                 for (let i = 0; i < state.gameManager.platforms.length; i++) {
                     const p = state.gameManager.platforms[i];
-                    if (!platforms[p.library]) {
-                        platforms[p.library] = [];
+                    if (!platforms[p.name]) {
+                        platforms[p.name] = [];
                     }
-                    platforms[p.library].push(p.name);
+                    platforms[p.name].push(p.name);
                 }
 
                 respond<GetRendererInitDataResponse>(event.target, {

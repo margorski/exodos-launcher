@@ -70,7 +70,7 @@ export class PlaylistManager {
             description: "A list of installed games.",
             author: "",
             icon: "",
-            library: platform.library,
+            library: platform.name,
             filename: playlistDummyFilename,
             games: games,
         };

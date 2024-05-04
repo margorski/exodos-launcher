@@ -1,6 +1,6 @@
 import { GameParser } from "@shared/game/GameParser";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
-import { GamePlatform, IThumbnailsInfo } from "@shared/platform/interfaces";
+import { GamePlatform, IImageInfo } from "@shared/platform/interfaces";
 import * as fastXmlParser from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
@@ -22,9 +22,8 @@ import {
     orderGames,
 } from "@shared/game/GameFilter";
 import { ViewGame } from "@shared/back/types";
-import { platformConfigs } from "@back/platform/platformConfig";
+import { readPlatformsFile } from "@back/platform/PlatformFile";
 
-const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
 
@@ -59,6 +58,7 @@ export class GameManager {
         platformsPath: "",
         installedGames: [],
         playlistManager: new PlaylistManager(),
+        platformsFile: { platforms: [], media: [] },
     };
 
     public get platforms() {
@@ -83,15 +83,19 @@ export class GameManager {
         await this._state.playlistManager.init({
             ...opts,
         });
+
+        this._state.platformsFile = await readPlatformsFile(
+            path.join(opts.platformsPath, "../Platforms.xml")
+        );
+        // ADD thumbnail on the GAME PARSE
+        // GET ALL IMAGES ON GET GAME
         const platformErrors = await this.loadPlatforms(
             opts.platformsPath,
             opts.exodosPath
         );
-        this.platforms
-            .filter((p) => p.configuration?.gamesPlatform)
-            .forEach((p) =>
-                this._initExodosInstalledGamesWatcher(p, opts.exodosPath)
-            );
+        this.platforms.forEach((p) =>
+            this._initExodosInstalledGamesWatcher(p, opts.exodosPath)
+        );
 
         return platformErrors;
     }
@@ -114,7 +118,7 @@ export class GameManager {
         let foundGames: IGameInfo[] = [];
         for (let i = 0; i < platforms.length; i++) {
             // If library matches filter, or no library filter given, filter this platforms games
-            if (!opts.library || platforms[i].library === opts.library) {
+            if (!opts.library || platforms[i].name === opts.library) {
                 foundGames = foundGames.concat(
                     filterGames(platforms[i].collection.games, filterOpts)
                 );
@@ -245,6 +249,13 @@ export class GameManager {
         );
 
         try {
+            if (
+                !fs.existsSync(gameExtrasPath) ||
+                !fs.statSync(gameExtrasPath).isDirectory()
+            ) {
+                return [];
+            }
+
             const dir = fs.readdirSync(gameExtrasPath);
             const files = dir.filter((f) =>
                 fs.statSync(path.join(gameExtrasPath, f)).isFile()
@@ -306,41 +317,28 @@ export class GameManager {
         this._state.platformsPath = platformsPath;
         const platforms: GamePlatform[] = [];
         try {
-            const libraryNames = await readdir(this._state.platformsPath);
+            const libraryNames = this._state.platformsFile.platforms;
+            console.log(
+                `Loading platforms ${libraryNames} from ${platformsPath}`
+            );
             for (let libraryName of libraryNames) {
-                // Check each library for platforms
                 try {
+                    console.log(
+                        `Checking existence of platform ${libraryName} xml file..`
+                    );
                     const platformFile = path.join(
                         this._state.platformsPath,
-                        libraryName
+                        `${libraryName}.xml`
                     );
-                    const platformFileExt = path.extname(platformFile);
-                    if (
-                        platformFileExt.toLowerCase().endsWith(".xml") &&
-                        (await stat(platformFile)).isFile()
-                    ) {
-                        const name = path.basename(
-                            platformFile,
-                            platformFileExt
+                    if ((await stat(platformFile)).isFile()) {
+                        console.log(`Platform file found: ${platformFile}.`);
+                        const newPlatform = new GamePlatform(
+                            libraryName,
+                            platformFile
                         );
-                        platforms.push({
-                            name: name,
-                            filePath: platformFile,
-                            library: libraryName,
-                            configuration: platformConfigs.find(
-                                (p) => p.filename === name
-                            ),
-                            data: {
-                                LaunchBox: {
-                                    Game: [],
-                                    AdditionalApplication: [],
-                                },
-                            },
-                            collection: {
-                                games: [],
-                                additionalApplications: [],
-                            },
-                        });
+                        platforms.push(newPlatform);
+                    } else {
+                        console.log(`Platform file not found: ${platformFile}`);
                     }
                 } catch (e) {
                     console.error(e);
@@ -355,6 +353,9 @@ export class GameManager {
         await Promise.all(
             platforms.map(async (platform) => {
                 try {
+                    console.log(
+                        `Loading platform ${platform.name} ${platform.filePath}..`
+                    );
                     const content = await readFile(platform.filePath);
                     const data: any | undefined = fastXmlParser.parse(
                         content.toString(),
@@ -374,11 +375,7 @@ export class GameManager {
                     }
 
                     // Populate platform
-                    platform.data = data;
-                    platform.collection = GameParser.parse(
-                        data,
-                        platform.library
-                    );
+                    platform.collection = GameParser.parse(data, platform.name);
                     const thumbnails = this._getThumbnailsForPlatform(
                         exodosPath,
                         platform
@@ -404,11 +401,11 @@ export class GameManager {
         return errors;
     }
 
+    // TODO: Move to GameManager or new image class (ImageManager?)
     private _getThumbnailsForPlatform(
         exodosPath: string,
         platform: GamePlatform
-    ): IThumbnailsInfo[] {
-        // TODO: Move to GameManager, take path from platform data
+    ): IImageInfo[] {
         const boxImagesPath = path.join(
             exodosPath,
             `Images/${platform.name}/Box - Front`
@@ -417,7 +414,7 @@ export class GameManager {
         console.info(
             `Loading thumbnails from "${boxImagesPath}" path for ${platform.name} platform.`
         );
-        const thumbnails: IThumbnailsInfo[] = [];
+        const thumbnails: IImageInfo[] = [];
         try {
             for (const s of walkSync(boxImagesPath)) {
                 // filename to id
@@ -439,10 +436,7 @@ export class GameManager {
         exodosPath: string
     ) {
         const gamesPath = path.resolve(
-            path.join(
-                exodosPath,
-                `eXo/${platform.configuration?.gamesSubdirectory}/`
-            )
+            path.join(exodosPath, platform.gamesDirectory)
         );
 
         console.log(
@@ -478,9 +472,7 @@ export class GameManager {
 
     private rescanInstalledGamesAndBroadcast(gamesPath: string) {
         this._state.installedGames = this.rescanInstalledGames(gamesPath);
-        this.platforms
-            .filter((p) => p.configuration?.gamesPlatform)
-            .forEach((p) => this._addInstalledGamesPlaylist(p));
+        this.platforms.forEach((p) => this._addInstalledGamesPlaylist(p));
     }
 
     private rescanInstalledGames(gamesPath: string) {

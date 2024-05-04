@@ -4,6 +4,7 @@ import { GamePlaylist } from "@shared/interfaces";
 import { GamePlatform } from "@shared/platform/interfaces";
 import { ErrorCopy } from "../util/misc";
 import { PlaylistManager } from "@back/playlist/PlaylistManager";
+import { PlatformsFile } from "@back/platform/PlatformFile";
 
 export type SearchCache = {
     query: SearchCacheQuery;
@@ -24,6 +25,7 @@ export type GameManagerState = {
     platformsPath: string;
     playlistManager: PlaylistManager;
     installedGames: string[];
+    platformsFile: PlatformsFile;
 };
 
 export type LoadPlatformError = ErrorCopy & {

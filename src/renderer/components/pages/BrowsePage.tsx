@@ -23,7 +23,6 @@ import { GameOrderChangeEvent } from "../GameOrder";
 import { InputElement } from "../InputField";
 import { ResizableSidebar, SidebarResizeEvent } from "../ResizableSidebar";
 import { englishTranslation } from "@renderer/lang/en";
-import { platformConfigs } from "@back/platform/platformConfig";
 
 type OwnProps = {
     games: GAMES | undefined;
@@ -165,10 +164,7 @@ export class BrowsePage extends React.Component<
             this.props;
         const { draggedGameId } = this.state;
         const order = this.props.order || BrowsePage.defaultOrder;
-        const isGamesPlatform =
-            platformConfigs.find(
-                (pc) => `${pc.filename}.xml` === this.props.gameLibrary
-            )?.gamesPlatform ?? false;
+        const isGamesPlatform = true;
 
         // Find the selected game in the selected playlist
         let gamePlaylistEntry: GamePlaylistEntry | undefined;
