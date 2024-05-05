@@ -71,6 +71,7 @@ export interface IGameInfo extends IPureGameInfo {
     musicPath: string;
     /** Thumbnail path to be displayed in game list in grid mode*/
     thumbnailPath: string;
+    configurationPath: string;
 }
 
 /** Represents the meta data for a single additional application */

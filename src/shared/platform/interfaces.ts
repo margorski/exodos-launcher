@@ -63,6 +63,7 @@ export type IRawGameInfo = {
     Language?: string; // (String)
     ManualPath?: string; // (String)
     MusicPath?: string; // (String)
+    ConfigurationPath?: string; // (String)
 };
 
 /**

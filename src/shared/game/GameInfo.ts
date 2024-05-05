@@ -31,6 +31,7 @@ export class GameInfo {
             manualPath: "",
             musicPath: "",
             thumbnailPath: "",
+            configurationPath: "",
         };
     }
 

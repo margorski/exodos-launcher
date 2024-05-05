@@ -63,17 +63,22 @@ export class PlaylistManager {
         }
 
         const playlistDummyFilename = `${platform.name}_installedgames`;
-        const playlist = this.playlists.find(
+
+        const existingPlaylistIndex = this.playlists.findIndex(
             (p) => p.filename === playlistDummyFilename
-        ) ?? {
-            title: "Installed games",
-            description: "A list of installed games.",
-            author: "",
-            icon: "",
-            library: platform.name,
-            filename: playlistDummyFilename,
-            games: games,
-        };
+        );
+        const playlist =
+            existingPlaylistIndex >= 0
+                ? this.playlists.splice(existingPlaylistIndex, 1)[0]
+                : {
+                      title: "Installed games",
+                      description: "A list of installed games.",
+                      author: "",
+                      icon: "",
+                      library: platform.name,
+                      filename: playlistDummyFilename,
+                      games: [],
+                  };
         playlist.games = games;
         this.playlists.unshift(playlist);
         this._opts?.onPlaylistAddOrUpdate(playlist);
@@ -94,10 +99,32 @@ export class PlaylistManager {
                     content: `Error while parsing playlist "${filePath}". ${error}`,
                 })
             );
-            playlist = {
-                ...data,
-                filename,
-            };
+
+            const hasGames =
+                data.games &&
+                Array.isArray(data.games) &&
+                data.games.length > 0;
+            if (hasGames) {
+                const gamesPlatform =
+                    data.library ?? data.games[0].platform ?? "";
+                if (gamesPlatform === "") {
+                    opts.log({
+                        source: "Playlist",
+                        content: `Playlist "${filePath}" doesn't have a library. Skipping.`,
+                    });
+                } else {
+                    playlist = {
+                        ...data,
+                        library: gamesPlatform.slice(0, -4),
+                        filename,
+                    };
+                }
+            } else {
+                opts.log({
+                    source: "Playlist",
+                    content: `Playlist "${filePath}" doesn't have games. Skipping.`,
+                });
+            }
         } catch (error) {
             opts.log({
                 source: "Playlist",

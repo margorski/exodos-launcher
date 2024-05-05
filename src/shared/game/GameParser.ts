@@ -96,6 +96,7 @@ export class GameParser {
             placeholder: false, // (No loaded game is a placeholder),
             manualPath: unescapeHTML(data.ManualPath),
             musicPath: unescapeHTML(data.MusicPath),
+            configurationPath: unescapeHTML(data.ConfigurationPath),
             thumbnailPath: "",
         };
     }
