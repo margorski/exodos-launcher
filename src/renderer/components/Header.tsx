@@ -28,7 +28,6 @@ type OwnProps = {
     onToggleLeftSidebarClick?: () => void;
     /** Called when the right sidebar toggle button is clicked. */
     onToggleRightSidebarClick?: () => void;
-    onRandomGameClick?: () => void;
 };
 
 export type HeaderProps = OwnProps & WithPreferencesProps;
@@ -140,17 +139,6 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                         onClick={() => this.onReset(onOrderChange)}
                     >
                         {strings.reset}
-                    </div>
-                </div>
-                <div className="header__wrap">
-                    <div
-                        className="simple-button"
-                        onClick={() => {
-                            if (this.props.onRandomGameClick)
-                                this.props.onRandomGameClick();
-                        }}
-                    >
-                        {strings.random}
                     </div>
                 </div>
             </div>

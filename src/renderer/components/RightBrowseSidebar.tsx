@@ -57,70 +57,6 @@ export class RightBrowseSidebar extends React.Component<
     RightBrowseSidebarProps,
     RightBrowseSidebarState
 > {
-    // Bound "on change" callbacks for game fields
-    onTitleChange = this.wrapOnTextChange((game, text) => {
-        game.convertedTitle = text;
-    });
-    onAlternateTitlesChange = this.wrapOnTextChange((game, text) => {
-        game.alternateTitles = text;
-    });
-    onDeveloperChange = this.wrapOnTextChange((game, text) => {
-        game.developer = text;
-    });
-    onTagsChange = this.wrapOnTextChange((game, text) => {
-        game.tags = text;
-    });
-    onSeriesChange = this.wrapOnTextChange((game, text) => {
-        game.series = text;
-    });
-    onSourceChange = this.wrapOnTextChange((game, text) => {
-        game.source = text;
-    });
-    onPublisherChange = this.wrapOnTextChange((game, text) => {
-        game.publisher = text;
-    });
-    onPlatformChange = this.wrapOnTextChange((game, text) => {
-        game.platform = text;
-    });
-    onPlayModeChange = this.wrapOnTextChange((game, text) => {
-        game.playMode = text;
-    });
-    onStatusChange = this.wrapOnTextChange((game, text) => {
-        game.status = text;
-    });
-    onVersionChange = this.wrapOnTextChange((game, text) => {
-        game.version = text;
-    });
-    onReleaseDateChange = this.wrapOnTextChange((game, text) => {
-        game.releaseDate = text;
-    });
-    onLanguageChange = this.wrapOnTextChange((game, text) => {
-        game.language = text;
-    });
-    onLaunchCommandChange = this.wrapOnTextChange((game, text) => {
-        game.launchCommand = text;
-    });
-    onApplicationPathChange = this.wrapOnTextChange((game, text) => {
-        game.applicationPath = text;
-    });
-    onNotesChange = this.wrapOnTextChange((game, text) => {
-        game.notes = text;
-    });
-    onOriginalDescriptionChange = this.wrapOnTextChange((game, text) => {
-        game.originalDescription = text;
-    });
-    // Bound "on click" callbacks for game fields
-    onDeveloperClick = this.wrapOnTextClick("developer");
-    onTagsClick = this.wrapOnTextClick("tags");
-    onSeriesClick = this.wrapOnTextClick("series");
-    onSourceClick = this.wrapOnTextClick("source");
-    onPublisherClick = this.wrapOnTextClick("publisher");
-    onPlatformClick = this.wrapOnTextClick("platform");
-    onPlayModeClick = this.wrapOnTextClick("playMode");
-    onStatusClick = this.wrapOnTextClick("status");
-    onVersionClick = this.wrapOnTextClick("version");
-    onLanguageClick = this.wrapOnTextClick("language");
-
     launchCommandRef: React.RefObject<HTMLInputElement> = React.createRef();
 
     constructor(props: RightBrowseSidebarProps) {
@@ -194,7 +130,6 @@ export class RightBrowseSidebar extends React.Component<
                                     <InputField
                                         text={game.convertedTitle}
                                         placeholder={strings.noTitle}
-                                        onChange={this.onTitleChange}
                                     />
                                 </div>
                                 <div className="browse-right-sidebar__title-row__buttons">
@@ -235,13 +170,11 @@ export class RightBrowseSidebar extends React.Component<
                                 text={game.tags}
                                 placeholder={strings.noTags}
                                 className="browse-right-sidebar__searchable"
-                                onChange={this.onTagsChange}
                                 items={[]}
                                 onItemSelect={(text) => {
                                     game.tags = text;
                                     this.forceUpdate();
                                 }}
-                                onClick={this.onTagsClick}
                             />
                         </div>
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
@@ -250,8 +183,6 @@ export class RightBrowseSidebar extends React.Component<
                                 text={game.series}
                                 placeholder={strings.noSeries}
                                 className="browse-right-sidebar__searchable"
-                                onChange={this.onSeriesChange}
-                                onClick={this.onSeriesClick}
                             />
                         </div>
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
@@ -260,8 +191,6 @@ export class RightBrowseSidebar extends React.Component<
                                 text={game.developer}
                                 placeholder={strings.noDeveloper}
                                 className="browse-right-sidebar__searchable"
-                                onChange={this.onDeveloperChange}
-                                onClick={this.onDeveloperClick}
                             />
                         </div>
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
@@ -270,8 +199,6 @@ export class RightBrowseSidebar extends React.Component<
                                 text={game.publisher}
                                 placeholder={strings.noPublisher}
                                 className="browse-right-sidebar__searchable"
-                                onChange={this.onPublisherChange}
-                                onClick={this.onPublisherClick}
                             />
                         </div>
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
@@ -279,9 +206,7 @@ export class RightBrowseSidebar extends React.Component<
                             <InputField
                                 text={game.source}
                                 placeholder={strings.noSource}
-                                onChange={this.onSourceChange}
                                 className="browse-right-sidebar__searchable"
-                                onClick={this.onSourceClick}
                             />
                         </div>
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
@@ -289,14 +214,12 @@ export class RightBrowseSidebar extends React.Component<
                             <DropdownInputField
                                 text={game.platform}
                                 placeholder={strings.noPlatform}
-                                onChange={this.onPlatformChange}
                                 className="browse-right-sidebar__searchable"
                                 items={[]}
                                 onItemSelect={(text) => {
                                     game.platform = text;
                                     this.forceUpdate();
                                 }}
-                                onClick={this.onPlatformClick}
                             />
                         </div>
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
@@ -304,14 +227,12 @@ export class RightBrowseSidebar extends React.Component<
                             <DropdownInputField
                                 text={game.playMode}
                                 placeholder={strings.noPlayMode}
-                                onChange={this.onPlayModeChange}
                                 className="browse-right-sidebar__searchable"
                                 items={[]}
                                 onItemSelect={(text) => {
                                     game.playMode = text;
                                     this.forceUpdate();
                                 }}
-                                onClick={this.onPlayModeClick}
                             />
                         </div>
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
@@ -321,7 +242,6 @@ export class RightBrowseSidebar extends React.Component<
                                     .getFullYear()
                                     .toString()}
                                 placeholder={strings.noReleaseDate}
-                                onChange={this.onReleaseDateChange}
                                 className="browse-right-sidebar__searchable"
                                 onClick={() =>
                                     this.props.onSearch(
@@ -368,6 +288,32 @@ export class RightBrowseSidebar extends React.Component<
                                 <InputField
                                     text={currentPlaylistNotes || ""}
                                     placeholder={strings.noPlaylistNotes}
+                                    multiline={true}
+                                />
+                            </div>
+                        </div>
+                    ) : undefined}
+                    {/* -- Notes -- */}
+                    {game.notes ? (
+                        <div className="browse-right-sidebar__section">
+                            <div className="browse-right-sidebar__row">
+                                <p>{strings.notes}: </p>
+                                <InputField
+                                    text={game.notes}
+                                    placeholder={strings.noNotes}
+                                    multiline={true}
+                                />
+                            </div>
+                        </div>
+                    ) : undefined}
+                    {/* -- Original Description -- */}
+                    {game.originalDescription ? (
+                        <div className="browse-right-sidebar__section">
+                            <div className="browse-right-sidebar__row">
+                                <p>{strings.originalDescription}: </p>
+                                <InputField
+                                    text={game.originalDescription}
+                                    placeholder={strings.noOriginalDescription}
                                     multiline={true}
                                 />
                             </div>
@@ -515,21 +461,6 @@ export class RightBrowseSidebar extends React.Component<
                     ? `${field}:${wrapSearchTerm(value)}`
                     : `missing:${field}`;
                 this.props.onSearch(search);
-            }
-        };
-    }
-
-    /** Create a wrapper for a EditableTextWrap's onChange callback (this is to reduce redundancy). */
-    wrapOnTextChange(
-        func: (game: IGameInfo, text: string) => void
-    ): (
-        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => void {
-        return (event) => {
-            const game = this.props.currentGame;
-            if (game) {
-                func(game, event.currentTarget.value);
-                this.forceUpdate();
             }
         };
     }
