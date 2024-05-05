@@ -62,6 +62,13 @@ export class PlaylistManager {
             return;
         }
 
+        if (!platform.isGamePlatform) {
+            console.log(
+                `Platform ${platform.name} is not a game platform. Doesn't need installed games playlist.`
+            );
+            return;
+        }
+
         const playlistDummyFilename = `${platform.name}_installedgames`;
 
         const existingPlaylistIndex = this.playlists.findIndex(

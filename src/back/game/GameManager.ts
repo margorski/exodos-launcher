@@ -93,9 +93,11 @@ export class GameManager {
             opts.platformsPath,
             opts.exodosPath
         );
-        this.platforms.forEach((p) =>
-            this._initExodosInstalledGamesWatcher(p, opts.exodosPath)
-        );
+        this.platforms
+            .filter((p) => p.isGamePlatform)
+            .forEach((p) =>
+                this._initExodosInstalledGamesWatcher(p, opts.exodosPath)
+            );
 
         return platformErrors;
     }

@@ -22,6 +22,13 @@ export class GamePlatform {
         const gameDirectory = this.collection.games[0].rootFolder;
         return removeLowestDirectory(gameDirectory, 2);
     }
+
+    get isGamePlatform(): boolean {
+        return (
+            this.collection.games.length > 0 &&
+            !!this.collection.games[0].configurationPath
+        );
+    }
 }
 
 export type IRawPlatformFile = {

@@ -281,7 +281,6 @@ export class BrowsePage extends React.Component<
                         onDeselectPlaylist={this.onRightSidebarDeselectPlaylist}
                         gamePlaylistEntry={gamePlaylistEntry}
                         isInstalled={this.isCurrentGameInstalled()}
-                        isGame={isGamesPlatform}
                     />
                 </ResizableSidebar>
             </div>

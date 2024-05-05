@@ -36,8 +36,6 @@ type OwnProps = {
     onDeselectPlaylist: () => void;
     /** If the selected game is installed */
     isInstalled: boolean;
-    /** For other things than games like magazines different buttons are displayed */
-    isGame: boolean;
 };
 
 export type RightBrowseSidebarProps = OwnProps &
@@ -102,7 +100,7 @@ export class RightBrowseSidebar extends React.Component<
     render() {
         const strings = englishTranslation.browse;
         const game: IGameInfo | undefined = this.props.currentGame;
-
+        // HACK: This is a hacky solution to determine if the selected item is a game or a magazine
         if (game) {
             const {
                 currentAddApps,
@@ -110,8 +108,9 @@ export class RightBrowseSidebar extends React.Component<
                 currentPlaylistNotes,
                 isInstalled,
             } = this.props;
-            // TODO somehow parametrize this to do not display unnecessary buttons for magazines
-            const playButtonLabel = this.props.isGame
+
+            const isGame = !!game?.configurationPath;
+            const playButtonLabel = isGame
                 ? isInstalled
                     ? strings.play
                     : strings.install
@@ -144,7 +143,7 @@ export class RightBrowseSidebar extends React.Component<
                                             )
                                         }
                                     />
-                                    {this.props.isGame ? (
+                                    {isGame ? (
                                         <input
                                             type="button"
                                             className="simple-button"
