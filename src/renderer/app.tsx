@@ -343,8 +343,11 @@ export class App extends React.Component<AppProps, AppState> {
 
                 case BackOut.BROWSE_VIEW_PAGE_RESPONSE:
                     {
+                        console.log("BACK OUT BROWSE VIEW PAGE RESPONSE");
                         const resData: BrowseViewPageResponseData = res.data;
 
+                        console.log(resData);
+                        // TODO: PREPARE FILTERING
                         let view: View | undefined = this.state.views[res.id];
 
                         if (view) {

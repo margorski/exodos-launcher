@@ -21,7 +21,6 @@ import {
     filterGames,
     orderGames,
 } from "@shared/game/GameFilter";
-import { ViewGame } from "@shared/back/types";
 import { readPlatformsFile } from "@back/platform/PlatformFile";
 
 const readFile = promisify(fs.readFile);
@@ -54,7 +53,6 @@ export class GameManager {
 
     private _state: GameManagerState = {
         platforms: [],
-        extrasInitializedGames: new Set(),
         platformsPath: "",
         installedGames: [],
         playlistManager: new PlaylistManager(),
@@ -148,26 +146,9 @@ export class GameManager {
             playlist: playlist,
         });
 
-        const viewGames: ViewGame[] = [];
-        for (let i = 0; i < results.length; i++) {
-            const g = results[i];
-            viewGames[i] = {
-                id: g.id,
-                title: g.title,
-                convertedTitle: g.convertedTitle,
-                platform: g.platform,
-                genre: g.tags,
-                developer: g.developer,
-                publisher: g.publisher,
-                releaseDate: g.releaseDate,
-                thumbnailPath: g.thumbnailPath,
-            };
-        }
-
         return {
             query: query,
             games: results,
-            viewGames: viewGames,
         };
     }
 
@@ -190,9 +171,11 @@ export class GameManager {
     } {
         if (!this.initialized) throw new Error("GameManager not initialized.");
 
+        console.log("GET GAME");
         const game = this.findGame(gameId);
         if (!game) throw new Error(`Game with id ${gameId} not found.`);
 
+        const _addApps = this._getAddAppsForGame(game);
         return {
             game: game,
             addApps: this._getAddAppsForGame(game),
@@ -214,15 +197,12 @@ export class GameManager {
     private _getAddAppsForGame(game: IGameInfo): IAdditionalApplicationInfo[] {
         if (!this.initialized) throw new Error("GameManager not initialized.");
 
-        if (!this._state.extrasInitializedGames.has(game.id))
-            this._initializeExtrasForGame(game);
+        this._loadDynamicExtrasForGame(game);
 
-        return [...this._getXMLAdditionalApps(game.id)];
+        return [...this._getAdditionalApps(game.id)];
     }
 
-    private _getXMLAdditionalApps(
-        gameId: string
-    ): IAdditionalApplicationInfo[] {
+    private _getAdditionalApps(gameId: string): IAdditionalApplicationInfo[] {
         const result: IAdditionalApplicationInfo[] = [];
         const platforms = this.platforms;
         for (let i = 0; i < platforms.length; i++) {
@@ -236,7 +216,7 @@ export class GameManager {
         return result;
     }
 
-    private _initializeExtrasForGame(game: IGameInfo) {
+    private _loadDynamicExtrasForGame(game: IGameInfo) {
         if (!this.initialized) throw new Error("GameManager not initialized.");
         if (!game?.applicationPath)
             throw new Error("Game application path not set. Invalid data.");
@@ -289,7 +269,6 @@ export class GameManager {
                         return addApp;
                     }
                 });
-            this._state.extrasInitializedGames.add(game.id);
         } catch (e) {
             console.error(
                 `Error while reading extras directory: ${gameExtrasPath} Error: ${e}`
@@ -458,21 +437,41 @@ export class GameManager {
                         console.log(
                             `Game ${path} added, rescan installed games.`
                         );
-                        this.rescanInstalledGamesAndBroadcast(gamesPath);
+                        //this.rescanInstalledGamesAndBroadcast(gamesPath);
+                        this.setIsInstalledFlag(true, path);
                     })
                     .on("unlinkDir", (path) => {
                         console.log(
                             `Game ${path} has been removed, rescan installed games.`
                         );
-                        this.rescanInstalledGamesAndBroadcast(gamesPath);
+                        this.setIsInstalledFlag(false, path);
+                        //this.rescanInstalledGamesAndBroadcast(gamesPath);
                     });
+                // RESCAN ALL GAMES
                 this.rescanInstalledGamesAndBroadcast(gamesPath);
                 console.log("Initial scan complete. Ready for changes");
             })
             .on("error", (error) => console.log(`Watcher error: ${error}`));
     }
 
+    private setIsInstalledFlag(value: boolean, gamesPath: string) {
+        console.log(
+            `Setting installed flag for games in ${gamesPath} to ${value}`
+        );
+        this._state.platforms.forEach((p) => {
+            const game = p.collection.games.find((game) =>
+                game.applicationPath.split("\\").includes(gamesPath)
+            );
+            console.log(
+                `Setting installed flag for ${game?.title} to ${value}`
+            );
+            if (game) game.installed = value;
+        });
+    }
+
     private rescanInstalledGamesAndBroadcast(gamesPath: string) {
+        // TODO: DO NOT ADD INSTALLED GAMES PLAYLIST
+        // SET FLAG ISINSTALLED INSTEAD ON EVERY INSTALLED GAME
         this._state.installedGames = this.rescanInstalledGames(gamesPath);
         this.platforms.forEach((p) => this._addInstalledGamesPlaylist(p));
     }

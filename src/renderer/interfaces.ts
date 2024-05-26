@@ -1,6 +1,6 @@
-import { ViewGame } from "@shared/back/types";
+import { IGameInfo } from "@shared/game/interfaces";
 
-export type GAMES = Record<number, ViewGame | undefined>;
+export type GAMES = Record<number, IGameInfo | undefined>;
 
 /** State of a single "stage" in the upgrade system (each individual downloadable upgrade is called a "stage"). */
 export type UpgradeStageState = {

@@ -1,7 +1,7 @@
 import { MessageBoxOptions, OpenExternalOptions } from "electron";
 import { EventEmitter } from "events";
 import * as WebSocket from "ws";
-import { BackInit, ViewGame, WrappedRequest } from "@shared/back/types";
+import { BackInit, WrappedRequest } from "@shared/back/types";
 import { IAppConfigData } from "@shared/config/interfaces";
 import { IGameInfo } from "@shared/game/interfaces";
 import { ExecMapping } from "@shared/interfaces";
@@ -38,7 +38,6 @@ export type BackState = {
 export type BackQueryCache = {
     query: BackQuery;
     games: IGameInfo[];
-    viewGames: ViewGame[];
 };
 
 export type BackQuery = {

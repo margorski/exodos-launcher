@@ -11,10 +11,10 @@ function orderByTitle(a: IGameInfo, b: IGameInfo): number {
 
 /** Order games by their first tag alphabetically (ascending) */
 function orderByTags(a: IGameInfo, b: IGameInfo): number {
-    if (a.tags < b.tags) {
+    if (a.genre < b.genre) {
         return -1;
     }
-    if (a.tags > b.tags) {
+    if (a.genre > b.genre) {
         return 1;
     }
     return orderByTitle(a, b);

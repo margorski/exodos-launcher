@@ -166,12 +166,12 @@ export class RightBrowseSidebar extends React.Component<
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
                             <p>{strings.tags}: </p>
                             <DropdownInputField
-                                text={game.tags}
+                                text={game.genre}
                                 placeholder={strings.noTags}
                                 className="browse-right-sidebar__searchable"
                                 items={[]}
                                 onItemSelect={(text) => {
-                                    game.tags = text;
+                                    game.genre = text;
                                     this.forceUpdate();
                                 }}
                             />
@@ -446,21 +446,4 @@ export class RightBrowseSidebar extends React.Component<
     onScreenshotPreviewClick = (): void => {
         this.setState({ screenshotPreviewUrl: "" });
     };
-
-    /** Create a callback for when a game field is clicked. */
-    wrapOnTextClick<T extends PickType<IGameInfo, string>>(
-        field: T
-    ): () => void {
-        return () => {
-            const { currentGame } = this.props;
-            if (currentGame) {
-                this.props.onDeselectPlaylist();
-                const value = currentGame[field];
-                const search = value
-                    ? `${field}:${wrapSearchTerm(value)}`
-                    : `missing:${field}`;
-                this.props.onSearch(search);
-            }
-        };
-    }
 }

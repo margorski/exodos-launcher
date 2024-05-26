@@ -641,7 +641,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     id: req.id,
                     type: BackOut.BROWSE_VIEW_PAGE_RESPONSE,
                     data: {
-                        games: cache.viewGames.slice(
+                        games: cache.games.slice(
                             reqData.offset,
                             reqData.offset + reqData.limit
                         ),
@@ -675,8 +675,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 } // @TODO Start clearing the cache if it gets too full
 
                 let index = -1;
-                for (let i = 0; i < cache.viewGames.length; i++) {
-                    if (cache.viewGames[i].id === reqData.gameId) {
+                for (let i = 0; i < cache.games.length; i++) {
+                    if (cache.games[i].id === reqData.gameId) {
                         index = i;
                         break;
                     }

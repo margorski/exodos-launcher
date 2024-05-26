@@ -16,7 +16,7 @@ export class GameInfo {
             playMode: "",
             status: "",
             notes: "",
-            tags: "",
+            genre: "",
             source: "",
             applicationPath: "",
             rootFolder: "",
@@ -32,6 +32,10 @@ export class GameInfo {
             musicPath: "",
             thumbnailPath: "",
             configurationPath: "",
+            installed: false,
+            favorite: false,
+            rating: "",
+            region: "",
         };
     }
 

@@ -38,8 +38,7 @@ export interface IPureGameInfo {
     status: string;
     /** Information that could be useful for the player (of varying importance) */
     notes: string;
-    /** Tags of the game (seperated by semi-colon) */
-    tags: string;
+    genre: string;
     /** Source if the game files, either full URL or the name of the website */
     source: string;
     /** Path to the application that runs the game */
@@ -55,6 +54,10 @@ export interface IPureGameInfo {
     originalDescription: string;
     /** The language(s) the game is in */
     language: string;
+    favorite: boolean;
+    region: string;
+    rating: string;
+    maxPlayers?: number;
 }
 
 /** Represents the meta data for a single Game (including temporary data) */
@@ -72,6 +75,7 @@ export interface IGameInfo extends IPureGameInfo {
     /** Thumbnail path to be displayed in game list in grid mode*/
     thumbnailPath: string;
     configurationPath: string;
+    installed: boolean;
 }
 
 /** Represents the meta data for a single additional application */

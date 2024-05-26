@@ -1,7 +1,7 @@
 import { dialog } from "@electron/remote";
 import * as fs from "fs";
 import * as path from "path";
-import { AddLogData, BackIn, ViewGame } from "@shared/back/types";
+import { AddLogData, BackIn } from "@shared/back/types";
 import { htdocsPath } from "@shared/constants";
 import { IGameInfo } from "@shared/game/interfaces";
 import { getFileServerURL } from "@shared/Util";
@@ -63,7 +63,7 @@ type ElementBase<T extends ElementBase<T>> = { parentElement: T | null };
 export type ElementAncestorFunction<T extends ElementBase<T>> = (
     target: T,
     count: number,
-    input: T,
+    input: T
 ) => boolean;
 
 /**
@@ -76,7 +76,7 @@ export type ElementAncestorFunction<T extends ElementBase<T>> = (
 export function findElementAncestor<T extends ElementBase<T>>(
     element: T,
     fn: ElementAncestorFunction<T>,
-    checkElement: boolean = false,
+    checkElement: boolean = false
 ): T | undefined {
     let current = checkElement ? element : element.parentElement;
     let count = 0;
@@ -101,7 +101,7 @@ export function findElementAncestor<T extends ElementBase<T>>(
  */
 export function checkIfAncestor(
     start: Element | null,
-    target: Element | null,
+    target: Element | null
 ): boolean {
     let element: Element | null = start;
     while (element) {
@@ -120,11 +120,11 @@ export function getGameThumbnailUrl(thumbnailPath: string): string {
 
 export function getGameTitleScreenshotUrl(
     platform: string,
-    gameName: string,
+    gameName: string
 ): string {
     return `${getFileServerURL()}/Images/${platform}/Screenshot - Game Title/${gameName.replace(
         ":",
-        "_",
+        "_"
     )}-01.png`;
 }
 
@@ -135,11 +135,11 @@ export function getPlatformIconURL(platform: string): string {
 export function getGameScreenshotImageURL(
     platform: string,
     gameName: string,
-    idx: number = 1,
+    idx: number = 1
 ): string {
     return `${getFileServerURL()}/Images/${platform}/Screenshot - Gameplay/${gameName.replace(
         ":",
-        "_",
+        "_"
     )}-0${idx}.png`;
 }
 
@@ -155,14 +155,14 @@ export async function resourceExists(url: string): Promise<boolean> {
 
 export function getGameScreenshotsUrls(
     platform: string,
-    gameName: string,
+    gameName: string
 ): string[] {
     var screenshots = [];
     screenshots.push(getGameTitleScreenshotUrl(platform, gameName));
     return screenshots.concat(
         [1, 2, 3, 4].map((x) =>
-            getGameScreenshotImageURL(platform, gameName, x),
-        ),
+            getGameScreenshotImageURL(platform, gameName, x)
+        )
     );
 }
 
@@ -171,7 +171,7 @@ export function getGameImagePath(folderName: string, gameId: string): string {
         window.External.config.fullExodosPath,
         window.External.config.data.imageFolderPath,
         folderName,
-        `${gameId.substr(0, 2)}/${gameId.substr(2, 2)}/${gameId}.png`,
+        `${gameId.substr(0, 2)}/${gameId.substr(2, 2)}/${gameId}.png`
     );
 }
 
@@ -180,7 +180,7 @@ type IGamePathInfo = Pick<IGameInfo, "platform" | "launchCommand">;
 /* istanbul ignore next */
 export function getGamePath(
     game: IGamePathInfo,
-    fpPath: string,
+    fpPath: string
 ): string | undefined {
     // @TODO Because some strings can be interpreted as different paths/URLs, maybe this should return an array
     //       of strings with all the possible paths of the "main" file?
@@ -242,7 +242,7 @@ export function getGamePath(
                         return path.join(
                             fpPath,
                             htdocsPath,
-                            urlToFilePath(url),
+                            urlToFilePath(url)
                         );
                     }
                 }
@@ -280,7 +280,7 @@ export function getGamePath(
                         return path.join(
                             fpPath,
                             htdocsPath,
-                            urlToFilePath(url),
+                            urlToFilePath(url)
                         );
                     } else {
                         return path.join(fpPath, shockwavePath, str);
@@ -346,7 +346,7 @@ export function toURL(str: string): URL | undefined {
 export async function openConfirmDialog(
     title: string,
     message: string,
-    cancel: boolean = false,
+    cancel: boolean = false
 ): Promise<boolean> {
     const buttons = ["Yes", "No"];
     if (cancel) {
@@ -371,7 +371,7 @@ export async function openConfirmDialog(
 export function isExodosValidCheck(exodosPath: string): Promise<boolean> {
     return new Promise((resolve) =>
         fs.stat(path.join(exodosPath, "Data/Platforms"), (error) =>
-            resolve(!error),
-        ),
+            resolve(!error)
+        )
     );
 }

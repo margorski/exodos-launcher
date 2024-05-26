@@ -21,7 +21,6 @@ export type SearchCacheQuery = {
 
 export type GameManagerState = {
     platforms: GamePlatform[];
-    extrasInitializedGames: Set<String>;
     platformsPath: string;
     playlistManager: PlaylistManager;
     installedGames: string[];

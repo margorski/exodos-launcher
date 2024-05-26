@@ -164,7 +164,6 @@ export class BrowsePage extends React.Component<
             this.props;
         const { draggedGameId } = this.state;
         const order = this.props.order || BrowsePage.defaultOrder;
-        const isGamesPlatform = true;
 
         // Find the selected game in the selected playlist
         let gamePlaylistEntry: GamePlaylistEntry | undefined;

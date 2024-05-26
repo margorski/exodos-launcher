@@ -5,12 +5,7 @@ import {
     GridCellProps,
     ScrollParams,
 } from "react-virtualized/dist/es/Grid";
-import {
-    BackOut,
-    ImageChangeData,
-    ViewGame,
-    WrappedResponse,
-} from "@shared/back/types";
+import { BackOut, ImageChangeData, WrappedResponse } from "@shared/back/types";
 import { LOGOS } from "@shared/constants";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { GAMES } from "../interfaces";
@@ -122,7 +117,7 @@ export class GameGrid extends React.Component<GameGridProps> {
                     {({ width, height }) => {
                         const { columns, rows } = this.calculateSize(
                             this.props.gamesTotal,
-                            width,
+                            width
                         );
                         this.columns = columns;
                         // Calculate column and row of selected item
@@ -131,7 +126,7 @@ export class GameGrid extends React.Component<GameGridProps> {
                         if (this.props.selectedGameId) {
                             const index: number = findGameIndex(
                                 this.props.games,
-                                this.props.selectedGameId,
+                                this.props.selectedGameId
                             );
                             if (index >= 0) {
                                 scrollToColumn = index % this.columns;
@@ -202,7 +197,7 @@ export class GameGrid extends React.Component<GameGridProps> {
         const { draggedGameId, games, selectedGameId } = this.props;
         if (!games) {
             throw new Error(
-                "Trying to render a cell in game grid, but no games are found?",
+                "Trying to render a cell in game grid, but no games are found?"
             );
         }
         const index: number = props.rowIndex * this.columns + props.columnIndex;
@@ -233,7 +228,7 @@ export class GameGrid extends React.Component<GameGridProps> {
             // Update the image in the browsers cache
             if (resData.folder === LOGOS) {
                 fetch(
-                    getGameTitleScreenshotUrl(resData.folder, resData.id),
+                    getGameTitleScreenshotUrl(resData.folder, resData.id)
                 ).then(() => {
                     // Refresh the image for the game(s) that uses it
                     const elements =
@@ -242,7 +237,7 @@ export class GameGrid extends React.Component<GameGridProps> {
                         const item = elements.item(i);
                         if (item && GameGridItem.getId(item) === resData.id) {
                             const img: HTMLElement | null = item.querySelector(
-                                ".game-grid-item__thumb__image",
+                                ".game-grid-item__thumb__image"
                             ) as any;
                             if (img) {
                                 const val = img.style.backgroundImage;
@@ -258,20 +253,18 @@ export class GameGrid extends React.Component<GameGridProps> {
     onScroll = (params: ScrollParams) => {
         const { rows, columns } = this.calculateSize(
             this.props.gamesTotal,
-            params.clientWidth,
+            params.clientWidth
         );
 
         const top = Math.max(
             0,
-            Math.floor(params.scrollTop / this.props.cellHeight) -
-                BACK_OVERSCAN,
+            Math.floor(params.scrollTop / this.props.cellHeight) - BACK_OVERSCAN
         );
         const bot = Math.min(
             Math.ceil(
-                (params.scrollTop + params.clientHeight) /
-                    this.props.cellHeight,
+                (params.scrollTop + params.clientHeight) / this.props.cellHeight
             ) + BACK_OVERSCAN,
-            rows,
+            rows
         );
 
         this.props.onRequestGames(top * columns, (bot - top) * columns);
@@ -289,7 +282,7 @@ export class GameGrid extends React.Component<GameGridProps> {
     /** When a cell is clicked. */
     onGameSelect = (
         event: React.MouseEvent,
-        gameId: string | undefined,
+        gameId: string | undefined
     ): void => {
         this.props.onGameSelect(gameId);
     };
@@ -302,7 +295,7 @@ export class GameGrid extends React.Component<GameGridProps> {
     /** When a cell is right clicked. */
     onGameContextMenu = (
         event: React.MouseEvent<HTMLDivElement>,
-        gameId: string | undefined,
+        gameId: string | undefined
     ): void => {
         if (this.props.onContextMenu) {
             if (gameId) {
@@ -314,7 +307,7 @@ export class GameGrid extends React.Component<GameGridProps> {
     /** When a cell is starting to be dragged. */
     onGameDragStart = (
         event: React.DragEvent,
-        gameId: string | undefined,
+        gameId: string | undefined
     ): void => {
         if (this.props.onGameDragStart) {
             if (gameId) {
@@ -326,7 +319,7 @@ export class GameGrid extends React.Component<GameGridProps> {
     /** When a cell is ending being dragged. */
     onGameDragEnd = (
         event: React.DragEvent,
-        gameId: string | undefined,
+        gameId: string | undefined
     ): void => {
         if (this.props.onGameDragEnd) {
             if (gameId) {
@@ -358,7 +351,7 @@ export class GameGrid extends React.Component<GameGridProps> {
         const game = findElementAncestor(
             element as Element,
             (target) => GameGridItem.isElement(target),
-            true,
+            true
         );
         if (game) {
             return GameGridItem.getId(game);
@@ -416,7 +409,7 @@ export class GameGrid extends React.Component<GameGridProps> {
         if (gamesTotal > 0) {
             cells.columns = Math.max(
                 1,
-                ((width - 16) / this.props.cellWidth) | 0,
+                ((width - 16) / this.props.cellWidth) | 0
             ); // ("x|0" is the same as Math.floor(x))
             cells.rows = Math.ceil(gamesTotal / cells.columns);
         }
@@ -426,7 +419,7 @@ export class GameGrid extends React.Component<GameGridProps> {
 
 function findGameIndex(
     games: GAMES | undefined,
-    gameId: string | undefined,
+    gameId: string | undefined
 ): number {
     if (gameId !== undefined && games) {
         for (let index in games) {

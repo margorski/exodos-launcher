@@ -187,7 +187,7 @@ export type BrowseViewPageData = {
 };
 
 export type BrowseViewPageResponseData = {
-    games: ViewGame[];
+    games: IGameInfo[];
     offset: number;
     total?: number;
 };
@@ -220,19 +220,6 @@ type GameQuery = {
 };
 
 export type UpdateConfigData = Partial<IAppConfigData>;
-
-export type ViewGame = {
-    id: string;
-    title: string;
-    convertedTitle: string;
-    platform: string;
-    // List view only
-    genre: string;
-    developer: string;
-    publisher: string;
-    releaseDate: string;
-    thumbnailPath: string;
-};
 
 export type BrowseChangeData = {
     library?: string;

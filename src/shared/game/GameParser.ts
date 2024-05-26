@@ -82,7 +82,7 @@ export class GameParser {
             playMode: unescapeHTML(data.PlayMode),
             status: unescapeHTML(data.Status),
             notes: unescapeHTML(data.Notes),
-            tags: unescapeHTML(data.Genre),
+            genre: unescapeHTML(data.Genre),
             source: unescapeHTML(data.Source),
             applicationPath: unescapeHTML(data.ApplicationPath),
             rootFolder: unescapeHTML(data.RootFolder),
@@ -97,7 +97,12 @@ export class GameParser {
             manualPath: unescapeHTML(data.ManualPath),
             musicPath: unescapeHTML(data.MusicPath),
             configurationPath: unescapeHTML(data.ConfigurationPath),
+            favorite: data.Favorite ?? false,
+            maxPlayers: data.MaxPlayers,
+            rating: unescapeHTML(data.Rating),
+            region: unescapeHTML(data.Region),
             thumbnailPath: "",
+            installed: false,
         };
     }
 
@@ -112,33 +117,6 @@ export class GameParser {
             launchCommand: unescapeHTML(data.CommandLine),
             name: unescapeHTML(data.Name),
             waitForExit: !!data.WaitForExit,
-        };
-    }
-
-    public static reverseParseGame(game: IGameInfo): IRawGameInfo {
-        return {
-            ID: escapeHTML(game.id),
-            Title: escapeHTML(game.title),
-            AlternateTitles: escapeHTML(game.alternateTitles),
-            Series: escapeHTML(game.series),
-            Developer: escapeHTML(game.developer),
-            Publisher: escapeHTML(game.publisher),
-            Platform: escapeHTML(game.platform),
-            DateAdded: escapeHTML(game.dateAdded),
-            PlayMode: escapeHTML(game.playMode),
-            Status: escapeHTML(game.status),
-            Notes: escapeHTML(game.notes),
-            Genre: escapeHTML(game.tags),
-            Source: escapeHTML(game.source),
-            ApplicationPath: escapeHTML(game.applicationPath),
-            RootFolder: escapeHTML(game.rootFolder),
-            CommandLine: escapeHTML(game.launchCommand),
-            ReleaseDate: escapeHTML(game.releaseDate),
-            Version: escapeHTML(game.version),
-            OriginalDescription: escapeHTML(game.originalDescription),
-            Language: escapeHTML(game.language),
-            ManualPath: escapeHTML(game.manualPath),
-            MusicPath: escapeHTML(game.musicPath),
         };
     }
 

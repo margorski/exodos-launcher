@@ -71,6 +71,10 @@ export type IRawGameInfo = {
     ManualPath?: string; // (String)
     MusicPath?: string; // (String)
     ConfigurationPath?: string; // (String)
+    Favorite?: boolean;
+    MaxPlayers?: number;
+    Region?: string;
+    Rating?: string;
 };
 
 /**
