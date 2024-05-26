@@ -22,6 +22,7 @@ import {
     orderGames,
 } from "@shared/game/GameFilter";
 import { readPlatformsFile } from "@back/platform/PlatformFile";
+import { fixSlashes } from "@shared/Util";
 
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
@@ -365,8 +366,19 @@ export class GameManager {
                         const imagesForGame = thumbnails.find(
                             (i) => i.GameName == g.title
                         );
-                        if (imagesForGame)
-                            g.thumbnailPath = imagesForGame.BoxThumbnail;
+                        if (imagesForGame) {
+                            // The fileserver wants the relative path, not the full path on disk.
+                            // We know it always follows the format `/Images/<platform>/...`, so we split here on the assumption it will never appear earlier in the path. What are the odds?
+                            const parts = fixSlashes(
+                                imagesForGame.BoxThumbnail
+                            ).split(`Images/${platform.name}/`);
+                            if (parts.length > 1) {
+                                g.thumbnailPath = `Images/${platform.name}/${parts[1]}`;
+                            } else {
+                                // Failed to find relative path, ignore instead of throwing
+                                g.thumbnailPath = imagesForGame.BoxThumbnail;
+                            }
+                        }
                     });
                     // Success!
                     this._state.platforms.push(platform);
