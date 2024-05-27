@@ -10,7 +10,6 @@ import { WithPreferencesProps } from "../containers/withPreferences";
 import { WithSearchProps } from "../containers/withSearch";
 import {
     getGameImagePath,
-    getGameScreenshotsUrls,
     resourceExists,
 } from "../Util";
 import { DropdownInputField } from "./DropdownInputField";
@@ -20,6 +19,7 @@ import { RightBrowseSidebarAddApp } from "./RightBrowseSidebarAddApp";
 import { getFileServerURL } from "@shared/Util";
 import { openContextMenu } from "@main/Util";
 import { englishTranslation } from "@renderer/lang/en";
+import { GameImageCarousel } from "./GameImageCarousel";
 
 type OwnProps = {
     /** Currently selected game (if any) */
@@ -45,7 +45,6 @@ export type RightBrowseSidebarProps = OwnProps &
 type RightBrowseSidebarState = {
     /** If a preview of the current game's screenshot should be shown. */
     screenshotPreviewUrl: string;
-    screenshots: string[];
 };
 
 export interface RightBrowseSidebar {}
@@ -60,41 +59,8 @@ export class RightBrowseSidebar extends React.Component<
     constructor(props: RightBrowseSidebarProps) {
         super(props);
         this.state = {
-            screenshotPreviewUrl: "",
-            screenshots: [],
+            screenshotPreviewUrl: ""
         };
-    }
-
-    async getExistingScreenshotsList(
-        game: IGameInfo | null
-    ): Promise<string[]> {
-        if (!game) return [];
-
-        var allScreenshots = getGameScreenshotsUrls(game.platform, game.title);
-        var existingScreenshots = [];
-
-        for (var s of allScreenshots) {
-            if (await resourceExists(s)) existingScreenshots.push(s);
-        }
-        return existingScreenshots;
-    }
-
-    componentDidUpdate(prevProps: RightBrowseSidebarProps): void {
-        if (this.props.currentGame !== prevProps.currentGame) {
-            if (this.props.currentGame) {
-                this.getExistingScreenshotsList(this.props.currentGame).then(
-                    (screenshots) => {
-                        this.setState({
-                            screenshots: screenshots,
-                        });
-                    }
-                );
-            } else {
-                this.setState({
-                    screenshots: [],
-                });
-            }
-        }
     }
 
     render() {
@@ -161,6 +127,16 @@ export class RightBrowseSidebar extends React.Component<
                             </div>
                         </div>
                     </div>
+
+                    {/* -- Game Image Carousel -- */}
+                    <div className="browse-right-sidebar__section">
+                        <GameImageCarousel
+                            key={game.id}
+                            images={game.images}
+                            platform={game.platform} 
+                            onScreenshotClick={this.onScreenshotClick} />
+                    </div>
+
                     {/* -- Most Fields -- */}
                     <div className="browse-right-sidebar__section">
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
@@ -253,31 +229,6 @@ export class RightBrowseSidebar extends React.Component<
                                 }
                             />
                         </div>
-                    </div>
-                    {/* -- Screenshot -- */}
-                    <div className="browse-right-sidebar__section">
-                        {this.state.screenshots.map((s, idx) => (
-                            <div
-                                className="browse-right-sidebar__row"
-                                key={`screenshot-row-div-${idx}`}
-                            >
-                                <div
-                                    className="browse-right-sidebar__row__screenshot"
-                                    key={`screenshot-div-${idx}`}
-                                    onContextMenu={this.onScreenshotContextMenu}
-                                >
-                                    <img
-                                        className="browse-right-sidebar__row__screenshot-image"
-                                        alt="" // Hide the broken link image if source is not found
-                                        src={s}
-                                        key={`screenshot-img-${idx}`}
-                                        onClick={() =>
-                                            this.onScreenshotClick(s)
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        ))}
                     </div>
                     {/* -- Playlist Game Entry Notes -- */}
                     {gamePlaylistEntry ? (

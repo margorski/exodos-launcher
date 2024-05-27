@@ -1,3 +1,6 @@
+import { getLaunchboxFilename } from "@back/game/LaunchBoxHelper";
+import { fixSlashes } from "@shared/Util";
+import { GameImagesCollection, IGameInfo } from "@shared/game/interfaces";
 import { DeepPartial } from "@shared/interfaces";
 import { IFileInfo } from "@shared/platform/interfaces";
 import * as fs from "fs";
@@ -107,4 +110,30 @@ export function difObjects<T>(
         }
     }
     return dif;
+}
+
+const thumbnailPreference = [
+    'Box - Front',
+    'Box - Front - Reconstructed',
+    'Clear Logo',
+    'Screenshot - Game Title',
+];
+
+export function loadGameImages(game: IGameInfo, images: GameImagesCollection) {
+    const formattedGameTitle = getLaunchboxFilename(game.title);
+
+    // Load all images
+    for (const category of Object.keys(images)) {
+        if (images[category][formattedGameTitle]) {
+            game.images[category] = images[category][formattedGameTitle];
+        }
+    }
+
+    // Load thumbnail path
+    for (const preference of thumbnailPreference) {
+        if (images[preference] && images[preference][formattedGameTitle]) {
+            game.thumbnailPath = `Images/${game.platform}/${fixSlashes(images[preference][formattedGameTitle][0])}`;
+            return;
+        }
+    }
 }

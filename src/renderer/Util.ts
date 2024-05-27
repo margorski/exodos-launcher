@@ -113,11 +113,6 @@ export function checkIfAncestor(
     return false;
 }
 
-export function getGameThumbnailUrl(thumbnailPath: string): string {
-    if (!thumbnailPath) return "";
-    return `${getFileServerURL()}/${thumbnailPath}`;
-}
-
 export function getGameTitleScreenshotUrl(
     platform: string,
     gameName: string
@@ -128,19 +123,13 @@ export function getGameTitleScreenshotUrl(
     )}-01.png`;
 }
 
-export function getPlatformIconURL(platform: string): string {
-    return `${getFileServerURL()}/Images/Platforms/${platform}/Clear Logo/${platform}.png`;
+export function getGameThumbnailUrl(thumbnailPath: string): string {
+    if (!thumbnailPath) return "";
+    return `${getFileServerURL()}/${thumbnailPath}`;
 }
 
-export function getGameScreenshotImageURL(
-    platform: string,
-    gameName: string,
-    idx: number = 1
-): string {
-    return `${getFileServerURL()}/Images/${platform}/Screenshot - Gameplay/${gameName.replace(
-        ":",
-        "_"
-    )}-0${idx}.png`;
+export function getPlatformIconURL(platform: string): string {
+    return `${getFileServerURL()}/Images/Platforms/${platform}/Clear Logo/${platform}.png`;
 }
 
 export async function resourceExists(url: string): Promise<boolean> {
@@ -151,19 +140,6 @@ export async function resourceExists(url: string): Promise<boolean> {
         console.error(e);
         return false;
     }
-}
-
-export function getGameScreenshotsUrls(
-    platform: string,
-    gameName: string
-): string[] {
-    var screenshots = [];
-    screenshots.push(getGameTitleScreenshotUrl(platform, gameName));
-    return screenshots.concat(
-        [1, 2, 3, 4].map((x) =>
-            getGameScreenshotImageURL(platform, gameName, x)
-        )
-    );
 }
 
 export function getGameImagePath(folderName: string, gameId: string): string {

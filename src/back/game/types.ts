@@ -31,3 +31,7 @@ export type LoadPlatformError = ErrorCopy & {
     /** File path of the platform file the error is related to. */
     filePath: string;
 };
+
+export type ThumbnailList = {
+    [key: string]: string;
+};

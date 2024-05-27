@@ -1958,3 +1958,56 @@ body {
 .splash-screen__status-header {
   font-size: 2.5rem;
 }
+
+/** Game Image Carousel */
+.game-image-carousel-selected {
+  user-select: none;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 25vh;
+  margin-bottom: 0.5rem;
+}
+
+.game-image-carousel-wheel {
+  width: 100%;
+  height: 10vh;
+  display: flex;
+}
+
+.game-image-carousel-wheel-arrow {
+  user-select: none;
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+  max-width: 10%;
+  flex-grow: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.game-image-carousel-wheel-preview {
+  user-select: none;
+  display: flex;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.game-image-carousel-wheel-previews {
+  display: flex;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.game-image-carousel-label {
+  font-weight: bold;
+  text-align: center;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.fill-image {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}

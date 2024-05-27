@@ -851,3 +851,25 @@ body {
 .splash-screen__status {
   color: var(--layout__primary-text-color);
 }
+
+/* --- Game Image Carousel --- */
+.game-image-carousel-wheel-arrow {
+  background-color: var(--layout__secondary-background);
+}
+.game-image-carousel-wheel-arrow:hover {
+  background-color: var(--layout__slider-background-hover);
+}
+.game-image-carousel-wheel-arrow:active {
+  background-color: var(--layout__slider-background-active);
+}
+.game-image-carousel-wheel-preview:hover {
+  border-bottom: 3px solid var(--layout__slider-background-hover);
+  padding-bottom: 2px;
+  border-radius: 2px;
+}
+.game-image-carousel-wheel-preview:active,
+.game-image-carousel-wheel-preview--selected {
+  border-bottom: 3px solid var(--layout__slider-background);
+  padding-bottom: 2px;
+  border-radius: 2px;
+}

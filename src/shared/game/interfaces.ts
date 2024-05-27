@@ -60,6 +60,14 @@ export interface IPureGameInfo {
     maxPlayers?: number;
 }
 
+export type GameImages = {
+    [key: string]: Array<string> 
+};
+
+export type GameImagesCollection = {
+    [key: string]: GameImages; // "Box - Front" - "<GameTitle>" - "<FilePath>"
+}
+
 /** Represents the meta data for a single Game (including temporary data) */
 export interface IGameInfo extends IPureGameInfo {
     /** Library this game belongs to */
@@ -76,6 +84,7 @@ export interface IGameInfo extends IPureGameInfo {
     thumbnailPath: string;
     configurationPath: string;
     installed: boolean;
+    images: GameImages;
 }
 
 /** Represents the meta data for a single additional application */
