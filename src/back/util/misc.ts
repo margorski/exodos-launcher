@@ -129,14 +129,6 @@ export function loadGameMedia(game: IGameInfo, images: GameImagesCollection, vid
         }
     }
 
-    // Load thumbnail path
-    for (const preference of thumbnailPreference) {
-        if (images[preference] && images[preference][formattedGameTitle]) {
-            game.thumbnailPath = `Images/${game.platform}/${fixSlashes(images[preference][formattedGameTitle][0])}`;
-            return;
-        }
-    }
-
     // Load videos
     try {
         const formattedGamePath = path.basename(fixSlashes(game.applicationPath)).split('.bat')[0];
@@ -146,5 +138,13 @@ export function loadGameMedia(game: IGameInfo, images: GameImagesCollection, vid
         }
     } catch {
         // Ignore, files don't exist if path isn't forming
+    }
+
+    // Load thumbnail path
+    for (const preference of thumbnailPreference) {
+        if (images[preference] && images[preference][formattedGameTitle]) {
+            game.thumbnailPath = `Images/${game.platform}/${fixSlashes(images[preference][formattedGameTitle][0])}`;
+            return;
+        }
     }
 }

@@ -72,7 +72,7 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
                                 key={props.imgKey}
                                 className="fill-image"
                                 muted
-                                src={`${getFileServerURL()}/${media.path}#t=0.1`} /> // Preloads 0.1 seconds just to get the snapshot
+                                src={`${getFileServerURL()}/${media.path}#t=0.1`} />
                         );
                         break;
                 }
@@ -168,6 +168,7 @@ function sortGameMedia(media: GameMedia, platform: string): FormattedGameMedia[]
 
     // Add videos first
     if (media.video) {
+        console.log('VIDEO');
         list.push({
             name: "30 Second Demo",
             type: FormattedGameMediaType.VIDEO,

@@ -53,6 +53,7 @@
   --layout__game-item-background-selected:       #791c76;
   --layout__game-item-background-selected-hover: #a72aa2;
   --layout__game-item-thumb-image-rendering:       normal; /* Used to set the "image-rendering" of the thumbnail. */
+  --layout__game-grid-icon-shadow:               black;
   /* Browse Sidebar(s) */
   --layout__browse-sidebar-background:         #181819;
   --layout__browse-sidebar-divider-background: #131313;
@@ -876,4 +877,9 @@ body {
 .floating-container {
   background-color: var(--layout__home-page-box-background);
   border-color: var(--layout__home-page-box-border);
+}
+
+/** Fancy shadow effect on platform icon */
+.game-grid-item__thumb__icons {
+  filter: drop-shadow(1px 1px 4px var(--layout__game-grid-icon-shadow));
 }
