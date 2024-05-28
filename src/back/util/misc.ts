@@ -1,3 +1,6 @@
+import { getLaunchboxFilename } from "@back/game/LaunchBoxHelper";
+import { fixSlashes } from "@shared/Util";
+import { GameImagesCollection, GameVideosCollection, IGameInfo } from "@shared/game/interfaces";
 import { DeepPartial } from "@shared/interfaces";
 import { IFileInfo } from "@shared/platform/interfaces";
 import * as fs from "fs";
@@ -107,4 +110,42 @@ export function difObjects<T>(
         }
     }
     return dif;
+}
+
+const thumbnailPreference = [
+    'Box - Front',
+    'Box - Front - Reconstructed',
+    'Fanart - Box - Front',
+    'Clear Logo',
+    'Screenshot - Game Title',
+];
+
+export function loadGameMedia(game: IGameInfo, images: GameImagesCollection, videos: GameVideosCollection) {
+    const formattedGameTitle = getLaunchboxFilename(game.title);
+
+    // Load all images
+    for (const category of Object.keys(images)) {
+        if (images[category][formattedGameTitle]) {
+            game.media.images[category] = images[category][formattedGameTitle];
+        }
+    }
+
+    // Load videos
+    try {
+        const formattedGamePath = path.basename(fixSlashes(game.applicationPath)).split('.bat')[0];
+
+        if (videos[formattedGamePath]) {
+            game.media.video = `Videos/${game.platform}/${videos[formattedGamePath]}`;
+        }
+    } catch {
+        // Ignore, files don't exist if path isn't forming
+    }
+
+    // Load thumbnail path
+    for (const preference of thumbnailPreference) {
+        if (images[preference] && images[preference][formattedGameTitle]) {
+            game.thumbnailPath = `Images/${game.platform}/${fixSlashes(images[preference][formattedGameTitle][0])}`;
+            return;
+        }
+    }
 }

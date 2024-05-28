@@ -6,8 +6,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as chokidar from "chokidar";
 import { promisify } from "util";
-import { copyError, walkSync } from "../util/misc";
-import { GameManagerState, LoadPlatformError } from "./types";
+import { copyError, loadGameMedia, walkSync } from "../util/misc";
+import { GameManagerState, LoadPlatformError, ThumbnailList } from "./types";
 import {
     PlaylistManager,
     PlaylistUpdatedFunc,
@@ -22,7 +22,7 @@ import {
     orderGames,
 } from "@shared/game/GameFilter";
 import { readPlatformsFile } from "@back/platform/PlatformFile";
-import { fixSlashes } from "@shared/Util";
+import { findGameImageCollection, findGameVideos } from "@back/util/images";
 
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
@@ -43,6 +43,7 @@ export interface IGameManagerOpts {
     exodosPath: string;
     platformsPath: string;
     playlistFolder: string;
+    imagesPath: string;
     onPlaylistAddOrUpdate: PlaylistUpdatedFunc;
     log: LogFunc;
 }
@@ -90,7 +91,8 @@ export class GameManager {
         // GET ALL IMAGES ON GET GAME
         const platformErrors = await this.loadPlatforms(
             opts.platformsPath,
-            opts.exodosPath
+            opts.exodosPath,
+            opts.imagesPath,
         );
         this.platforms
             .filter((p) => p.isGamePlatform)
@@ -294,7 +296,8 @@ export class GameManager {
 
     private async loadPlatforms(
         platformsPath: string,
-        exodosPath: string
+        exodosPath: string,
+        imagesPath: string,
     ): Promise<LoadPlatformError[]> {
         this._state.platformsPath = platformsPath;
         const platforms: GamePlatform[] = [];
@@ -355,31 +358,20 @@ export class GameManager {
                             `Failed to parse XML file: ${platform.filePath}`
                         );
                     }
-
-                    // Populate platform
+                    
+                    // Load games
                     platform.collection = GameParser.parse(data, platform.name);
-                    const thumbnails = this._getThumbnailsForPlatform(
-                        exodosPath,
-                        platform
-                    );
-                    platform.collection.games.forEach((g) => {
-                        const imagesForGame = thumbnails.find(
-                            (i) => i.GameName == g.title
-                        );
-                        if (imagesForGame) {
-                            // The fileserver wants the relative path, not the full path on disk.
-                            // We know it always follows the format `/Images/<platform>/...`, so we split here on the assumption it will never appear earlier in the path. What are the odds?
-                            const parts = fixSlashes(
-                                imagesForGame.BoxThumbnail
-                            ).split(`Images/${platform.name}/`);
-                            if (parts.length > 1) {
-                                g.thumbnailPath = `Images/${platform.name}/${parts[1]}`;
-                            } else {
-                                // Failed to find relative path, ignore instead of throwing
-                                g.thumbnailPath = imagesForGame.BoxThumbnail;
-                            }
-                        }
-                    });
+
+                    // Load images
+                    const imagesRoot = path.join(exodosPath, imagesPath, platform.name);
+                    const videoRoot = path.join(exodosPath, "Videos", platform.name);
+                    const images = await findGameImageCollection(imagesRoot);
+                    const videos = findGameVideos(videoRoot);
+                    console.log(JSON.stringify(videos, undefined, 2));
+                    for (const game of platform.collection.games) {
+                        loadGameMedia(game, images, videos);
+                    }
+
                     // Success!
                     this._state.platforms.push(platform);
                 } catch (e) {
@@ -398,28 +390,37 @@ export class GameManager {
     private _getThumbnailsForPlatform(
         exodosPath: string,
         platform: GamePlatform
-    ): IImageInfo[] {
-        const boxImagesPath = path.join(
-            exodosPath,
-            `Images/${platform.name}/Box - Front`
-        );
+    ): ThumbnailList {
+        // Find thumbnail images in order of preference
+        const categoryOrder = [
+            'Box - Front',
+            'Box - Front - Reconstructed',
+            'Clear Logo',
+            'Screenshot - Game Title',
+        ];
 
-        console.info(
-            `Loading thumbnails from "${boxImagesPath}" path for ${platform.name} platform.`
-        );
-        const thumbnails: IImageInfo[] = [];
-        try {
-            for (const s of walkSync(boxImagesPath)) {
-                // filename to id
-                const coverPath = s.path.replace("../", "");
-                thumbnails.push({
-                    GameName: s.filename.replace("_", ":").split("-0")[0],
-                    BoxThumbnail: coverPath,
-                });
+        const thumbnails: ThumbnailList = {};
+
+        // For each category, store each found game if it isn't already stored
+        for (const category of categoryOrder) {
+            const boxImagesPath = path.join(exodosPath, `Images/${platform.name}/${category}`);
+            console.info(
+                `Loading thumbnails from "${boxImagesPath}" path for ${platform.name} platform.`
+            );
+            try {
+                for (const s of walkSync(boxImagesPath)) {
+                    const lastIdx = s.filename.lastIndexOf("-0");
+                    if (lastIdx > -1) {
+                        const gameName = s.filename.slice(0, lastIdx);
+                        if (!thumbnails[gameName]) {
+                            thumbnails[gameName] = s.path.replace("../", "");
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(`Error while loading thumbnails: ${e}`);
+                console.error(`Thumbnails not loaded.`);
             }
-        } catch (e) {
-            console.error(`Error while loading thumbnails: ${e}`);
-            console.error(`Thumbnails not loaded.`);
         }
         return thumbnails;
     }

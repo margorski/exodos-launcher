@@ -1,5 +1,6 @@
-import { IGameCollection } from "../game/interfaces";
-import { removeLowestDirectory } from "../../shared/Util";
+import { GameImages, GameImagesCollection, IGameCollection, IGameInfo } from "../game/interfaces";
+import { fixSlashes, removeLowestDirectory } from "../../shared/Util";
+import { getLaunchboxFilename } from "@back/game/LaunchBoxHelper";
 
 export type PlatformInfo = {
     name: string;

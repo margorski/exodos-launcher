@@ -59,7 +59,6 @@ import * as http from "http";
 import * as path from "path";
 import * as WebSocket from "ws";
 import { v4 as uuid } from "uuid";
-
 import { EventEmitter } from "events";
 import { ConfigFile } from "./config/ConfigFile";
 import { loadExecMappingsFile } from "./Execs";
@@ -265,6 +264,7 @@ async function initializeGameManager() {
             exodosPath: state.config.exodosPath,
             platformsPath,
             playlistFolder,
+            imagesPath: state.config.imageFolderPath,
             onPlaylistAddOrUpdate,
             log,
         });

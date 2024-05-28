@@ -32,6 +32,7 @@
   --layout__secondary-background:  #2d2d30;
   --layout__tertiary-background:   #141417;
   --layout__quaternary-background: #242428;
+  --layout__background-faded:      rgba(0, 0, 0, 0.8);
   /* Outline Color */
   --layout__primary-outline-color: #47474d;
   /* Scrollbar */
@@ -52,6 +53,7 @@
   --layout__game-item-background-selected:       #791c76;
   --layout__game-item-background-selected-hover: #a72aa2;
   --layout__game-item-thumb-image-rendering:       normal; /* Used to set the "image-rendering" of the thumbnail. */
+  --layout__game-grid-icon-shadow:               black;
   /* Browse Sidebar(s) */
   --layout__browse-sidebar-background:         #181819;
   --layout__browse-sidebar-divider-background: #131313;
@@ -272,13 +274,6 @@ body {
 .log__source--curation {
   color: var(--layout__log-source-curation);
 }
-
-
-/* ------ Image Preview ------ */
-.image-preview {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
 
 /* ------ Main Layout ------ */
 .root {
@@ -850,4 +845,41 @@ body {
 }
 .splash-screen__status {
   color: var(--layout__primary-text-color);
+}
+
+/* --- Game Image Carousel --- */
+.game-image-carousel-wheel-arrow {
+  background-color: var(--layout__secondary-background);
+}
+.game-image-carousel-wheel-arrow:hover {
+  background-color: var(--layout__slider-background-hover);
+}
+.game-image-carousel-wheel-arrow:active {
+  background-color: var(--layout__slider-background-active);
+}
+.game-image-carousel-wheel-preview:hover {
+  border-bottom: 3px solid var(--layout__slider-background-hover);
+  padding-bottom: 2px;
+  border-radius: 2px;
+}
+.game-image-carousel-wheel-preview:active,
+.game-image-carousel-wheel-preview--selected {
+  border-bottom: 3px solid var(--layout__slider-background);
+  padding-bottom: 2px;
+  border-radius: 2px;
+}
+
+/** Floating Containers */
+.floating-container__wrapper {
+  background-color: var(--layout__background-faded);
+}
+
+.floating-container {
+  background-color: var(--layout__home-page-box-background);
+  border-color: var(--layout__home-page-box-border);
+}
+
+/** Fancy shadow effect on platform icon */
+.game-grid-item__thumb__icons {
+  filter: drop-shadow(1px 1px 4px var(--layout__game-grid-icon-shadow));
 }
