@@ -61,12 +61,21 @@ export interface IPureGameInfo {
 }
 
 export type GameImages = {
-    [key: string]: Array<string> 
+    [key: string]: Array<string>;
 };
+
+export type GameMedia = {
+    images: GameImages;
+    video: string;
+}
 
 export type GameImagesCollection = {
     [key: string]: GameImages; // "Box - Front" - "<GameTitle>" - "<FilePath>"
 }
+
+export type GameVideosCollection = {
+    [key: string]: string; // "<game title> (from app path)" - "<FilePath>" 
+};
 
 /** Represents the meta data for a single Game (including temporary data) */
 export interface IGameInfo extends IPureGameInfo {
@@ -80,11 +89,12 @@ export interface IGameInfo extends IPureGameInfo {
     manualPath: string;
     /** Path to music played in menu */
     musicPath: string;
-    /** Thumbnail path to be displayed in game list in grid mode*/
+    /** Thumbnail path to be displayed in game list in grid mode */
     thumbnailPath: string;
     configurationPath: string;
     installed: boolean;
-    images: GameImages;
+    /** Collection of game media*/
+    media: GameMedia;
 }
 
 /** Represents the meta data for a single additional application */

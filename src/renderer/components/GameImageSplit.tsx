@@ -1,7 +1,7 @@
 import * as React from "react";
 import { formatString } from "@shared/utils/StringFormatter";
 import { ConfirmElement, ConfirmElementArgs } from "./ConfirmElement";
-import { ImagePreview } from "./ImagePreview";
+import { MediaPreview } from "./ImagePreview";
 import { OpenIcon } from "./OpenIcon";
 import { SimpleButton } from "./SimpleButton";
 import { englishTranslation } from "@renderer/lang/en";
@@ -95,7 +95,7 @@ export class GameImageSplit extends React.Component<
                             extra={[text, !!disabled]}
                         />
                         {showPreview ? (
-                            <ImagePreview
+                            <MediaPreview
                                 src={this.props.imgSrc}
                                 onCancel={this.onPreviewCancel}
                             />

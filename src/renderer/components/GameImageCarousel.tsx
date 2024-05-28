@@ -1,32 +1,32 @@
 import { fixSlashes, getFileServerURL } from "@shared/Util";
-import { GameImages, IGameInfo } from "@shared/game/interfaces"
+import { GameImages, GameMedia, IGameInfo } from "@shared/game/interfaces"
 import { useMemo, useState, useCallback } from "react";
 import React = require("react");
 import { OpenIcon } from "./OpenIcon";
 
 export type GameImageCarouselProps = {
-    images: GameImages;
+    media: GameMedia;
     platform: string;
-    key: string; // Ensures previous images are always replaced when the selected game changes
-    onScreenshotClick: (screenshotUrl: string) => void;
+    imgKey: string; // Ensures previous images are always replaced when the selected game changes
+    onPreviewMedia: (media: FormattedGameMedia) => void;
 }
 
 const IMAGE_COUNT = 4;
 
 export function GameImageCarousel(props: GameImageCarouselProps) {
-    const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+    const [selectedMediaIdx, setSelectedMediaIdx] = useState(0);
     const [wheelPosition, setWheelPosition] = useState(0);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(0);
 
     // When the image changes, reset the selected elements
     React.useEffect(() => {
         setWheelPosition(0);
-        setSelectedImageIdx(0);
-    }, [props.images]);
+        setSelectedMediaIdx(0);
+    }, [props.media]);
 
-    const sortedImages = useMemo(() => {
-        return sortGameImages(props.images, props.platform)
-    }, [props.images, props.platform]);
+    const sortedMedia = useMemo(() => {
+        return sortGameMedia(props.media, props.platform)
+    }, [props.media, props.platform]);
 
     // Hover functions to trigger the label to show
     const handleMouseEnter = (index: number) => {
@@ -45,20 +45,41 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
     };
 
     const wheelMoveRight = () => {
-        if (wheelPosition < sortedImages.length - IMAGE_COUNT) {
+        if (wheelPosition < sortedMedia.length - IMAGE_COUNT) {
             setWheelPosition(wheelPosition + 1);
         }
     };
 
     const imagePreviews = useMemo(() => {
-        return sortedImages
-            .slice(Math.min(wheelPosition, sortedImages.length - 1), Math.min(wheelPosition + IMAGE_COUNT, sortedImages.length))
-            .map((image, idx) => {
-                const selected = (wheelPosition + idx) === selectedImageIdx;
+        return sortedMedia
+            .slice(Math.min(wheelPosition, sortedMedia.length - 1), Math.min(wheelPosition + IMAGE_COUNT, sortedMedia.length))
+            .map((media, idx) => {
+                const selected = (wheelPosition + idx) === selectedMediaIdx;
+
+                let innerElem = undefined;
+                switch (media.type) {
+                    case FormattedGameMediaType.IMAGE: 
+                        innerElem = (
+                            <img
+                                key={props.imgKey}
+                                className="fill-image" 
+                                src={`${getFileServerURL()}/${media.path}`} />
+                        );
+                        break;
+                    case FormattedGameMediaType.VIDEO:
+                        innerElem = (
+                            <video
+                                key={props.imgKey}
+                                className="fill-image"
+                                muted
+                                src={`${getFileServerURL()}/${media.path}#t=0.1`} /> // Preloads 0.1 seconds just to get the snapshot
+                        );
+                        break;
+                }
 
                 return (
                     <div 
-                        key={`${props.key}-${idx}`} 
+                        key={`${props.imgKey}-${idx}`} 
                         style={{
                             width: `${(1 / IMAGE_COUNT) * (100 - (IMAGE_COUNT * 2))}%`,
                             marginLeft: '1%',
@@ -67,27 +88,47 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
                         className={`game-image-carousel-wheel-preview ${selected && 'game-image-carousel-wheel-preview--selected'}`} 
                         onMouseEnter={() => handleMouseEnter(idx)}
                         onMouseLeave={handleMouseLeave}
-                        onClick={() => setSelectedImageIdx(idx + wheelPosition)}>
-                        <img className="fill-image" src={`${getFileServerURL()}/Images/${image.path}`} />
+                        onClick={() => setSelectedMediaIdx(idx + wheelPosition)}>
+                        {innerElem}
                     </div>
                 );
             });
-    }, [wheelPosition, sortedImages, selectedImageIdx]);
+    }, [wheelPosition, sortedMedia, selectedMediaIdx]);
 
-    if (sortedImages.length === 0 || wheelPosition > sortedImages.length - 1|| selectedImageIdx > sortedImages.length - 1) {
+    if (sortedMedia.length === 0 || wheelPosition > sortedMedia.length - 1 || selectedMediaIdx > sortedMedia.length - 1) {
         return <></>; // Either no images, or the game just changed and state needs reset, let render happen at next state change instead
     }
 
-    const selectedImage = sortedImages[selectedImageIdx];
+    const selectedMedia = sortedMedia[selectedMediaIdx];
 
-    console.log(selectedImage.path);
+    const renderSelected = () => {
+        switch (selectedMedia.type) {
+            case FormattedGameMediaType.IMAGE: 
+                return (
+                    <img
+                        key={props.imgKey}
+                        className="fill-image" 
+                        src={`${getFileServerURL()}/${selectedMedia.path}`}
+                        onClick={() => props.onPreviewMedia(selectedMedia)}/>
+                )
+            case FormattedGameMediaType.VIDEO:
+                return (
+                    <video
+                        key={props.imgKey}
+                        className="fill-image" 
+                        autoPlay
+                        loop
+                        muted
+                        src={`${getFileServerURL()}/${selectedMedia.path}`}
+                        onClick={() => props.onPreviewMedia(selectedMedia)}/>
+                )
+        }
+    };
+
     return (
         <div className="game-image-carousel">
             <div className="game-image-carousel-selected">
-                <img
-                    key={props.key}
-                    className="fill-image" src={`${getFileServerURL()}/Images/${selectedImage.path}`}
-                    onClick={() => props.onScreenshotClick(`${getFileServerURL()}/Images/${selectedImage.path}`)}/>
+                {renderSelected()}
             </div>
             <div className="game-image-carousel-wheel">
                 {wheelPosition > 0 && (
@@ -98,32 +139,49 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
                 <div className="game-image-carousel-wheel-previews">
                     {imagePreviews}
                 </div>
-                {wheelPosition < sortedImages.length - IMAGE_COUNT && (
+                {wheelPosition < sortedMedia.length - IMAGE_COUNT && (
                     <div className="game-image-carousel-wheel-arrow" onClick={wheelMoveRight}>
                         <OpenIcon icon="arrow-right"/>
                     </div>
                 )}
             </div>
             <div className="game-image-carousel-label">
-                {hoveredIndex === null ? selectedImage.name : sortedImages[hoveredIndex].name}
+                {hoveredIndex === null ? selectedMedia.name : sortedMedia[hoveredIndex].name}
             </div>
         </div>
     );
 }
 
-type FormattedGameImage = {
+export enum FormattedGameMediaType {
+    IMAGE,
+    VIDEO,
+}
+
+export type FormattedGameMedia = {
     name: string;
+    type: FormattedGameMediaType;
     path: string;
 }
 
-function sortGameImages(images: GameImages, platform: string): FormattedGameImage[] {
-    const list: FormattedGameImage[] = [];
+function sortGameMedia(media: GameMedia, platform: string): FormattedGameMedia[] {
+    const list: FormattedGameMedia[] = [];
 
-    for (const category of Object.keys(images)) {
-        for (const filename of images[category]) {
+    // Add videos first
+    if (media.video) {
+        list.push({
+            name: "30 Second Demo",
+            type: FormattedGameMediaType.VIDEO,
+            path: fixSlashes(media.video),
+        })
+    }
+
+    // Add images next
+    for (const category of Object.keys(media.images)) {
+        for (const filename of media.images[category]) {
             list.push({
                 name: category,
-                path: fixSlashes(`${platform}/${filename}`)
+                type: FormattedGameMediaType.IMAGE,
+                path: fixSlashes(`Images/${platform}/${filename}`),
             })
         }
     }

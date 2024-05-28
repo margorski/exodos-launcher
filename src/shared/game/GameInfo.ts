@@ -36,7 +36,10 @@ export class GameInfo {
             favorite: false,
             rating: "",
             region: "",
-            images: {},
+            media: {
+                images: {},
+                video: "",
+            },
         };
     }
 

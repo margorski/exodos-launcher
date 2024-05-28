@@ -32,6 +32,7 @@
   --layout__secondary-background:  #2d2d30;
   --layout__tertiary-background:   #141417;
   --layout__quaternary-background: #242428;
+  --layout__background-faded:      rgba(0, 0, 0, 0.8);
   /* Outline Color */
   --layout__primary-outline-color: #47474d;
   /* Scrollbar */
@@ -272,13 +273,6 @@ body {
 .log__source--curation {
   color: var(--layout__log-source-curation);
 }
-
-
-/* ------ Image Preview ------ */
-.image-preview {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
 
 /* ------ Main Layout ------ */
 .root {
@@ -872,4 +866,14 @@ body {
   border-bottom: 3px solid var(--layout__slider-background);
   padding-bottom: 2px;
   border-radius: 2px;
+}
+
+/** Floating Containers */
+.floating-container__wrapper {
+  background-color: var(--layout__background-faded);
+}
+
+.floating-container {
+  background-color: var(--layout__home-page-box-background);
+  border-color: var(--layout__home-page-box-border);
 }

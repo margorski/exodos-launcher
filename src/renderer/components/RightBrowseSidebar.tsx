@@ -1,25 +1,23 @@
-import { MenuItemConstructorOptions } from "electron";
 import { BrowserWindow, shell } from "@electron/remote";
-import * as React from "react";
-import { BackIn, LaunchAddAppData, LaunchGameData } from "@shared/back/types";
-import { LOGOS, SCREENSHOTS } from "@shared/constants";
-import { wrapSearchTerm } from "@shared/game/GameFilter";
-import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
-import { GamePlaylistEntry, PickType } from "@shared/interfaces";
-import { WithPreferencesProps } from "../containers/withPreferences";
-import { WithSearchProps } from "../containers/withSearch";
-import {
-    getGameImagePath,
-    resourceExists,
-} from "../Util";
-import { DropdownInputField } from "./DropdownInputField";
-import { ImagePreview } from "./ImagePreview";
-import { InputField } from "./InputField";
-import { RightBrowseSidebarAddApp } from "./RightBrowseSidebarAddApp";
-import { getFileServerURL } from "@shared/Util";
 import { openContextMenu } from "@main/Util";
 import { englishTranslation } from "@renderer/lang/en";
-import { GameImageCarousel } from "./GameImageCarousel";
+import { getFileServerURL } from "@shared/Util";
+import { BackIn, LaunchAddAppData, LaunchGameData } from "@shared/back/types";
+import { LOGOS, SCREENSHOTS } from "@shared/constants";
+import { GameMedia, IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
+import { GamePlaylistEntry } from "@shared/interfaces";
+import { MenuItemConstructorOptions } from "electron";
+import * as React from "react";
+import {
+    getGameImagePath
+} from "../Util";
+import { WithPreferencesProps } from "../containers/withPreferences";
+import { WithSearchProps } from "../containers/withSearch";
+import { DropdownInputField } from "./DropdownInputField";
+import { FormattedGameMedia, GameImageCarousel } from "./GameImageCarousel";
+import { MediaPreview } from "./ImagePreview";
+import { InputField } from "./InputField";
+import { RightBrowseSidebarAddApp } from "./RightBrowseSidebarAddApp";
 
 type OwnProps = {
     /** Currently selected game (if any) */
@@ -43,8 +41,8 @@ export type RightBrowseSidebarProps = OwnProps &
     WithSearchProps;
 
 type RightBrowseSidebarState = {
-    /** If a preview of the current game's screenshot should be shown. */
-    screenshotPreviewUrl: string;
+    /** If a preview of the current game's selected media. */
+    previewMedia?: FormattedGameMedia;
 };
 
 export interface RightBrowseSidebar {}
@@ -58,9 +56,7 @@ export class RightBrowseSidebar extends React.Component<
 
     constructor(props: RightBrowseSidebarProps) {
         super(props);
-        this.state = {
-            screenshotPreviewUrl: ""
-        };
+        this.state = {};
     }
 
     render() {
@@ -131,10 +127,10 @@ export class RightBrowseSidebar extends React.Component<
                     {/* -- Game Image Carousel -- */}
                     <div className="browse-right-sidebar__section">
                         <GameImageCarousel
-                            key={game.id}
-                            images={game.images}
+                            imgKey={game.id}
+                            media={game.media}
                             platform={game.platform} 
-                            onScreenshotClick={this.onScreenshotClick} />
+                            onPreviewMedia={this.onPreviewMedia} />
                     </div>
 
                     {/* -- Most Fields -- */}
@@ -286,11 +282,11 @@ export class RightBrowseSidebar extends React.Component<
                         </div>
                     )}
 
-                    {/* -- Screenshot Preview -- */}
-                    {this.state.screenshotPreviewUrl ? (
-                        <ImagePreview
-                            src={this.state.screenshotPreviewUrl}
-                            onCancel={this.onScreenshotPreviewClick}
+                    {/* -- Media Preview -- */}
+                    {this.state.previewMedia ? (
+                        <MediaPreview
+                            media={this.state.previewMedia}
+                            onCancel={this.onPreviewMediaClick}
                         />
                     ) : undefined}
                 </div>
@@ -390,11 +386,11 @@ export class RightBrowseSidebar extends React.Component<
         this.forceUpdate();
     };
 
-    onScreenshotClick = (screenshotUrl: string): void => {
-        this.setState({ screenshotPreviewUrl: screenshotUrl });
+    onPreviewMedia = (media: FormattedGameMedia): void => {
+        this.setState({ previewMedia: media });
     };
 
-    onScreenshotPreviewClick = (): void => {
-        this.setState({ screenshotPreviewUrl: "" });
+    onPreviewMediaClick = (): void => {
+        this.setState({ previewMedia: undefined });
     };
 }

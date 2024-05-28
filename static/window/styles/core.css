@@ -311,15 +311,26 @@ body {
 }
 
 /* ------ Image Preview ------ */
-.image-preview {
-  /* Fill entire screen */
-  position: absolute;
-  left: 0;
-  top: 0;
+.image-preview-container {
   width: 100%;
   height: 100%;
-  /* Pimp */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
   padding: 2rem;
+}
+.image-preview {
+  /* Fill entire screen */
+  justify-content: center;
+  width: 100%;
+  display: flex;
+  /* Pimp */
+}
+.image-preview--fill {
+  height: 100%;
+}
+.image-preview--fit {
+  max-height: 100%;
 }
 .image-preview * {
   user-select: none;
@@ -330,9 +341,16 @@ body {
 }
 .image-preview__image--fill {
   cursor: zoom-out;
+  object-fit: contain;
 }
 .image-preview__image--fit {
   cursor: zoom-in;
+  object-fit: contain;
+}
+.image-preview-label {
+  font-weight: bold;
+  font-size: 1.25em;
+  margin-top: 0.5rem;
 }
 
 
@@ -2010,4 +2028,31 @@ body {
   max-height: 100%;
   max-width: 100%;
   object-fit: contain;
+}
+
+/** Floating Containers */
+.floating-container__wrapper {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.floating-container {
+  text-align: center;
+  padding: 1rem;
+  border: 1px solid;
+  overflow: auto;
+  max-height: 90%;
+  max-width: 90%;
+}
+
+.page-wrap {
+  width: 100%;
+  height: 100%;
 }

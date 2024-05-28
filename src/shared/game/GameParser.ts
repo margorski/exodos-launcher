@@ -103,7 +103,10 @@ export class GameParser {
             region: unescapeHTML(data.Region),
             thumbnailPath: "",
             installed: false,
-            images: {},
+            media: {
+                images: {},
+                video: "",
+            },
         };
     }
 

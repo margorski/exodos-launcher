@@ -1,4 +1,4 @@
-import { GameImagesCollection, IGameInfo } from '@shared/game/interfaces';
+import { GameImagesCollection, GameVideosCollection, IGameInfo } from '@shared/game/interfaces';
 import * as fs from 'fs';
 import * as path from 'path';
 import { walkSync } from './misc';
@@ -26,4 +26,15 @@ export async function findGameImageCollection(platImagesPath: string): Promise<G
     }
 
     return collection;
+}
+
+export function findGameVideos(videoPath: string): GameVideosCollection {
+    const videos: GameVideosCollection = {};
+
+    const files = fs.readdirSync(videoPath).filter(f => f.endsWith('.mp4'));
+    for (const s of files) {
+        videos[s.split('.mp4')[0]] = s;
+    }
+
+    return videos;
 }

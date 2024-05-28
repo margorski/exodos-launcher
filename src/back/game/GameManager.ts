@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as chokidar from "chokidar";
 import { promisify } from "util";
-import { copyError, loadGameImages, walkSync } from "../util/misc";
+import { copyError, loadGameMedia, walkSync } from "../util/misc";
 import { GameManagerState, LoadPlatformError, ThumbnailList } from "./types";
 import {
     PlaylistManager,
@@ -22,7 +22,7 @@ import {
     orderGames,
 } from "@shared/game/GameFilter";
 import { readPlatformsFile } from "@back/platform/PlatformFile";
-import { findGameImageCollection } from "@back/util/images";
+import { findGameImageCollection, findGameVideos } from "@back/util/images";
 
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
@@ -364,9 +364,12 @@ export class GameManager {
 
                     // Load images
                     const imagesRoot = path.join(exodosPath, imagesPath, platform.name);
+                    const videoRoot = path.join(exodosPath, "Videos", platform.name);
                     const images = await findGameImageCollection(imagesRoot);
+                    const videos = findGameVideos(videoRoot);
+                    console.log(JSON.stringify(videos, undefined, 2));
                     for (const game of platform.collection.games) {
-                        loadGameImages(game, images);
+                        loadGameMedia(game, images, videos);
                     }
 
                     // Success!
