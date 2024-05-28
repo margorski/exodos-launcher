@@ -115,6 +115,7 @@ export function difObjects<T>(
 const thumbnailPreference = [
     'Box - Front',
     'Box - Front - Reconstructed',
+    'Fanart - Box - Front',
     'Clear Logo',
     'Screenshot - Game Title',
 ];

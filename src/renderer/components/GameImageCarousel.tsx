@@ -68,11 +68,17 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
                         break;
                     case FormattedGameMediaType.VIDEO:
                         innerElem = (
-                            <video
-                                key={props.imgKey}
-                                className="fill-image"
-                                muted
-                                src={`${getFileServerURL()}/${media.path}#t=0.1`} />
+                            <>
+                                <div className="game-image-carousel-wheel-preview-overlay">
+                                    <OpenIcon className="game-image-carousel-wheel-preview-overlay--icon" icon='play-circle' />
+                                </div>
+                                <video
+                                    key={props.imgKey}
+                                    className="fill-image"
+                                    muted
+                                    src={`${getFileServerURL()}/${media.path}#t=0.1`}>
+                                </video>
+                            </>
                         );
                         break;
                 }
@@ -107,7 +113,7 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
                 return (
                     <img
                         key={props.imgKey}
-                        className="fill-image" 
+                        className="fill-image cursor" 
                         src={`${getFileServerURL()}/${selectedMedia.path}`}
                         onClick={() => props.onPreviewMedia(selectedMedia)}/>
                 )
@@ -115,7 +121,7 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
                 return (
                     <video
                         key={props.imgKey}
-                        className="fill-image" 
+                        className="fill-image cursor" 
                         autoPlay
                         loop
                         muted

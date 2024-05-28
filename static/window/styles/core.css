@@ -2006,9 +2006,26 @@ body {
 
 .game-image-carousel-wheel-preview {
   user-select: none;
+  cursor: pointer;
   display: flex;
   justify-content: center;
   flex-grow: 1;
+  position: relative;
+}
+
+.game-image-carousel-wheel-preview-overlay {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.game-image-carousel-wheel-preview-overlay--icon {
+  opacity: 90%;
+  width: 65%;
+  height: 65%;
+  filter: drop-shadow(1px 1px 5px var(--layout__game-grid-icon-shadow));
 }
 
 .game-image-carousel-wheel-previews {
@@ -2055,4 +2072,8 @@ body {
 .page-wrap {
   width: 100%;
   height: 100%;
+}
+
+.cursor {
+  cursor: pointer;
 }

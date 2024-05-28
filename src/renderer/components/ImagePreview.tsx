@@ -60,8 +60,8 @@ export function MediaPreview(props: MediaPreviewProps) {
 
     return (
         <BareFloatingContainer>
-            <div className="image-preview-container" onClick={onClickBackground}>
-                <div style={{height: "97%"}}>
+            <div className="image-preview-container" style={{overflowY: scaleUp ? 'auto' : 'unset'}} onClick={onClickBackground}>
+                <div style={{height: scaleUp ? "auto" : "97%"}}>
                     <div className={
                             "image-preview" +
                             (scaleUp
