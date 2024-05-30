@@ -52,6 +52,8 @@ type OwnProps = {
     clearSearch: () => void;
     /** "Route" of the currently selected library (empty string means no library). */
     gameLibrary: string;
+    /** Key to force game refresh */
+    refreshKey: number;
 };
 
 export type BrowsePageProps = OwnProps & WithPreferencesProps;
@@ -156,6 +158,10 @@ export class BrowsePage extends React.Component<
                 currentGame: undefined,
                 currentAddApps: undefined,
             });
+        }
+        // Cheap hack to force the game to update if a key changes
+        if (prevProps.refreshKey !== this.props.refreshKey) {
+            this.updateCurrentGameAndAddApps();
         }
     }
 
@@ -287,15 +293,11 @@ export class BrowsePage extends React.Component<
     }
 
     private isCurrentGameInstalled = () => {
-        if (this.props.playlists.length === 0 || !this.state.currentGame)
-            return false;
-        const gameId = this.state.currentGame.id;
-
-        return this.isGameInstalled(gameId);
+        if (this.state.currentGame) {
+            return this.state.currentGame.installed;
+        }
+        return false;
     };
-
-    private isGameInstalled = (gameId: string) =>
-        this.props.playlists[0].games.findIndex((g) => g.id === gameId) !== -1;
 
     private noRowsRendererMemo = memoizeOne(() => {
         const strings = englishTranslation.browse;

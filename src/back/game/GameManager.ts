@@ -23,6 +23,8 @@ import {
 } from "@shared/game/GameFilter";
 import { readPlatformsFile } from "@back/platform/PlatformFile";
 import { findGameImageCollection, findGameVideos } from "@back/util/images";
+import { fixSlashes } from "@shared/Util";
+import { onGameUpdated } from "..";
 
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
@@ -468,17 +470,33 @@ export class GameManager {
     }
 
     private setIsInstalledFlag(value: boolean, gamesPath: string) {
+        /**
+         * XML application path refers to a different folder, but we can predict the real name based on the final segment
+         * XML points to the commands folder, but we're tracking if the game data folder was created or not?
+         * 
+         * e.g
+         * gamesPath: eXo/eXoDOS/1Ton
+         * xml root: eXo/eXoDOS/!dos/1Ton
+         * Capture dirname `1Ton` and compare that instead
+         *  */
+        
+        const dirname = path.basename(gamesPath);
         console.log(
             `Setting installed flag for games in ${gamesPath} to ${value}`
         );
         this._state.platforms.forEach((p) => {
             const game = p.collection.games.find((game) =>
-                game.applicationPath.split("\\").includes(gamesPath)
+                fixSlashes(game.rootFolder).endsWith(`/${dirname}`) // Cheap but effective matcher
             );
-            console.log(
-                `Setting installed flag for ${game?.title} to ${value}`
-            );
-            if (game) game.installed = value;
+            if (game) {
+                console.log(
+                    `Setting installed flag for ${game?.title} to ${value}`
+                );
+                game.installed = value;
+                onGameUpdated(game);
+            } else {
+                console.log('Failed to find matching game');
+            }
         });
     }
 

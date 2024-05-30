@@ -53,6 +53,7 @@ export enum BackOut {
     THEME_LIST_CHANGE,
     PLAYLIST_UPDATE,
     PLAYLIST_REMOVE,
+    GAME_CHANGE,
     QUIT,
 }
 
