@@ -2,6 +2,8 @@ import { GamePlaylist } from "../interfaces";
 import { GameOrderBy, GameOrderReverse } from "../order/interfaces";
 import { IGameInfo } from "./interfaces";
 
+export const INSTALLED_GAMES_PLAYLIST_PREFIX = "!installedgames!"; // Some weird name that won't collide with real playlists
+
 type OrderFn = (a: IGameInfo, b: IGameInfo) => number;
 
 /** Order games by their order title alphabetically (ascending) */
@@ -153,17 +155,29 @@ function filterPlaylist(
     if (!playlist) {
         return games;
     }
-    const filteredGames: IGameInfo[] = [];
-    for (let gameEntry of playlist.games) {
-        const id = gameEntry.id;
-        for (let game of games) {
-            if (game.id === id) {
-                filteredGames.push(game);
-                break;
+
+    // Installed playlists are a special case
+    if (playlist.filename.startsWith(INSTALLED_GAMES_PLAYLIST_PREFIX)) {
+        // Purely rely on games installed state for these
+        const platformName = playlist.filename.split('_').slice(1).join('_');
+        return games.filter(g => g.installed && g.platform === platformName);
+    } else {
+        const filteredGames: IGameInfo[] = [];
+
+        // Add games normally
+        for (let gameEntry of playlist.games) {
+            const id = gameEntry.id;
+            for (let game of games) {
+                if (game.id === id) {
+                    filteredGames.push(game);
+                    break;
+                }
             }
         }
+
+        return filteredGames;
     }
-    return filteredGames;
+
 }
 
 /**

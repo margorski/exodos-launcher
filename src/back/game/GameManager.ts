@@ -96,6 +96,7 @@ export class GameManager {
             opts.exodosPath,
             opts.imagesPath,
         );
+        this.addInstalledGamesPlaylists();
         this.platforms
             .filter((p) => p.isGamePlatform)
             .forEach((p) =>
@@ -362,7 +363,7 @@ export class GameManager {
                     }
                     
                     // Load games
-                    platform.collection = GameParser.parse(data, platform.name);
+                    platform.collection = GameParser.parse(data, platform.name, exodosPath);
 
                     // Load images
                     const imagesRoot = path.join(exodosPath, imagesPath, platform.name);
@@ -462,8 +463,6 @@ export class GameManager {
                         this.setIsInstalledFlag(false, path);
                         //this.rescanInstalledGamesAndBroadcast(gamesPath);
                     });
-                // RESCAN ALL GAMES
-                this.rescanInstalledGamesAndBroadcast(gamesPath);
                 console.log("Initial scan complete. Ready for changes");
             })
             .on("error", (error) => console.log(`Watcher error: ${error}`));
@@ -472,7 +471,6 @@ export class GameManager {
     private setIsInstalledFlag(value: boolean, gamesPath: string) {
         /**
          * XML application path refers to a different folder, but we can predict the real name based on the final segment
-         * XML points to the commands folder, but we're tracking if the game data folder was created or not?
          * 
          * e.g
          * gamesPath: eXo/eXoDOS/1Ton
@@ -500,11 +498,12 @@ export class GameManager {
         });
     }
 
-    private rescanInstalledGamesAndBroadcast(gamesPath: string) {
-        // TODO: DO NOT ADD INSTALLED GAMES PLAYLIST
-        // SET FLAG ISINSTALLED INSTEAD ON EVERY INSTALLED GAME
-        this._state.installedGames = this.rescanInstalledGames(gamesPath);
-        this.platforms.forEach((p) => this._addInstalledGamesPlaylist(p));
+    private addInstalledGamesPlaylists() {
+        for (const platform of this.platforms) { 
+            this._state.playlistManager.addInstalledGamesPlaylist(
+                platform
+            );
+        };
     }
 
     private rescanInstalledGames(gamesPath: string) {
@@ -526,17 +525,7 @@ export class GameManager {
     }
 
     private _addInstalledGamesPlaylist(platform: GamePlatform) {
-        const platformInstalledGames = this._state.installedGames
-            .map((gameName) => {
-                const gameInPlatform = platform.collection.games.find((game) =>
-                    game.applicationPath.split("\\").includes(gameName)
-                );
-                if (gameInPlatform) return { id: gameInPlatform.id };
-                else return;
-            })
-            .filter((g) => g) as GamePlaylistEntry[];
         this._state.playlistManager.addInstalledGamesPlaylist(
-            platformInstalledGames,
             platform
         );
     }
