@@ -26,7 +26,7 @@ export class GamePlatform {
 
     get isGamePlatform(): boolean {
         return (
-            this.collection.games.length > 0 &&
+            Object.keys(this.collection.games).length > 0 &&
             !!this.collection.games[0].configurationPath
         );
     }

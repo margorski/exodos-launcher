@@ -27,7 +27,7 @@ import {
 } from "@shared/back/types";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
 import { APP_TITLE } from "@shared/constants";
-import { UNKNOWN_LIBRARY } from "@shared/game/interfaces";
+import { IGameInfo, UNKNOWN_LIBRARY } from "@shared/game/interfaces";
 import { ExodosBackendInfo, GamePlaylist, WindowIPC } from "@shared/interfaces";
 import { getLibraryItemTitle } from "@shared/library/util";
 import { memoizeOne } from "@shared/memoize";
@@ -105,6 +105,8 @@ export type AppState = {
     updateInfo: UpdateInfo | undefined;
     /** Exodos backend info for displaying at homepage  */
     exodosBackendInfo: ExodosBackendInfo | undefined;
+    /** Key to force refresh of current game */
+    currentGameRefreshKey: number;
 };
 
 export class App extends React.Component<AppProps, AppState> {
@@ -167,6 +169,7 @@ export class App extends React.Component<AppProps, AppState> {
             updateInfo: undefined,
             order,
             exodosBackendInfo: undefined,
+            currentGameRefreshKey: 0,
         };
 
         // Initialize app
@@ -562,6 +565,12 @@ export class App extends React.Component<AppProps, AppState> {
                         this.setState({ themeList: resData });
                     }
                     break;
+                case BackOut.GAME_CHANGE:
+                    {
+                        // We don't track selected game here, so we'll just force a game update anyway
+                        this.setState({ currentGameRefreshKey: this.state.currentGameRefreshKey + 1 });
+                    }
+                    break;
             }
         });
 
@@ -721,6 +730,7 @@ export class App extends React.Component<AppProps, AppState> {
             themeList: this.state.themeList,
             updateInfo: this.state.updateInfo,
             exodosBackendInfo: this.state.exodosBackendInfo,
+            currentGameRefreshKey: this.state.currentGameRefreshKey,
         };
         // Render
         return (

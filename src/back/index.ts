@@ -844,6 +844,24 @@ function exit() {
     }
 }
 
+export function onGameUpdated(game: IGameInfo): void {
+    if (!isErrorProxy(state.server)) {
+        const res: WrappedResponse<IGameInfo> = {
+            id: "",
+            type: BackOut.GAME_CHANGE,
+            data: game
+        };
+        const message = JSON.stringify(res);
+        state.server.clients.forEach((socket) => {
+            if (socket.onmessage === onMessageWrap) {
+                console.log(`Broadcast: ${BackOut[res.type]}`);
+                // (Check if authorized)
+                socket.send(message);
+            }
+        });
+    }
+}
+
 function respond<T>(target: WebSocket, response: WrappedResponse<T>): void {
     target.send(JSON.stringify(response));
 }

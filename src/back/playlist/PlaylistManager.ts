@@ -5,6 +5,7 @@ import { PlaylistFile } from "./PlaylistFile";
 import { LogFunc } from "@back/types";
 import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
 import { GamePlatform } from "@shared/platform/interfaces";
+import { INSTALLED_GAMES_PLAYLIST_PREFIX } from "@shared/game/GameFilter";
 
 export type PlaylistUpdatedFunc = (playlist: GamePlaylist) => void;
 export interface PlaylistManagerOpts {
@@ -54,7 +55,6 @@ export class PlaylistManager {
     }
 
     public addInstalledGamesPlaylist(
-        games: GamePlaylistEntry[],
         platform: GamePlatform
     ) {
         if (!this._initialized) {
@@ -69,26 +69,16 @@ export class PlaylistManager {
             return;
         }
 
-        const playlistDummyFilename = `${platform.name}_installedgames`;
-
-        const existingPlaylistIndex = this.playlists.findIndex(
-            (p) => p.filename === playlistDummyFilename
-        );
-        const playlist =
-            existingPlaylistIndex >= 0
-                ? this.playlists.splice(existingPlaylistIndex, 1)[0]
-                : {
-                      title: "Installed games",
-                      description: "A list of installed games.",
-                      author: "",
-                      icon: "",
-                      library: platform.name,
-                      filename: playlistDummyFilename,
-                      games: [],
-                  };
-        playlist.games = games;
-        this.playlists.unshift(playlist);
-        this._opts?.onPlaylistAddOrUpdate(playlist);
+        // Add a stub playlist for installed games, we'll use special behaviour when reading later
+        this.playlists.unshift({
+            title: `Installed games (${platform.name})`,
+            description: "A list of installed games.",
+            author: "",
+            icon: "",
+            library: platform.name,
+            filename: `${INSTALLED_GAMES_PLAYLIST_PREFIX}_${platform.name}`,
+            games: [],
+        });
     }
 
     private async _onPlaylistAddOrChange(

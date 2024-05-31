@@ -23,6 +23,8 @@ import {
 } from "@shared/game/GameFilter";
 import { readPlatformsFile } from "@back/platform/PlatformFile";
 import { findGameImageCollection, findGameVideos } from "@back/util/images";
+import { fixSlashes } from "@shared/Util";
+import { onGameUpdated } from "..";
 
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
@@ -94,6 +96,7 @@ export class GameManager {
             opts.exodosPath,
             opts.imagesPath,
         );
+        this.addInstalledGamesPlaylists();
         this.platforms
             .filter((p) => p.isGamePlatform)
             .forEach((p) =>
@@ -360,7 +363,7 @@ export class GameManager {
                     }
                     
                     // Load games
-                    platform.collection = GameParser.parse(data, platform.name);
+                    platform.collection = GameParser.parse(data, platform.name, exodosPath);
 
                     // Load images
                     const imagesRoot = path.join(exodosPath, imagesPath, platform.name);
@@ -460,33 +463,47 @@ export class GameManager {
                         this.setIsInstalledFlag(false, path);
                         //this.rescanInstalledGamesAndBroadcast(gamesPath);
                     });
-                // RESCAN ALL GAMES
-                this.rescanInstalledGamesAndBroadcast(gamesPath);
                 console.log("Initial scan complete. Ready for changes");
             })
             .on("error", (error) => console.log(`Watcher error: ${error}`));
     }
 
     private setIsInstalledFlag(value: boolean, gamesPath: string) {
+        /**
+         * XML application path refers to a different folder, but we can predict the real name based on the final segment
+         * 
+         * e.g
+         * gamesPath: eXo/eXoDOS/1Ton
+         * xml root: eXo/eXoDOS/!dos/1Ton
+         * Capture dirname `1Ton` and compare that instead
+         *  */
+        
+        const dirname = path.basename(gamesPath);
         console.log(
             `Setting installed flag for games in ${gamesPath} to ${value}`
         );
         this._state.platforms.forEach((p) => {
             const game = p.collection.games.find((game) =>
-                game.applicationPath.split("\\").includes(gamesPath)
+                fixSlashes(game.rootFolder).endsWith(`/${dirname}`) // Cheap but effective matcher
             );
-            console.log(
-                `Setting installed flag for ${game?.title} to ${value}`
-            );
-            if (game) game.installed = value;
+            if (game) {
+                console.log(
+                    `Setting installed flag for ${game?.title} to ${value}`
+                );
+                game.installed = value;
+                onGameUpdated(game);
+            } else {
+                console.log('Failed to find matching game');
+            }
         });
     }
 
-    private rescanInstalledGamesAndBroadcast(gamesPath: string) {
-        // TODO: DO NOT ADD INSTALLED GAMES PLAYLIST
-        // SET FLAG ISINSTALLED INSTEAD ON EVERY INSTALLED GAME
-        this._state.installedGames = this.rescanInstalledGames(gamesPath);
-        this.platforms.forEach((p) => this._addInstalledGamesPlaylist(p));
+    private addInstalledGamesPlaylists() {
+        for (const platform of this.platforms) { 
+            this._state.playlistManager.addInstalledGamesPlaylist(
+                platform
+            );
+        };
     }
 
     private rescanInstalledGames(gamesPath: string) {
@@ -508,17 +525,7 @@ export class GameManager {
     }
 
     private _addInstalledGamesPlaylist(platform: GamePlatform) {
-        const platformInstalledGames = this._state.installedGames
-            .map((gameName) => {
-                const gameInPlatform = platform.collection.games.find((game) =>
-                    game.applicationPath.split("\\").includes(gameName)
-                );
-                if (gameInPlatform) return { id: gameInPlatform.id };
-                else return;
-            })
-            .filter((g) => g) as GamePlaylistEntry[];
         this._state.playlistManager.addInstalledGamesPlaylist(
-            platformInstalledGames,
             platform
         );
     }

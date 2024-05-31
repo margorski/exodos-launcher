@@ -47,6 +47,7 @@ export type AppRouterProps = {
     themeList: Theme[];
     updateInfo: UpdateInfo | undefined;
     exodosBackendInfo: ExodosBackendInfo | undefined;
+    currentGameRefreshKey: number;
 };
 
 export class AppRouter extends React.Component<AppRouterProps> {
@@ -74,6 +75,7 @@ export class AppRouter extends React.Component<AppRouterProps> {
             onSelectGame: this.props.onSelectGame,
             onSelectPlaylist: this.props.onSelectPlaylist,
             gameLibrary: this.props.gameLibrary,
+            refreshKey: this.props.currentGameRefreshKey,
         };
         const configProps: ConnectedConfigPageProps = {
             themeList: this.props.themeList,
