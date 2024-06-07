@@ -152,7 +152,7 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
                 )}
             </div>
             <div className="game-image-carousel-label">
-                {hoveredIndex === null ? selectedMedia.name : sortedMedia[hoveredIndex].name}
+                {hoveredIndex === null ? selectedMedia.name : sortedMedia[wheelPosition + hoveredIndex].name}
             </div>
         </div>
     );
