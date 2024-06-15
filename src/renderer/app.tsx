@@ -41,14 +41,16 @@ import { SplashScreen } from "./components/SplashScreen";
 import { TitleBar } from "./components/TitleBar";
 import { ConnectedFooter } from "./containers/ConnectedFooter";
 import HeaderContainer from "./containers/HeaderContainer";
-import { WithPreferencesProps } from "./containers/withPreferences";
+import { WithPreferencesProps, withPreferences } from "./containers/withPreferences";
 import { GAMES } from "./interfaces";
 import { Paths } from "./Paths";
 import { AppRouter, AppRouterProps } from "./router";
-import { SearchQuery } from "./store/search";
 import { joinLibraryRoute } from "./Util";
 import { debounce } from "@shared/utils/debounce";
-import { WithRouterProps } from "./containers/withRouter";
+import { WithRouterProps, withRouter } from "./containers/withRouter";
+import { ConnectedProps, connect } from "react-redux";
+import { RootState } from "./redux/store";
+import { initialize } from "./redux/gamesSlice";
 // Auto updater works only with .appImage distribution. We are using .tar.gz
 // so it will just fail silently. Code is left for future.
 
@@ -56,8 +58,7 @@ const VIEW_PAGE_SIZE = 250;
 
 type Views = Record<string, View | undefined>; // views[id] = view
 type View = {
-    games: GAMES;
-    pages: Record<number, ViewPage | undefined>;
+    games: Array<IGameInfo>;
     total: number;
     selectedPlaylistId?: string;
     selectedGameId?: string;
@@ -72,12 +73,19 @@ type View = {
 };
 type ViewPage = {};
 
-type AppOwnProps = {
-    /** Most recent search query. */
-    search: SearchQuery;
-};
+const mapState = (state: RootState) => ({
+    totalGames: state.gamesState.totalGames
+});
 
-export type AppProps = AppOwnProps & WithRouterProps & WithPreferencesProps;
+const mapDispatch = {
+    initializeGames: initialize,
+}
+
+const connector = connect(mapState, mapDispatch);
+
+type OwnProps = {};
+
+export type AppProps = ConnectedProps<typeof connector> & OwnProps & WithRouterProps & WithPreferencesProps;
 
 export type AppState = {
     views: Views;
@@ -109,7 +117,7 @@ export type AppState = {
     currentGameRefreshKey: number;
 };
 
-export class App extends React.Component<AppProps, AppState> {
+class App extends React.Component<AppProps, AppState> {
     constructor(props: AppProps) {
         super(props);
 
@@ -127,8 +135,7 @@ export class App extends React.Component<AppProps, AppState> {
         for (let library of libraries) {
             views[library] = {
                 dirtyCache: false,
-                games: {},
-                pages: {},
+                games: [],
                 total: 0,
                 query: {
                     search: this.props.search.text,
@@ -358,8 +365,7 @@ export class App extends React.Component<AppProps, AppState> {
                             const newView = (views[res.id] = { ...view });
                             if (view.dirtyCache) {
                                 newView.dirtyCache = false;
-                                newView.games = {};
-                                newView.pages = {};
+                                newView.games = [];
                             } else {
                                 newView.games = { ...view.games };
                             }
@@ -778,7 +784,7 @@ export class App extends React.Component<AppProps, AppState> {
                                 </div>
                                 {/* Footer */}
                                 <ConnectedFooter
-                                    totalCount={this.state.gamesTotal}
+                                    totalCount={this.props.totalGames}
                                     currentLabel={
                                         libraryPath &&
                                         getLibraryItemTitle(libraryPath)
@@ -965,52 +971,6 @@ export class App extends React.Component<AppProps, AppState> {
             return;
         }
 
-        const pageMin = Math.floor(offset / VIEW_PAGE_SIZE);
-        const pageMax = Math.ceil((offset + limit) / VIEW_PAGE_SIZE);
-
-        const pageIndices: number[] = [];
-        const pages: ViewPage[] = [];
-        for (let page = pageMin; page <= pageMax; page++) {
-            if (view.dirtyCache || !view.pages[page]) {
-                pageIndices.push(page);
-                pages.push({});
-            }
-        }
-
-        if (pages.length > 0) {
-            window.External.back.sendReq<any, BrowseViewPageData>({
-                id: library, // @TODO Add this as an optional property of the data instead of misusing the id
-                type: BackIn.BROWSE_VIEW_PAGE,
-                data: {
-                    offset: pageMin * VIEW_PAGE_SIZE,
-                    limit: (pageMax - pageMin + 1) * VIEW_PAGE_SIZE,
-                    query: {
-                        library: library,
-                        search: view.query.search,
-                        playlistId: view && view.selectedPlaylistId,
-                        orderBy: view.query.orderBy,
-                        orderReverse: view.query.orderReverse,
-                    },
-                },
-            });
-
-            const newPages: Record<number, ViewPage | undefined> = {};
-            for (let i = 0; i < pages.length; i++) {
-                newPages[pageIndices[i]] = pages[i];
-            }
-            this.setState({
-                views: {
-                    ...this.state.views,
-                    [library]: {
-                        ...view,
-                        pages: {
-                            ...view.pages,
-                            ...newPages,
-                        },
-                    },
-                },
-            });
-        }
     };
 
     onQuickSearch = (search: string): void => {
@@ -1039,8 +999,7 @@ export class App extends React.Component<AppProps, AppState> {
                 if (res.data && view) {
                     // Fetch the page that the game is on
                     if (
-                        res.data.index !== undefined &&
-                        !view.pages[(res.data.index / VIEW_PAGE_SIZE) | 0]
+                        res.data.index !== undefined
                     ) {
                         this.onRequestGames(res.data.index, res.data.index);
                     }
@@ -1120,6 +1079,8 @@ export class App extends React.Component<AppProps, AppState> {
         }
     );
 }
+
+export default withRouter(withPreferences(connector(App)));
 
 /** Get the "library route" of a url (returns empty string if URL is not a valid "sub-browse path") */
 function getBrowseSubPath(urlPath: string): string {

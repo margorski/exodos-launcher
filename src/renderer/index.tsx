@@ -1,14 +1,13 @@
+import { ReduxRouter } from "@lagunovsky/redux-react-router";
 import { createMemoryHistory } from "history";
 import * as React from "react";
+import * as ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
-import { AddLogData, BackIn } from "@shared/back/types";
+import App from './app';
 import configureStore from "./configureStore";
-import ConnectedApp from "./containers/ConnectedApp";
 import { ContextReducerProvider } from "./context-reducer/ContextReducerProvider";
 import { PreferencesContextProvider } from "./context/PreferencesContext";
 import { ProgressContext } from "./context/ProgressContext";
-import { ReduxRouter } from "@lagunovsky/redux-react-router";
-import * as ReactDOM from "react-dom/client";
 
 (async () => {
     // Toggle DevTools when CTRL+SHIFT+I is pressed
@@ -31,7 +30,7 @@ import * as ReactDOM from "react-dom/client";
             <PreferencesContextProvider>
                 <ContextReducerProvider context={ProgressContext}>
                     <ReduxRouter history={history}>
-                        <ConnectedApp />
+                        <App />
                     </ReduxRouter>
                 </ContextReducerProvider>
             </PreferencesContextProvider>
