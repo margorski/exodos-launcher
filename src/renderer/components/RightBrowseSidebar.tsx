@@ -29,6 +29,12 @@ type OwnProps = {
     currentLibrary: string;
     /** Currently selected game entry (if any) */
     gamePlaylistEntry?: GamePlaylistEntry;
+    /** Launch game */
+    onGameLaunch: (gameId: string) => void;
+    /** Launch game setup */
+    onGameLaunchSetup: (gameId: string) => void;
+    /** Launch add app */
+    onAddAppLaunch: (addAppId: string) => void;
 };
 
 export type RightBrowseSidebarProps = OwnProps & WithPreferencesProps;
@@ -91,25 +97,15 @@ export class RightBrowseSidebar extends React.Component<
                                         type="button"
                                         className="simple-button"
                                         value={playButtonLabel}
-                                        onClick={() =>
-                                            window.External.back.send<LaunchGameData>(
-                                                BackIn.LAUNCH_GAME,
-                                                { id: game.id }
-                                            )
-                                        }
+                                        onClick={() => this.props.onGameLaunch(game.id)}
                                     />
                                     {isGame ? (
                                         <input
                                             type="button"
                                             className="simple-button"
-                                            disabled={!currentGame?.installed}
+                                            disabled={!(currentGame?.installed)}
                                             value={strings.setup}
-                                            onClick={() =>
-                                                window.External.back.send<LaunchGameData>(
-                                                    BackIn.LAUNCH_GAME_SETUP,
-                                                    { id: game.id }
-                                                )
-                                            }
+                                            onClick={() => this.props.onGameLaunchSetup(game.id)}
                                         />
                                     ) : null}
                                 </div>
@@ -346,12 +342,7 @@ export class RightBrowseSidebar extends React.Component<
                 win.focus();
             });
         } else {
-            window.External.back.send<any, LaunchAddAppData>(
-                BackIn.LAUNCH_ADDAPP,
-                {
-                    id: addApp.id,
-                }
-            );
+            this.props.onAddAppLaunch(addApp.id);
         }
     }
 

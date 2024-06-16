@@ -1,10 +1,13 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { getDefaultFieldFilter, mergeGameFilters, parseUserInput } from "@renderer/util/search";
+import { deepCopy, fixSlashes } from "@shared/Util";
 import { IGameInfo } from "@shared/game/interfaces";
 import { GameFilter, GamePlaylist } from "@shared/interfaces";
+import { setGameInstalled } from "./gamesSlice";
+import * as path from 'path';
 
 export type ResultsView = {
-  selectedGameId?: string,
+  selectedGame?: IGameInfo,
   selectedPlaylist?: GamePlaylist,
   games: IGameInfo[];
   text: string;
@@ -13,7 +16,6 @@ export type ResultsView = {
 }
 
 type SearchState = {
-  currentView: string,
   views: Record<string, ResultsView>,
 }
 
@@ -29,7 +31,7 @@ export type SearchSetViewGamesAction = {
 
 export type SearchSetGameAction = {
   view: string;
-  gameId?: string;
+  game?: IGameInfo;
 }
 
 export type SearchSetPlaylistAction = {
@@ -37,8 +39,11 @@ export type SearchSetPlaylistAction = {
   playlist?: GamePlaylist;
 }
 
+export type SearchViewAction = {
+  view: string;
+}
+
 const initialState: SearchState = {
-  currentView: '',
   views: {}
 };
 
@@ -81,7 +86,6 @@ const searchSlice = createSlice({
         let newFilter = parseUserInput(payload.text);
         // Merge all filters
         if (view.selectedPlaylist && view.selectedPlaylist.filter) {
-          console.log('playlist filter applied');
           newFilter = mergeGameFilters(view.selectedPlaylist.filter, newFilter);
         }
 
@@ -102,71 +106,74 @@ const searchSlice = createSlice({
     },
     setViewGames(state: SearchState, { payload }: PayloadAction<SearchSetViewGamesAction>) {
       if (state.views[payload.view]) {
-        return {
-          ...state,
-          views: {
-            ...state.views,
-            [payload.view]: {
-              ...state.views[payload.view],
-              games: payload.games,
-            }
-          }
-        }
+        state.views[payload.view].games = payload.games;
       }
-
-      return state;
     },
     selectPlaylist(state: SearchState, { payload }: PayloadAction<SearchSetPlaylistAction>) {
       const view = state.views[payload.view];
       if (view) {
-        const newView = {...view};
-        newView.selectedPlaylist = payload.playlist;
+        const playlist = payload.playlist ? deepCopy(payload.playlist) : undefined;
+        view.selectedPlaylist = playlist;
 
         if (view && !payload.playlist) {
           // Deselected playlist, rebuild query
-          let newFilter = parseUserInput(view.text);
-          newView.filter = newFilter;
+          view.filter = parseUserInput(view.text);
         }
 
         if (view && payload.playlist && payload.playlist.filter) {
           // Build filter for this new search
-          let newFilter = parseUserInput(view.text);
+          view.filter = parseUserInput(view.text);
           // Merge all filters
-          newFilter = mergeGameFilters(payload.playlist.filter, newFilter);
-          newView.filter = newFilter;
-          console.log('filter');
-          console.log(JSON.stringify(newFilter, undefined, 2));
-        }
-        
-        return {
-          ...state,
-          views: {
-            ...state.views,
-            [payload.view]: newView
-          }
+          view.filter = mergeGameFilters(payload.playlist.filter, view.filter);
         }
       }
-
-      return state;
     },
     selectGame(state: SearchState, { payload }: PayloadAction<SearchSetGameAction>) {
       if (state.views[payload.view]) {
+        const game = payload.game ? deepCopy(payload.game) : undefined;
+
         return {
           ...state,
           views: {
             ...state.views,
             [payload.view]: {
               ...state.views[payload.view],
-              selectedGameId: payload.gameId
+              selectedGame: game
             }
           }
         }
       }
 
       return state;
-    }
-  }
+    },
+    forceSearch(state: SearchState, { payload }: PayloadAction<SearchViewAction>) {
+      const view = state.views[payload.view];
+      if (view) {
+        // Build filter for this new search
+        view.filter = parseUserInput(view.text);
+        // Merge all filters
+        if (view.selectedPlaylist && view.selectedPlaylist.filter) {
+          view.filter = mergeGameFilters(view.selectedPlaylist.filter, view.filter);
+        }
+      }
+    } 
+  },
+  extraReducers: (builder) => {
+    builder.addCase(setGameInstalled, (state, { payload }) => {
+      const { gameDataPath, value } = payload;
+      const dirname = path.basename(gameDataPath);
+
+      for (const viewName of Object.keys(state.views)) {
+        const view = state.views[viewName];
+        if (view.selectedGame) {
+          if (fixSlashes(view.selectedGame.rootFolder).endsWith(`/${dirname}`)) {
+            view.selectedGame.installed = value;
+          }
+        }
+      }
+    });
+  },
 });
 
-export const { setSearchText, setViewGames, initializeViews, selectPlaylist, selectGame } = searchSlice.actions;
+export const { setSearchText, setViewGames, initializeViews, selectPlaylist, selectGame, forceSearch } = searchSlice.actions;
 export default searchSlice.reducer;

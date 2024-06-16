@@ -88,7 +88,6 @@ export type BackInitArgs = {
 };
 
 export enum BackInit {
-    GAMES,
     PLAYLISTS,
     EXEC,
 }
@@ -111,7 +110,6 @@ export type GetRendererInitDataResponse = {
     log: ILogEntry[];
     themes: Theme[];
     playlists?: GamePlaylist[];
-    platforms: Record<string, string[]>;
     localeCode: string;
 };
 
@@ -137,7 +135,8 @@ export type OpenExternalResponseData = {
 };
 
 export type LaunchGameData = {
-    id: string;
+    game: IGameInfo;
+    addApps: IAdditionalApplicationInfo[];
 };
 
 export type GetGameData = {
@@ -160,7 +159,8 @@ export type RandomGamesData = {
 export type RandomGamesResponseData = IGameInfo[];
 
 export type LaunchAddAppData = {
-    id: string;
+    game: IGameInfo;
+    addApp: IAdditionalApplicationInfo;
 };
 
 export type LaunchExodosContentData = {

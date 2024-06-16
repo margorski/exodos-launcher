@@ -38,7 +38,7 @@ import { ConnectedFooter } from "./containers/ConnectedFooter";
 import HeaderContainer from "./containers/HeaderContainer";
 import { WithPreferencesProps, withPreferences } from "./containers/withPreferences";
 import { WithRouterProps, withRouter } from "./containers/withRouter";
-import { initialize } from "./redux/gamesSlice";
+import { GamesInitState, initialize } from "./redux/gamesSlice";
 import { initializeViews } from "./redux/searchSlice";
 import { RootState } from "./redux/store";
 import { AppRouter, AppRouterProps } from "./router";
@@ -65,7 +65,9 @@ type View = {
 
 const mapState = (state: RootState) => ({
     searchState: state.searchState,
-    totalGames: state.gamesState.totalGames
+    totalGames: state.gamesState.totalGames,
+    gamesLoaded: state.gamesState.initState,
+    libraries: state.gamesState.libraries,
 });
 
 const mapDispatch = {
@@ -80,11 +82,9 @@ type OwnProps = {};
 export type AppProps = ConnectedProps<typeof connector> & OwnProps & WithRouterProps & WithPreferencesProps;
 
 export type AppState = {
-    libraries: string[];
     playlists: GamePlaylist[];
     playlistIconCache: Record<string, string>; // [PLAYLIST_ID] = ICON_BLOB_URL
     appPaths: Record<string, string>;
-    platforms: Record<string, string[]>;
     loaded: { [key in BackInit]: boolean };
     themeList: Theme[];
     gamesTotal: number;
@@ -118,31 +118,14 @@ class App extends React.Component<AppProps, AppState> {
             orderReverse: preferencesData.gamesOrder,
         };
 
-        // Prepare libraries
-        const libraries = Object.keys(window.External.initialPlatforms).sort();
-
-        // Prepare initial views
-        props.initializeViews(libraries);
-
-        // Prepare platforms
-        const platforms: Record<string, string[]> = {};
-        for (let library of libraries) {
-            platforms[library] = window.External.initialPlatforms[library]
-                .slice()
-                .sort();
-        }
-
         // Set initial state
         this.state = {
-            libraries: libraries,
             playlists: window.External.initialPlaylists || [],
             playlistIconCache: {},
             appPaths: {},
-            platforms: platforms,
             loaded: {
                 0: false,
                 1: false,
-                2: false,
             },
             themeList: window.External.initialThemes,
             gamesTotal: -1,
@@ -294,20 +277,6 @@ class App extends React.Component<AppProps, AppState> {
                                         }
                                     );
                                     break;
-
-                                case BackInit.GAMES:
-                                    window.External.back.send<GetGamesTotalResponseData>(
-                                        BackIn.GET_GAMES_TOTAL,
-                                        undefined,
-                                        (res) => {
-                                            if (res.data) {
-                                                this.setState({
-                                                    gamesTotal: res.data,
-                                                });
-                                            }
-                                        }
-                                    );
-                                    break;
                             }
                         }
 
@@ -445,7 +414,7 @@ class App extends React.Component<AppProps, AppState> {
 
     render() {
         const loaded =
-            this.state.loaded[BackInit.GAMES] &&
+            this.props.gamesLoaded === GamesInitState.LOADED &&
             this.state.loaded[BackInit.PLAYLISTS] &&
             this.state.loaded[BackInit.EXEC];
         const libraryPath = getBrowseSubPath(this.props.location.pathname);
@@ -457,11 +426,9 @@ class App extends React.Component<AppProps, AppState> {
             gamesTotal: view ? view.games.length : 0,
             playlists: playlists,
             appPaths: this.state.appPaths,
-            platforms: this.state.platforms,
-            platformsFlat: this.flattenPlatformsMemo(this.state.platforms),
             playlistIconCache: this.state.playlistIconCache,
             onLaunchGame: this.onLaunchGame,
-            libraries: this.state.libraries,
+            libraries: this.props.libraries,
             localeCode: this.state.localeCode,
             order: this.state.order,
             gameScale: this.state.gameScale,
@@ -480,10 +447,8 @@ class App extends React.Component<AppProps, AppState> {
                     <>
                         {/* Splash screen */}
                         <SplashScreen
-                            gamesLoaded={this.state.loaded[BackInit.GAMES]}
-                            playlistsLoaded={
-                                this.state.loaded[BackInit.PLAYLISTS]
-                            }
+                            gamesLoaded={this.props.gamesLoaded === GamesInitState.LOADED}
+                            playlistsLoaded={this.state.loaded[BackInit.PLAYLISTS]}
                             miscLoaded={this.state.loaded[BackInit.EXEC]}
                         />
                         {/* Title-bar (if enabled) */}
@@ -498,7 +463,7 @@ class App extends React.Component<AppProps, AppState> {
                                 {/* Header */}
                                 <HeaderContainer
                                     gameLibrary={libraryPath}
-                                    libraries={this.state.libraries}
+                                    libraries={this.props.libraries}
                                     onToggleLeftSidebarClick={
                                         this.onToggleLeftSidebarClick
                                     }

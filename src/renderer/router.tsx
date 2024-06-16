@@ -22,8 +22,6 @@ export type AppRouterProps = {
     gamesTotal: number;
     playlists: GamePlaylist[];
     appPaths: Record<string, string>;
-    platforms: Record<string, string[]>;
-    platformsFlat: string[];
     onLaunchGame: (gameId: string) => void;
     playlistIconCache: Record<string, string>;
     libraries: string[];
@@ -43,7 +41,6 @@ export type AppRouterProps = {
 export class AppRouter extends React.Component<AppRouterProps> {
     render() {
         const homeProps: ConnectedHomePageProps = {
-            platforms: this.props.platforms,
             playlists: this.props.playlists,
             exodosBackendInfo: this.props.exodosBackendInfo,
             onLaunchGame: this.props.onLaunchGame,
@@ -60,7 +57,7 @@ export class AppRouter extends React.Component<AppRouterProps> {
         };
         const configProps: ConnectedConfigPageProps = {
             themeList: this.props.themeList,
-            platforms: this.props.platformsFlat,
+            platforms: this.props.libraries,
             localeCode: this.props.localeCode,
         };
         return (

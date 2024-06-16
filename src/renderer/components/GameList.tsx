@@ -28,7 +28,7 @@ export type GameListProps = {
     /** Total number of games there are. */
     gamesTotal: number;
     /** Currently selected game (if any). */
-    selectedGameId?: string;
+    selectedGame?: IGameInfo;
     /** Currently dragged game (if any). */
     draggedGameId?: string;
     /** Height of each row in the list (in pixels). */
@@ -36,7 +36,7 @@ export type GameListProps = {
     /** Function that renders the elements to show instead of the grid if there are no games (render prop). */
     noRowsRenderer?: () => JSX.Element;
     /** Called when the user attempts to select a game. */
-    onGameSelect: (gameId?: string) => void;
+    onGameSelect: (game?: IGameInfo) => void;
     /** Called when the user attempts to launch a game. */
     onGameLaunch: (gameId: string) => void;
     /** Called when the user attempts to open a context menu (at a game). */
@@ -92,10 +92,10 @@ export class GameList extends React.Component<GameListProps> {
                         {({ width, height }) => {
                             // Calculate column and row of selected item
                             let scrollToIndex: number = -1;
-                            if (this.props.selectedGameId) {
+                            if (this.props.selectedGame) {
                                 scrollToIndex = findGameIndex(
                                     games,
-                                    this.props.selectedGameId,
+                                    this.props.selectedGame.id,
                                 );
                             }
                             return (
@@ -147,7 +147,7 @@ export class GameList extends React.Component<GameListProps> {
 
     /** Renders a single row in the game list. */
     rowRenderer = (props: ListRowProps): React.ReactNode => {
-        const { draggedGameId, games, selectedGameId } = this.props;
+        const { draggedGameId, games, selectedGame } = this.props;
         if (!games) {
             throw new Error(
                 "Trying to render a row in game list, but no games are found?",
@@ -168,7 +168,7 @@ export class GameList extends React.Component<GameListProps> {
                     game.releaseDate,
                 )}
                 isDraggable={true}
-                isSelected={game.id === selectedGameId}
+                isSelected={game.id === selectedGame?.id}
                 isDragged={game.id === draggedGameId}
                 isInstalled={this.props.installedGameIds.includes(game.id)}
             />
@@ -185,8 +185,8 @@ export class GameList extends React.Component<GameListProps> {
     /** When a key is pressed (while the list, or one of its children, is selected). */
     onKeyPress = (event: React.KeyboardEvent): void => {
         if (event.key === "Enter") {
-            if (this.props.selectedGameId) {
-                this.props.onGameLaunch(this.props.selectedGameId);
+            if (this.props.selectedGame) {
+                this.props.onGameLaunch(this.props.selectedGame.id);
             }
         }
     };
@@ -196,7 +196,12 @@ export class GameList extends React.Component<GameListProps> {
         _: React.MouseEvent,
         gameId: string | undefined,
     ): void => {
-        this.props.onGameSelect(gameId);
+        if (this.props.games) {
+            const game = this.props.games.find(g => g.id === gameId);
+            if (game) {
+                this.props.onGameSelect(game);
+            }
+        }
     };
 
     /** When a row is double clicked. */
@@ -232,7 +237,7 @@ export class GameList extends React.Component<GameListProps> {
         } else {
             const game = this.props.games[params.scrollToRow];
             if (game) {
-                this.props.onGameSelect(game.id);
+                this.props.onGameSelect(game);
             }
         }
     };

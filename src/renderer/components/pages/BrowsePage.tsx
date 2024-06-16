@@ -24,7 +24,7 @@ import { ResizableSidebar, SidebarResizeEvent } from "../ResizableSidebar";
 import { englishTranslation } from "@renderer/lang/en";
 import { RootState } from "@renderer/redux/store";
 import { ConnectedProps, connect } from "react-redux";
-import { selectGame, selectPlaylist } from "@renderer/redux/searchSlice";
+import { forceSearch, selectGame, selectPlaylist } from "@renderer/redux/searchSlice";
 
 export type BrowsePageProps = {
     playlists: GamePlaylist[];
@@ -64,7 +64,8 @@ const mapState = (state: RootState) => ({
 
 const mapDispatch = {
     onSelectPlaylist: selectPlaylist,
-    onSelectGame: selectGame
+    onSelectGame: selectGame,
+    forceSearch: forceSearch,
 }
 
 const connector = connect(mapState, mapDispatch);
@@ -97,12 +98,30 @@ class BrowsePage extends React.Component<
     }
 
     componentDidMount() {
+        const view = this.props.searchState.views[this.props.gameLibrary];
+        if (view && view.games.length === 0) {
+            // No games found, force a search incase it hasn't tried to load yet
+            this.props.forceSearch({
+                view: this.props.gameLibrary
+            });
+        }
+
         updatePreferencesData({
             browsePageShowLeftSidebar: !!this.props.playlists.length,
         });
     }
 
     componentDidUpdate(prevProps: BrowsePageProps, prevState: BrowsePageState) {
+        if (prevProps.gameLibrary !== this.props.gameLibrary) {
+            const view = this.props.searchState.views[this.props.gameLibrary];
+            if (view && view.games.length === 0) {
+                // No games found, force a search incase it hasn't tried to load yet
+                this.props.forceSearch({
+                    view: this.props.gameLibrary
+                });
+            }
+        }
+
         if (this.props.playlists !== prevProps.playlists) {
             updatePreferencesData({
                 browsePageShowLeftSidebar: !!this.props.playlists.length,
@@ -118,7 +137,7 @@ class BrowsePage extends React.Component<
         const order = this.props.order || BrowsePage.defaultOrder;
 
         // Find selected game
-        const selectedGame = view?.selectedGameId ? this.props.games.find(g => g.id === view.selectedGameId) : undefined;
+        const selectedGame = view?.selectedGame;
         const selectedAddApps = selectedGame ? this.props.addApps.filter(a => a.gameId === selectedGame.id) : [];
 
         // Find the selected game in the selected playlist
@@ -175,7 +194,7 @@ class BrowsePage extends React.Component<
                                     games={view?.games}
                                     installedGameIds={installedGameIds}
                                     gamesTotal={view?.games.length}
-                                    selectedGameId={view?.selectedGameId}
+                                    selectedGame={view?.selectedGame}
                                     draggedGameId={draggedGameId}
                                     noRowsRenderer={this.noRowsRendererMemo()}
                                     onGameSelect={this.onGameSelect}
@@ -197,7 +216,7 @@ class BrowsePage extends React.Component<
                                     games={view?.games}
                                     installedGameIds={installedGameIds}
                                     gamesTotal={view?.games.length}
-                                    selectedGameId={view?.selectedGameId}
+                                    selectedGame={view?.selectedGame}
                                     draggedGameId={draggedGameId}
                                     noRowsRenderer={this.noRowsRendererMemo()}
                                     onGameSelect={this.onGameSelect}
@@ -225,6 +244,9 @@ class BrowsePage extends React.Component<
                         currentPlaylistNotes={this.state.currentPlaylistNotes}
                         currentLibrary={this.props.gameLibrary}
                         gamePlaylistEntry={gamePlaylistEntry}
+                        onGameLaunch={this.onGameLaunch}
+                        onGameLaunchSetup={this.onGameLaunchSetup}
+                        onAddAppLaunch={this.onAddAppLaunch}
                     />
                 </ResizableSidebar>
             </div>
@@ -312,22 +334,52 @@ class BrowsePage extends React.Component<
         );
     }
 
-    onGameSelect = (gameId?: string): void => {
+    onGameSelect = (game?: IGameInfo): void => {
         const view = this.props.searchState.views[this.props.gameLibrary];
 
-        if (view?.selectedGameId !== gameId) {
+        if (view?.selectedGame?.id !== game?.id) {
             this.props.onSelectGame({
                 view: this.props.gameLibrary,
-                gameId,
+                game,
             });
         }
     };
 
+
     onGameLaunch = (gameId: string): void => {
-        window.External.back.send<LaunchGameData>(BackIn.LAUNCH_GAME, {
-            id: gameId,
-        });
+        const game = this.props.games.find(g => g.id === gameId);
+        const addApps = this.props.addApps.filter(a => a.gameId === gameId);
+        if (game) {
+            window.External.back.send<LaunchGameData>(BackIn.LAUNCH_GAME, {
+                game,
+                addApps
+            });
+        }
     };
+
+    onGameLaunchSetup = (gameId: string): void => {
+        const game = this.props.games.find(g => g.id === gameId);
+        const addApps = this.props.addApps.filter(a => a.gameId === gameId);
+        if (game) {
+            window.External.back.send<LaunchGameData>(BackIn.LAUNCH_GAME_SETUP, {
+                game,
+                addApps
+            });
+        }
+    };
+
+    onAddAppLaunch = (addAppId: string): void => {
+        const addApp = this.props.addApps.find(a => a.id === addAppId);
+        if (addApp) {
+            const game = this.props.games.find(g => g.id === addApp.gameId);
+            if (game) {
+                window.External.back.send<LaunchGameData>(BackIn.LAUNCH_ADDAPP, {
+                    game,
+                    addApp,
+                });
+            }
+        }
+    }
 
     onCenterKeyDown = (event: React.KeyboardEvent): void => {
         const key: string = event.key.toLowerCase();

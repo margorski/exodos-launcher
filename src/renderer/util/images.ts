@@ -27,18 +27,20 @@ export async function findGameImageCollection(platImagesPath: string): Promise<G
     const rootFolders = await fs.promises.readdir(platImagesPath, { withFileTypes: true });
     const collection: GameImagesCollection = {};
 
-    for (const dir of rootFolders.filter(f => f.isDirectory())) {
-        collection[dir.name] = {}; // Initialize the image category
-        const folderPath = path.join(platImagesPath, dir.name);
-
-        for (const s of walkSync(folderPath)) {
-            const lastIdx = s.filename.lastIndexOf("-0");
-            if (lastIdx > -1) {
-                const title = s.filename.slice(0, lastIdx);
-                if (!collection[dir.name][title]) {
-                    collection[dir.name][title] = [path.relative(platImagesPath, s.path)];
-                } else {
-                    collection[dir.name][title].push(path.relative(platImagesPath, s.path));
+    if (fs.existsSync(platImagesPath)) {
+        for (const dir of rootFolders.filter(f => f.isDirectory())) {
+            collection[dir.name] = {}; // Initialize the image category
+            const folderPath = path.join(platImagesPath, dir.name);
+    
+            for (const s of walkSync(folderPath)) {
+                const lastIdx = s.filename.lastIndexOf("-0");
+                if (lastIdx > -1) {
+                    const title = s.filename.slice(0, lastIdx);
+                    if (!collection[dir.name][title]) {
+                        collection[dir.name][title] = [path.relative(platImagesPath, s.path)];
+                    } else {
+                        collection[dir.name][title].push(path.relative(platImagesPath, s.path));
+                    }
                 }
             }
         }
@@ -50,9 +52,11 @@ export async function findGameImageCollection(platImagesPath: string): Promise<G
 export function findGameVideos(videoPath: string): GameVideosCollection {
     const videos: GameVideosCollection = {};
 
-    const files = fs.readdirSync(videoPath).filter(f => f.endsWith('.mp4'));
-    for (const s of files) {
-        videos[s.split('.mp4')[0]] = s;
+    if (fs.existsSync(videoPath)) {
+        const files = fs.readdirSync(videoPath).filter(f => f.endsWith('.mp4'));
+        for (const s of files) {
+            videos[s.split('.mp4')[0]] = s;
+        }
     }
 
     return videos;

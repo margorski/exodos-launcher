@@ -1,6 +1,6 @@
 import { PayloadAction, isAnyOf } from "@reduxjs/toolkit";
 import { startAppListening } from "./listenerMiddleware";
-import { ResultsView, SearchSetTextAction, selectPlaylist, setSearchText, setViewGames } from "./searchSlice";
+import { ResultsView, SearchSetTextAction, SearchViewAction, forceSearch, selectPlaylist, setSearchText, setViewGames } from "./searchSlice";
 import { IGameInfo } from "@shared/game/interfaces";
 import { FieldFilter, GameFilter } from "@shared/interfaces";
 import { debounce } from "@shared/utils/debounce";
@@ -9,7 +9,7 @@ import { INSTALLED_GAMES_PLAYLIST_PREFIX } from "@shared/game/GameFilter";
 
 const debounceSearch = debounce((state: RootState, viewName: string, view: ResultsView) => {
   let games = state.gamesState.games;
-  console.log('start ' + games.length);
+  console.log('Start count ' + games.length);
 
   // Check if we're a special installed games playlist
   if (view.selectedPlaylist) {
@@ -17,36 +17,33 @@ const debounceSearch = debounce((state: RootState, viewName: string, view: Resul
       const platform = view.selectedPlaylist.filename.split('_').slice(1).join('_');
       games = games.filter(g => g.installed && g.platform === platform);
     // Narrow by playlist if has explicit games and no dynamic filters
-    } else if (view.selectedPlaylist.games) {
+    } else if (view.selectedPlaylist.games.length > 0) {
       const playlistGameIds = view.selectedPlaylist.games.map(g => g.id);
       games = games.filter(g => playlistGameIds.includes(g.id));
     }
   } else {
     // Not in a playlist, treat view name as platform
-    console.log(viewName);
-    console.log(games);
     games = games.filter(g => g.platform === viewName);
   }
 
-
-  console.log('after playlist ' + games.length);
+  console.log('Results after playlist ' + games.length);
 
   // Narrow by filter
   games = filterGames(games, view.filter);
 
-  console.log(`Results: ${games.length}`);
+  console.log(`Final Results: ${games.length}`);
 
   // Update games in state
   store.dispatch(setViewGames({
     view: viewName,
     games,
   }));
-}, 150);
+}, 125);
 
 export function addSearchMiddleware() {
   startAppListening({
-    matcher: isAnyOf(setSearchText, selectPlaylist),
-    effect: async(action: PayloadAction<any>, listenerApi) => {
+    matcher: isAnyOf(setSearchText, selectPlaylist, forceSearch),
+    effect: async(action: PayloadAction<SearchViewAction>, listenerApi) => {
       const state = listenerApi.getState();
       const view = state.searchState.views[action.payload.view];
 
@@ -66,7 +63,6 @@ function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
     if (!filter.matchAny) {
       // Get join of all subfilters for an AND
       const subfilteredGames = filter.subfilters.map(f => filterGames(newGames, f));
-      console.log(subfilteredGames);
 
       // Get the intersection of all id sets
       const commonIds = subfilteredGames.reduce((acc, array) => {
@@ -95,25 +91,21 @@ function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
   // Handle own filter
 
   if (!isFilterEmpty(filter.exactWhitelist)) {
-    console.log('exact whitelist');
     const filterFunc = exactStringFilterFieldFactory(filter.exactWhitelist, filter.matchAny);
     newGames = newGames.filter(filterFunc);
   }
 
   if (!isFilterEmpty(filter.exactBlacklist)) {
-    console.log('exact blacklist');
     const filterFunc = not(exactStringFilterFieldFactory(filter.exactBlacklist, filter.matchAny));
     newGames = newGames.filter(filterFunc);
   }
 
   if (!isFilterEmpty(filter.whitelist)) {
-    console.log('whitelist');
     const filterFunc = fuzzyStringFilterFieldFactory(filter.whitelist, filter.matchAny);
     newGames = newGames.filter(filterFunc);
   }
 
   if (!isFilterEmpty(filter.blacklist)) {
-    console.log('blacklist');
     const filterFunc = not(fuzzyStringFilterFieldFactory(filter.blacklist, filter.matchAny));
     newGames = newGames.filter(filterFunc);
   }
@@ -152,11 +144,10 @@ const fieldFilterKeys: Array<keyof FieldFilter> = [
 
 function exactStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
   filter = lowerCaseFilter(filter);
-  console.log(filter);
 
   return (game: IGameInfo) => {
     // Compare generic keys against a few different fields
-    if (filter.generic) {
+    if (filter.generic.length > 0) {
       if (!matchAny) {
         for (const val of filter.generic) {
           if (
@@ -182,9 +173,9 @@ function exactStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
       }
     }
 
-    // Compare each field that's filterable by a string
+    // Compare each field that is filterable by a string
     for (const key of fieldFilterKeys) {
-      if (filter[key]) {
+      if (filter[key].length > 0) {
         if (!matchAny) {
           // Match all terms
           for (const val of filter[key]) {
@@ -210,12 +201,10 @@ function exactStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
 
 function fuzzyStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
   filter = lowerCaseFilter(filter);
-  console.log(filter);
-  console.log('match any ' + matchAny);
 
   return (game: IGameInfo) => {
     // Compare generic keys against a few different fields
-    if (filter.generic) {
+    if (filter.generic.length > 0) {
       if (!matchAny) {
         for (const val of filter.generic) {
           if (
@@ -241,9 +230,9 @@ function fuzzyStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
       }
     }
 
-    // Compare each field that's filterable by a string
+    // Compare each field that is filterable by a string
     for (const key of fieldFilterKeys) {
-      if (filter[key]) {
+      if (filter[key].length > 0) {
         if (!matchAny) {
           // Match all terms
           for (const val of filter[key]) {

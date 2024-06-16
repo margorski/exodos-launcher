@@ -17,6 +17,7 @@ export type GamesCollection = {
 export type GamesState = {
   initState: GamesInitState,
   totalGames: number;
+  libraries: string[];
 } & GamesCollection;
 
 export type GameInstalledAction = {
@@ -29,6 +30,7 @@ const initialState: GamesState = {
   addApps: [],
   initState: GamesInitState.WAITING,
   totalGames: 0,
+  libraries: [],
 };
 
 const gamesSlice = createSlice({
@@ -53,6 +55,13 @@ const gamesSlice = createSlice({
         initState: GamesInitState.LOADED,
       }
     },
+    /** Set list of libraries */
+    setLibraries: (state: GamesState, { payload }: PayloadAction<string[]>) => {      
+      return {
+        ...state,
+        libraries: payload,
+      };
+    },
     /** Set whether a game is installed or not */
     setGameInstalled: (state: GamesState, { payload }: PayloadAction<GameInstalledAction>) => {
       const { gameDataPath, value } = payload;
@@ -63,19 +72,11 @@ const gamesSlice = createSlice({
         return fixSlashes(game.rootFolder).endsWith(`/${dirname}`);
       })
       if (idx > -1) {
-        // Game found, update state
-        const newGames = [...state.games];
-        newGames[idx].installed = payload.value;
-        return {
-          ...state,
-          games: newGames
-        };
+        state.games[idx].installed = value;
       }
-
-      return state;
     }
   }
 });
 
-export const { initialize, setGames, setGameInstalled } = gamesSlice.actions;
+export const { initialize, setLibraries, setGames, setGameInstalled } = gamesSlice.actions;
 export default gamesSlice.reducer;

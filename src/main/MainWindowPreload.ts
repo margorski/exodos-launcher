@@ -86,7 +86,6 @@ import { IMainWindowExternal } from "@shared/interfaces";
 
     initialThemes: createErrorProxy("initialThemes"),
     initialPlaylists: createErrorProxy("initialPlaylists"),
-    initialPlatforms: createErrorProxy("initialPlatforms"),
     initialLocaleCode: createErrorProxy("initialLocaleCode"),
 
     waitUntilInitialized() {
@@ -146,8 +145,6 @@ const onInit = (async () => {
                                 response.data.themes;
                             window.External.initialPlaylists =
                                 response.data.playlists;
-                            window.External.initialPlatforms =
-                                response.data.platforms;
                             window.External.initialLocaleCode =
                                 response.data.localeCode;
                             if (window.External.preferences.data.currentTheme) {

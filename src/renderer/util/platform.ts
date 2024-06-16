@@ -1,4 +1,5 @@
 import { GameCollection } from "@shared/game/GameCollection";
+import { IAdditionalApplicationInfo } from "@shared/game/interfaces";
 
 export function getPlatforms(collection: GameCollection): string[] {
     // Get the values from the game collection

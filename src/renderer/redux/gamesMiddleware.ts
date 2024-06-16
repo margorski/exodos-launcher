@@ -1,14 +1,16 @@
 import { isAnyOf } from '@reduxjs/toolkit';
 import { readPlatformsFile } from '@renderer/file/PlatformFile';
+import { formatPlatformFileData } from '@renderer/util/LaunchBoxHelper';
+import { findGameImageCollection, findGameVideos, initExodosInstalledGamesWatcher, loadGameMedia } from '@renderer/util/images';
+import { fixSlashes, removeLowestDirectory } from '@shared/Util';
+import { GameParser } from '@shared/game/GameParser';
+import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
 import * as fastXmlParser from "fast-xml-parser";
 import * as fs from 'fs';
 import * as path from 'path';
-import { GamesCollection, GamesInitState, initialize, setGames } from './gamesSlice';
+import { GamesCollection, GamesInitState, initialize, setGames, setLibraries } from './gamesSlice';
 import { startAppListening } from './listenerMiddleware';
-import { formatPlatformFileData } from '@renderer/util/LaunchBoxHelper';
-import { GameParser } from '@shared/game/GameParser';
-import { findGameImageCollection, findGameVideos, initExodosInstalledGamesWatcher, loadGameMedia } from '@renderer/util/images';
-import { removeLowestDirectory } from '@shared/Util';
+import { initializeViews } from './searchSlice';
 
 export function addGamesMiddleware() {
   startAppListening({
@@ -16,10 +18,11 @@ export function addGamesMiddleware() {
     effect: async (_action, listenerApi) => {
       const state = listenerApi.getState();
 
-      console.log(state.gamesState.initState);
       if (state.gamesState.initState === GamesInitState.LOADED) {
         return; // Already loaded
       }
+
+      const startTime = Date.now();
       
       // Do load
 
@@ -36,6 +39,8 @@ export function addGamesMiddleware() {
       const platformsFile = await readPlatformsFile(
         path.join(platformsPath, "../Platforms.xml")
       );
+
+      let libraries: string[] = [];
 
       // Load each platforms games into the collection
       for (const platform of platformsFile.platforms) {
@@ -77,13 +82,22 @@ export function addGamesMiddleware() {
             // Load games
             const fileCollection = GameParser.parse(data, platform, window.External.config.fullExodosPath);
 
-            console.log(platformFile);
-            console.log(fileCollection.games.length);
+            // Only add to library list if has games
+            if (fileCollection.games.length > 0) {
+              libraries.push(platform);
+            }
+
+            // Load extra game data and add to collection
             for (const game of fileCollection.games) {
               loadGameMedia(game, images, videos);
             }
             collection.games.push(...fileCollection.games);
             collection.addApps.push(...fileCollection.additionalApplications);
+
+            // Load Extras add apps
+            for (const game of fileCollection.games) {
+              collection.addApps.push(...loadDynamicExtrasForGame(game));
+            }
 
             // Create a watcher for this platform
 
@@ -102,10 +116,73 @@ export function addGamesMiddleware() {
         }
       }
 
+      console.log(`Load time - ${Date.now() - startTime}ms`);
+
       // Set collection in state
+      libraries = libraries.sort();
+      listenerApi.dispatch(setLibraries(libraries));
+      listenerApi.dispatch(initializeViews(libraries));
       listenerApi.dispatch(setGames(collection));
     }
   });
+}
+
+const EXTRAS_DIR = "Extra";
+
+function loadDynamicExtrasForGame(game: IGameInfo): IAdditionalApplicationInfo[] {
+  if (!game?.applicationPath)
+      throw new Error("Game application path not set. Invalid data.");
+
+  const relativeExtras = path.join(
+      fixSlashes(game?.applicationPath),
+      EXTRAS_DIR
+  );
+  const gameExtrasPath = path.join(
+      window.External.config.fullExodosPath,
+      relativeExtras
+  );
+
+  const addApps: IAdditionalApplicationInfo[] = [];
+
+  try {
+      if (
+          !fs.existsSync(gameExtrasPath) ||
+          !fs.statSync(gameExtrasPath).isDirectory()
+      ) {
+          return [];
+      }
+
+      const dir = fs.readdirSync(gameExtrasPath);
+      const files = dir.filter((f) =>
+          fs.statSync(path.join(gameExtrasPath, f)).isFile()
+      );
+
+      const ignoredExtensions = ["bat", "bsh", "msh", ""];
+      for (const file of files.filter((f) => !ignoredExtensions.includes(f.split(".")?.[1] ?? ""))) {
+        const name = file.split(".")[0];
+        const id = getExtrasId(game.id, file);
+        addApps.push({
+            applicationPath: path.join(relativeExtras, file),
+            autoRunBefore: false,
+            gameId: game.id,
+            id,
+            launchCommand: ``,
+            name,
+            waitForExit: false,
+        });
+      }
+  } catch (e) {
+      console.error(
+          `Error while reading extras directory: ${gameExtrasPath} Error: ${e}`
+      );
+      return [];
+  }
+
+  return addApps;
+}
+
+function getExtrasId(gameId: string, filename: string): string {
+  return `${gameId}-${filename}`;
 }
 
 export type ErrorCopy = {

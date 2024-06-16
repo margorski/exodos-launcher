@@ -174,7 +174,6 @@ function sortGameMedia(media: GameMedia, platform: string): FormattedGameMedia[]
 
     // Add videos first
     if (media.video) {
-        console.log('VIDEO');
         list.push({
             name: "30 Second Demo",
             type: FormattedGameMediaType.VIDEO,

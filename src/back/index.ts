@@ -62,11 +62,11 @@ import { v4 as uuid } from "uuid";
 import { EventEmitter } from "events";
 import { ConfigFile } from "./config/ConfigFile";
 import { loadExecMappingsFile } from "./Execs";
-import { GameManager } from "./game/GameManager";
 import { GameLauncher } from "./game/GameLauncher";
 import { BackQuery, BackState } from "./types";
 import { difObjects } from "./util/misc";
 import { FileServer } from "./backend/fileServer";
+import { PlaylistManager } from "./playlist/PlaylistManager";
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
 const send: Required<typeof process.send> = process.send
@@ -86,14 +86,13 @@ const state: BackState = {
     configFolder: createErrorProxy("configFolder"),
     exePath: createErrorProxy("exePath"),
     localeCode: createErrorProxy("countryCode"),
-    gameManager: new GameManager(),
+    playlistManager: new PlaylistManager(),
     messageQueue: [],
     isHandling: false,
     messageEmitter: new EventEmitter() as any,
     init: {
         0: false,
         1: false,
-        2: false,
     },
     initEmitter: new EventEmitter() as any,
     logs: [],
@@ -141,7 +140,7 @@ async function initialize(message: any, _: any): Promise<void> {
         console.log("chdir: " + err);
     }
 
-    await initializeGameManager();
+    await initializePlaylistManager();
 
     // Load Exec Mappings
     loadExecMappingsFile(
@@ -232,16 +231,12 @@ const startMainServer = async (acceptRemote: boolean): Promise<number> =>
         }
     });
 
-async function initializeGameManager() {
+async function initializePlaylistManager() {
     const playlistFolder = path.join(
         state.config.exodosPath,
         state.config.playlistFolderPath
     );
 
-    const platformsPath = path.join(
-        state.config.exodosPath,
-        state.config.platformFolderPath
-    );
     const onPlaylistAddOrUpdate = function (playlist: GamePlaylist): void {
         // Clear all query caches that uses this playlist
         const hashes = Object.keys(state.queries);
@@ -258,34 +253,14 @@ async function initializeGameManager() {
         });
     };
 
-    console.info(`Initializing gameManager with ${platformsPath}`);
-    try {
-        const errors = await state.gameManager.init({
-            exodosPath: state.config.exodosPath,
-            platformsPath,
-            playlistFolder,
-            imagesPath: state.config.imageFolderPath,
-            onPlaylistAddOrUpdate,
-            log,
-        });
-        if (errors.length > 0) {
-            console.error(
-                `${errors.length} platform(s) throwfailed to load. Errors:`
-            );
-            for (let e of errors) {
-                console.error(errors);
-            }
-        }
-    } catch (error) {
-        console.error(`Cannot load platforms, error: ${error}`);
-        return;
-    }
+    state.playlistManager.init({
+        playlistFolder,
+        log,
+        onPlaylistAddOrUpdate,
+    });
 
     state.init[BackInit.PLAYLISTS] = true;
     state.initEmitter.emit(BackInit.PLAYLISTS);
-
-    state.init[BackInit.GAMES] = true;
-    state.initEmitter.emit(BackInit.GAMES);
 }
 
 function onConnect(
@@ -367,15 +342,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
 
         case BackIn.GET_RENDERER_INIT_DATA:
             {
-                const platforms: Record<string, string[]> = {};
-                for (let i = 0; i < state.gameManager.platforms.length; i++) {
-                    const p = state.gameManager.platforms[i];
-                    if (!platforms[p.name]) {
-                        platforms[p.name] = [];
-                    }
-                    platforms[p.name].push(p.name);
-                }
-
                 respond<GetRendererInitDataResponse>(event.target, {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
@@ -389,9 +355,8 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                             meta: theme.meta,
                         })),
                         playlists: state.init[BackInit.PLAYLISTS]
-                            ? state.gameManager.playlists
+                            ? state.playlistManager.playlists
                             : undefined,
-                        platforms: platforms,
                         localeCode: state.localeCode,
                     },
                 });
@@ -424,16 +389,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             }
             break;
 
-        case BackIn.GET_GAMES_TOTAL:
-            {
-                respond<GetGamesTotalResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: state.gameManager.countGames(),
-                });
-            }
-            break;
-
         case BackIn.SET_LOCALE:
             {
                 const reqData: SetLocaleData = req.data;
@@ -461,10 +416,9 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         case BackIn.LAUNCH_ADDAPP:
             {
                 const reqData: LaunchAddAppData = req.data;
+                const { game, addApp } = reqData;
 
-                const addApp = state.gameManager.findAddApp(reqData.id);
                 if (addApp) {
-                    const game = state.gameManager.findGame(addApp.gameId);
                     GameLauncher.launchAdditionalApplication({
                         addApp,
                         fpPath: path.resolve(state.config.exodosPath),
@@ -512,7 +466,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             {
                 const reqData: LaunchGameData = req.data;
 
-                const { game, addApps } = state.gameManager.getGame(reqData.id);
+                const { game, addApps } = reqData;
                 if (game) {
                     GameLauncher.launchGame({
                         game,
@@ -539,7 +493,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
         case BackIn.LAUNCH_GAME_SETUP:
             {
                 const reqData: LaunchGameData = req.data;
-                const { game, addApps } = state.gameManager.getGame(reqData.id);
+                const { game, addApps } = reqData;
 
                 if (game) {
                     GameLauncher.launchGameSetup({
@@ -560,178 +514,6 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
                     data: undefined,
-                });
-            }
-            break;
-
-        case BackIn.GET_GAME:
-            {
-                const reqData: GetGameData = req.data;
-                const data = state.gameManager.getGame(reqData.id);
-                respond<GetGameResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data,
-                });
-            }
-            break;
-
-        case BackIn.GET_ALL_GAMES:
-            {
-                const games: IGameInfo[] = [];
-                for (let i = 0; i < state.gameManager.platforms.length; i++) {
-                    const platform = state.gameManager.platforms[i];
-                    games.splice(games.length, 0, ...platform.collection.games);
-                }
-
-                respond<GetAllGamesResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: { games },
-                });
-            }
-            break;
-
-        case BackIn.RANDOM_GAMES:
-            {
-                const reqData: RandomGamesData = req.data;
-
-                let allGames: IGameInfo[] = [];
-                for (let platform of state.gameManager.platforms) {
-                    Array.prototype.push.apply(
-                        allGames,
-                        platform.collection.games
-                    );
-                }
-
-                const pickedGames: IGameInfo[] = [];
-                for (let i = 0; i < reqData.count; i++) {
-                    const index = (Math.random() * allGames.length) | 0;
-                    const game = allGames[index];
-                    if (game) {
-                        pickedGames.push(game);
-                        allGames.splice(index, 1);
-                    }
-                }
-
-                respond<RandomGamesResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: pickedGames,
-                });
-            }
-            break;
-
-        case BackIn.BROWSE_VIEW_PAGE:
-            {
-                const reqData: BrowseViewPageData = req.data;
-
-                const query: BackQuery = {
-                    library: reqData.query.library,
-                    search: reqData.query.search,
-                    orderBy: reqData.query.orderBy as GameOrderBy,
-                    orderReverse: reqData.query
-                        .orderReverse as GameOrderReverse,
-                    playlistId: reqData.query.playlistId,
-                };
-
-                var cache = state.gameManager.queryGames(query);
-
-                respond<BrowseViewPageResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.BROWSE_VIEW_PAGE_RESPONSE,
-                    data: {
-                        games: cache.games.slice(
-                            reqData.offset,
-                            reqData.offset + reqData.limit
-                        ),
-                        offset: reqData.offset,
-                        total: cache.games.length,
-                    },
-                });
-            }
-            break;
-
-        case BackIn.BROWSE_VIEW_INDEX:
-            {
-                const reqData: BrowseViewIndexData = req.data;
-
-                const query: BackQuery = {
-                    library: reqData.query.library,
-                    search: reqData.query.search,
-                    orderBy: reqData.query.orderBy as GameOrderBy,
-                    orderReverse: reqData.query
-                        .orderReverse as GameOrderReverse,
-                    playlistId: reqData.query.playlistId,
-                };
-
-                const hash = createHash("sha256")
-                    .update(JSON.stringify(query))
-                    .digest("base64");
-                let cache = state.queries[hash];
-                if (!cache) {
-                    state.queries[hash] = cache =
-                        state.gameManager.queryGames(query);
-                } // @TODO Start clearing the cache if it gets too full
-
-                let index = -1;
-                for (let i = 0; i < cache.games.length; i++) {
-                    if (cache.games[i].id === reqData.gameId) {
-                        index = i;
-                        break;
-                    }
-                }
-
-                respond<BrowseViewIndexResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: { index },
-                });
-            }
-            break;
-
-        case BackIn.QUICK_SEARCH:
-            {
-                const reqData: QuickSearchData = req.data;
-
-                const query: BackQuery = {
-                    library: reqData.query.library,
-                    search: reqData.query.search,
-                    orderBy: reqData.query.orderBy as GameOrderBy,
-                    orderReverse: reqData.query
-                        .orderReverse as GameOrderReverse,
-                    playlistId: reqData.query.playlistId,
-                };
-
-                const hash = createHash("sha256")
-                    .update(JSON.stringify(query))
-                    .digest("base64");
-                let cache = state.queries[hash];
-                if (!cache) {
-                    state.queries[hash] = cache =
-                        state.gameManager.queryGames(query);
-                }
-
-                let result: string | undefined;
-                let index: number | undefined;
-                for (let i = 0; i < cache.games.length; i++) {
-                    if (
-                        cache.games[i].title
-                            .toLowerCase()
-                            .startsWith(reqData.search)
-                    ) {
-                        index = i;
-                        result = cache.games[i].id;
-                        break;
-                    }
-                }
-                respond<QuickSearchResponseData>(event.target, {
-                    id: req.id,
-                    type: BackOut.GENERIC_RESPONSE,
-                    data: {
-                        id: result,
-                        index: index,
-                    },
                 });
             }
             break;
@@ -789,7 +571,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                 respond<GetPlaylistResponse>(event.target, {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
-                    data: state.gameManager.playlists,
+                    data: state.playlistManager.playlists,
                 });
             }
             break;

@@ -120,8 +120,6 @@ export function parseUserInput(input: string) {
       const keyChar = getKeyChar(token);
 
       if (keyChar) {
-        console.log(token);
-        console.log('keychar ' + keyChar);
         let parts = token.split(keyChar);
         if (parts.length > 1) {
           workingKey = parts[0];
@@ -227,8 +225,6 @@ export function parseUserInput(input: string) {
       }
     }
   }
-
-  console.log(filter);
 
   return filter;
 }

@@ -9,7 +9,6 @@ import { app } from "@electron/remote";
 import { englishTranslation } from "@renderer/lang/en";
 
 type OwnProps = {
-    platforms: Record<string, string[]>;
     playlists: GamePlaylist[];
     onLaunchGame: (gameId: string) => void;
     /** Whether an update is available to the Launcher */
