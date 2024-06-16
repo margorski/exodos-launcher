@@ -3,7 +3,6 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { ExodosBackendInfo, GamePlaylist } from "@shared/interfaces";
 import { WithPreferencesProps } from "../../containers/withPreferences";
-import { WithSearchProps } from "../../containers/withSearch";
 import { OpenIcon, OpenIconType } from "../OpenIcon";
 import { BackIn, LaunchExodosContentData } from "@shared/back/types";
 import { app } from "@electron/remote";
@@ -12,17 +11,14 @@ import { englishTranslation } from "@renderer/lang/en";
 type OwnProps = {
     platforms: Record<string, string[]>;
     playlists: GamePlaylist[];
-    onSelectPlaylist: (library: string, playlistId: string | undefined) => void;
     onLaunchGame: (gameId: string) => void;
-    /** Clear the current search query (resets the current search filters). */
-    clearSearch: () => void;
     /** Whether an update is available to the Launcher */
     updateInfo: UpdateInfo | undefined;
     /** Callback to initiate the update */
     exodosBackendInfo: ExodosBackendInfo | undefined;
 };
 
-export type HomePageProps = OwnProps & WithPreferencesProps & WithSearchProps;
+export type HomePageProps = OwnProps & WithPreferencesProps;
 
 export function HomePage(props: HomePageProps) {
     const allStrings = englishTranslation;

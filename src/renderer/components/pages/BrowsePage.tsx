@@ -13,9 +13,8 @@ import { updatePreferencesData } from "@shared/preferences/util";
 import { formatString } from "@shared/utils/StringFormatter";
 import { ConnectedLeftBrowseSidebar } from "../../containers/ConnectedLeftBrowseSidebar";
 import { ConnectedRightBrowseSidebar } from "../../containers/ConnectedRightBrowseSidebar";
-import { WithPreferencesProps } from "../../containers/withPreferences";
+import { WithPreferencesProps, withPreferences } from "../../containers/withPreferences";
 import { GAMES } from "../../interfaces";
-import { SearchQuery } from "../../store/search";
 import { gameScaleSpan } from "../../Util";
 import { GameGrid } from "../GameGrid";
 import { GameList } from "../GameList";
@@ -23,51 +22,32 @@ import { GameOrderChangeEvent } from "../GameOrder";
 import { InputElement } from "../InputField";
 import { ResizableSidebar, SidebarResizeEvent } from "../ResizableSidebar";
 import { englishTranslation } from "@renderer/lang/en";
+import { RootState } from "@renderer/redux/store";
+import { ConnectedProps, connect } from "react-redux";
+import { selectGame, selectPlaylist } from "@renderer/redux/searchSlice";
 
-type OwnProps = {
-    games: GAMES | undefined;
-    gamesTotal: number;
+export type BrowsePageProps = {
     playlists: GamePlaylist[];
     playlistIconCache: Record<string, string>;
-    onRequestGames: (start: number, end: number) => void;
-    onQuickSearch: (search: string) => void;
 
-    /** Most recent search query. */
-    search: SearchQuery;
     /** Current parameters for ordering games. */
     order?: GameOrderChangeEvent;
     /** Scale of the games. */
     gameScale: number;
     /** Layout of the games. */
     gameLayout: BrowsePageLayout;
-    /** Currently selected game (if any). */
-    selectedGameId?: string;
-    /** Currently selected playlist (if any). */
-    selectedPlaylistId?: string;
-    /** Called when a game is selected. */
-    onSelectGame: (gameId?: string) => void;
-    /** Called when a playlist is selected. */
-    onSelectPlaylist: (library: string, playlistId: string | undefined) => void;
-    /** Clear the current search query (resets the current search filters). */
-    clearSearch: () => void;
     /** "Route" of the currently selected library (empty string means no library). */
     gameLibrary: string;
     /** Key to force game refresh */
     refreshKey: number;
 };
 
-export type BrowsePageProps = OwnProps & WithPreferencesProps;
-
 export type BrowsePageState = {
     /** Current quick search string (used to jump to a game in the list, not to filter the list). */
     quickSearch: string;
     /** Currently dragged game (if any). */
     draggedGameId?: string;
-
-    /** Buffer for the selected game (all changes are made to the game until saved). */
-    currentGame?: IGameInfo;
-    /** Buffer for the selected games additional applications (all changes are made to this until saved). */
-    currentAddApps?: IAdditionalApplicationInfo[];
+    
     /** Buffer for the playlist notes of the selected game/playlist (all changes are made to the game until saved). */
     currentPlaylistNotes?: string;
 
@@ -76,11 +56,24 @@ export type BrowsePageState = {
     currentPlaylistFilename?: string;
 };
 
-export interface BrowsePage {}
+const mapState = (state: RootState) => ({
+    searchState: state.searchState,
+    games: state.gamesState.games,
+    addApps: state.gamesState.addApps,
+});
+
+const mapDispatch = {
+    onSelectPlaylist: selectPlaylist,
+    onSelectGame: selectGame
+}
+
+const connector = connect(mapState, mapDispatch);
+
+type ConnectedBrowsePageProps = BrowsePageProps & WithPreferencesProps & ConnectedProps<typeof connector>;
 
 /** Page displaying the games and playlists. */
-export class BrowsePage extends React.Component<
-    BrowsePageProps,
+class BrowsePage extends React.Component<
+    ConnectedBrowsePageProps,
     BrowsePageState
 > {
     /** Reference of the game grid/list element. */
@@ -94,13 +87,12 @@ export class BrowsePage extends React.Component<
     /** Time it takes before the current "quick search" string to reset after a change was made (in milliseconds). */
     static readonly quickSearchTimeout: number = 1500;
 
-    constructor(props: BrowsePageProps) {
+    constructor(props: ConnectedBrowsePageProps) {
         super(props);
         // Set initial state (this is set up to remove all "setState" calls)
         const initialState: BrowsePageState = {
             quickSearch: "",
         };
-        this.updateCurrentGameAndAddApps();
         this.state = initialState;
     }
 
@@ -111,78 +103,33 @@ export class BrowsePage extends React.Component<
     }
 
     componentDidUpdate(prevProps: BrowsePageProps, prevState: BrowsePageState) {
-        const { gameLibrary, selectedGameId, selectedPlaylistId } = this.props;
-        const { quickSearch } = this.state;
-
         if (this.props.playlists !== prevProps.playlists) {
             updatePreferencesData({
                 browsePageShowLeftSidebar: !!this.props.playlists.length,
             });
         }
-
-        // Update current game and add-apps if the selected game changes
-        if (selectedGameId && selectedGameId !== prevProps.selectedGameId) {
-            this.updateCurrentGameAndAddApps();
-        }
-        // Deselect the current game ad add-apps if the game has been deselected (from outside this component most likely)
-        if (
-            selectedGameId === undefined &&
-            (this.state.currentGame || this.state.currentAddApps)
-        ) {
-            this.setState({
-                currentGame: undefined,
-                currentAddApps: undefined,
-                currentPlaylistNotes: undefined,
-            });
-        }
-        // Update current game and add-apps if the selected game changes
-        if (
-            gameLibrary === prevProps.gameLibrary &&
-            selectedPlaylistId !== prevProps.selectedPlaylistId
-        ) {
-            this.setState({
-                currentGame: undefined,
-                currentAddApps: undefined,
-            });
-        }
-        // Check if quick search string changed, and if it isn't empty
-        if (prevState.quickSearch !== quickSearch && quickSearch !== "") {
-            this.props.onQuickSearch(quickSearch);
-        }
-        // Check the library selection changed (and no game is selected)
-        if (!selectedGameId && gameLibrary !== prevProps.gameLibrary) {
-            if (this.props.clearSearch) {
-                this.props.clearSearch();
-            }
-            this.setState({
-                currentGame: undefined,
-                currentAddApps: undefined,
-            });
-        }
-        // Cheap hack to force the game to update if a key changes
-        if (prevProps.refreshKey !== this.props.refreshKey) {
-            this.updateCurrentGameAndAddApps();
-        }
     }
 
     render() {
-        const { games, playlists, selectedGameId, selectedPlaylistId } =
+        const { playlists, searchState, gameLibrary } =
             this.props;
         const { draggedGameId } = this.state;
+        const view = searchState.views[gameLibrary];
         const order = this.props.order || BrowsePage.defaultOrder;
+
+        // Find selected game
+        const selectedGame = view?.selectedGameId ? this.props.games.find(g => g.id === view.selectedGameId) : undefined;
+        const selectedAddApps = selectedGame ? this.props.addApps.filter(a => a.gameId === selectedGame.id) : [];
 
         // Find the selected game in the selected playlist
         let gamePlaylistEntry: GamePlaylistEntry | undefined;
-        if (selectedPlaylistId && selectedGameId) {
-            const playlist = playlists.find(
-                (p) => p.filename === selectedPlaylistId
+        if (view && view.selectedPlaylist && selectedGame) {
+            gamePlaylistEntry = view.selectedPlaylist.games.find(
+                (g) => g.id === selectedGame.id
             );
-            if (playlist) {
-                gamePlaylistEntry = playlist.games.find(
-                    (g) => g.id === selectedGameId
-                );
-            }
         }
+        console.log(`total result list ` + view?.games.length);
+
         // Render
         return (
             <div className="game-browser" ref={this.gameBrowserRef}>
@@ -196,11 +143,7 @@ export class BrowsePage extends React.Component<
                 >
                     <ConnectedLeftBrowseSidebar
                         playlists={this.props.playlists}
-                        selectedPlaylistID={selectedPlaylistId || ""}
-                        currentPlaylist={this.state.currentPlaylist}
-                        currentPlaylistFilename={
-                            this.state.currentPlaylistFilename
-                        }
+                        currentPlaylist={view?.selectedPlaylist}
                         playlistIconCache={this.props.playlistIconCache}
                         onItemClick={this.onPlaylistClick}
                         onSetIcon={this.onPlaylistSetIcon}
@@ -229,15 +172,14 @@ export class BrowsePage extends React.Component<
                             const width: number = (height * 0.7) | 0;
                             return (
                                 <GameGrid
-                                    games={games}
+                                    games={view?.games}
                                     installedGameIds={installedGameIds}
-                                    gamesTotal={this.props.gamesTotal}
-                                    selectedGameId={selectedGameId}
+                                    gamesTotal={view?.games.length}
+                                    selectedGameId={view?.selectedGameId}
                                     draggedGameId={draggedGameId}
                                     noRowsRenderer={this.noRowsRendererMemo()}
                                     onGameSelect={this.onGameSelect}
                                     onGameLaunch={this.onGameLaunch}
-                                    onRequestGames={this.props.onRequestGames}
                                     orderBy={order.orderBy}
                                     orderReverse={order.orderReverse}
                                     cellWidth={width}
@@ -252,15 +194,14 @@ export class BrowsePage extends React.Component<
                             );
                             return (
                                 <GameList
-                                    games={games}
+                                    games={view?.games}
                                     installedGameIds={installedGameIds}
-                                    gamesTotal={this.props.gamesTotal}
-                                    selectedGameId={selectedGameId}
+                                    gamesTotal={view?.games.length}
+                                    selectedGameId={view?.selectedGameId}
                                     draggedGameId={draggedGameId}
                                     noRowsRenderer={this.noRowsRendererMemo()}
                                     onGameSelect={this.onGameSelect}
                                     onGameLaunch={this.onGameLaunch}
-                                    onRequestGames={this.props.onRequestGames}
                                     orderBy={order.orderBy}
                                     orderReverse={order.orderReverse}
                                     rowHeight={height}
@@ -279,31 +220,25 @@ export class BrowsePage extends React.Component<
                     onResize={this.onRightSidebarResize}
                 >
                     <ConnectedRightBrowseSidebar
-                        currentGame={this.state.currentGame}
-                        currentAddApps={this.state.currentAddApps}
+                        currentGame={selectedGame}
+                        currentAddApps={selectedAddApps}
                         currentPlaylistNotes={this.state.currentPlaylistNotes}
                         currentLibrary={this.props.gameLibrary}
-                        onDeselectPlaylist={this.onRightSidebarDeselectPlaylist}
                         gamePlaylistEntry={gamePlaylistEntry}
-                        isInstalled={this.isCurrentGameInstalled()}
                     />
                 </ResizableSidebar>
             </div>
         );
     }
 
-    private isCurrentGameInstalled = () => {
-        if (this.state.currentGame) {
-            return this.state.currentGame.installed;
-        }
-        return false;
-    };
-
     private noRowsRendererMemo = memoizeOne(() => {
         const strings = englishTranslation.browse;
+        const view = this.props.searchState.views[this.props.gameLibrary];
+        const gamesTotal = view ? view.games.length : 0;
+
         return () => (
             <div className="game-list__no-games">
-                {this.props.selectedPlaylistId ? (
+                {view && view.selectedPlaylist ? (
                     /* Empty Playlist */
                     <>
                         <h2 className="game-list__no-games__title">
@@ -324,7 +259,7 @@ export class BrowsePage extends React.Component<
                             {strings.noGamesFound}
                         </h1>
                         <br />
-                        {this.props.gamesTotal > 0 ? (
+                        {gamesTotal > 0 ? (
                             <>
                                 {strings.noGameMatchedDesc}
                                 <br />
@@ -338,14 +273,6 @@ export class BrowsePage extends React.Component<
             </div>
         );
     });
-
-    /** Deselect without clearing search (Right sidebar will search itself) */
-    onRightSidebarDeselectPlaylist = (): void => {
-        const { onSelectPlaylist } = this.props;
-        if (onSelectPlaylist) {
-            onSelectPlaylist(this.props.gameLibrary, undefined);
-        }
-    };
 
     onLeftSidebarResize = (event: SidebarResizeEvent): void => {
         const maxWidth =
@@ -386,8 +313,13 @@ export class BrowsePage extends React.Component<
     }
 
     onGameSelect = (gameId?: string): void => {
-        if (this.props.selectedGameId !== gameId) {
-            this.props.onSelectGame(gameId);
+        const view = this.props.searchState.views[this.props.gameLibrary];
+
+        if (view?.selectedGameId !== gameId) {
+            this.props.onSelectGame({
+                view: this.props.gameLibrary,
+                gameId,
+            });
         }
     };
 
@@ -427,61 +359,12 @@ export class BrowsePage extends React.Component<
         }
     };
 
-    /** Replace the "current game" with the selected game (in the appropriate circumstances) */
-    async updateCurrentGameAndAddApps(): Promise<void> {
-        const gameId = this.props.selectedGameId;
-        if (gameId !== undefined) {
-            // Find the selected game in the selected playlist
-            const playlistId = this.props.selectedPlaylistId;
-            let notes: string | undefined;
-            if (playlistId && gameId) {
-                const playlist = this.props.playlists.find(
-                    (p) => p.filename === playlistId
-                );
-                if (playlist) {
-                    const entry = playlist.games.find((g) => g.id === gameId);
-                }
-            }
-
-            window.External.back.send<GetGameResponseData, GetGameData>(
-                BackIn.GET_GAME,
-                { id: gameId },
-                (res) => {
-                    if (res.data) {
-                        if (res.data.game) {
-                            this.setState({
-                                currentGame: res.data.game,
-                                currentAddApps: res.data.addApps || [],
-                                currentPlaylistNotes: notes,
-                            });
-                        } else {
-                            console.log(
-                                `Failed to get game. Game is undefined (GameID: "${gameId}").`
-                            );
-                        }
-                    } else {
-                        console.log(
-                            `Failed to get game. Empty data in response (GameID: "${gameId}").`
-                        );
-                    }
-                }
-            );
-        }
-    }
-
-    onPlaylistClick = (playlistId: string, selected: boolean): void => {
+    onPlaylistClick = (playlist: GamePlaylist, selected: boolean): void => {
         if (!selected) {
-            this.setState({
-                currentPlaylist: undefined,
-                currentPlaylistFilename: undefined,
+            this.props.onSelectPlaylist({
+                view: this.props.gameLibrary,
+                playlist,
             });
-            this.props.clearSearch();
-            this.props.onSelectPlaylist(
-                this.props.gameLibrary,
-                this.props.selectedPlaylistId !== playlistId
-                    ? playlistId
-                    : undefined
-            );
         }
     };
 
@@ -552,20 +435,13 @@ export class BrowsePage extends React.Component<
     };
 
     onLeftSidebarShowAllClick = (): void => {
-        const { clearSearch, onSelectPlaylist } = this.props;
-        if (clearSearch) {
-            clearSearch();
-        }
+        const { onSelectPlaylist, gameLibrary } = this.props;
         if (onSelectPlaylist) {
-            onSelectPlaylist(this.props.gameLibrary, undefined);
+            onSelectPlaylist({
+                view: gameLibrary,
+                playlist: undefined
+            });
         }
-        this.setState({
-            currentPlaylist: undefined,
-            currentPlaylistFilename: undefined,
-            currentGame: undefined,
-            currentAddApps: undefined,
-            currentPlaylistNotes: undefined,
-        });
     };
 
     /** Focus the game grid/list (if this has a reference to one). */
@@ -587,6 +463,8 @@ export class BrowsePage extends React.Component<
         orderReverse: "ascending",
     };
 }
+
+export default withPreferences(connector(BrowsePage));
 
 function calcScale(defHeight: number, scale: number): number {
     return (defHeight + (scale - 0.5) * 2 * defHeight * gameScaleSpan) | 0;

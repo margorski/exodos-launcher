@@ -1,27 +1,22 @@
-import * as React from "react";
-import { Link } from "react-router-dom";
+import { englishTranslation } from "@renderer/lang/en";
+import { setSearchText } from "@renderer/redux/searchSlice";
+import { RootState } from "@renderer/redux/store";
 import { getLibraryItemTitle } from "@shared/library/util";
-import { WithPreferencesProps } from "../containers/withPreferences";
+import * as React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import { Paths } from "../Paths";
-import { SearchQuery } from "../store/search";
 import { joinLibraryRoute } from "../Util";
+import { WithPreferencesProps } from "../containers/withPreferences";
 import { GameOrder, GameOrderChangeEvent } from "./GameOrder";
 import { OpenIcon } from "./OpenIcon";
-import {
-    DefaultGameOrderBy,
-    DefaultGameOrderReverse,
-} from "@shared/order/interfaces";
-import { englishTranslation } from "@renderer/lang/en";
 
 type OwnProps = {
-    /** The most recent search query. */
-    searchQuery: SearchQuery;
+    gameLibrary?: string;
     /** The current parameters for ordering games. */
     order: GameOrderChangeEvent;
     /** Array of library routes */
     libraries: string[];
-    /** Called when a search is made. */
-    onSearch: (text: string, redirect: boolean) => void;
     /** Called when any of the ordering parameters are changed (by the header or a sub-component). */
     onOrderChange?: (event: GameOrderChangeEvent) => void;
     /** Called when the left sidebar toggle button is clicked. */
@@ -32,143 +27,18 @@ type OwnProps = {
 
 export type HeaderProps = OwnProps & WithPreferencesProps;
 
-type HeaderState = {
-    /** Current text in the search field. */
-    searchText: string;
-};
+export function Header(props: HeaderProps) {
+    const viewName = props.gameLibrary || (props.libraries.length > 0 ? props.libraries[0] : '');
+    const strings = englishTranslation.app;
+    const { onOrderChange, libraries } = props;
+    const searchState = useSelector((state: RootState) => state.searchState);
+    const dispatch = useDispatch();
+    const view = searchState.views[viewName];
+    const searchInputRef = React.useRef<HTMLInputElement>(null);
 
-export interface Header {}
-
-/** The header that is always visible at the top of the main window (just below the title bar). */
-export class Header extends React.Component<HeaderProps, HeaderState> {
-    searchInputRef: React.RefObject<HTMLInputElement> = React.createRef();
-
-    constructor(props: HeaderProps) {
-        super(props);
-        this.state = {
-            searchText: this.props.searchQuery.text,
-        };
-    }
-
-    componentDidMount() {
-        window.addEventListener("keypress", this.onKeypress);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener("keypress", this.onKeypress);
-    }
-
-    componentDidUpdate(prevProps: HeaderProps, prevState: HeaderState) {
-        // Update the text in the text-box if the search text has changed
-        const text = this.props.searchQuery.text;
-        if (
-            text !== prevProps.searchQuery.text &&
-            text !== prevState.searchText
-        ) {
-            this.setState({ searchText: text });
-        }
-    }
-
-    render() {
-        const strings = englishTranslation.app;
-        const { onOrderChange, libraries } = this.props;
-        const { searchText } = this.state;
-
-        return (
-            <div className="header">
-                {/* Header Menu */}
-                <div className="header__wrap">
-                    <ul className="header__menu">
-                        <MenuItem title={strings.home} link={Paths.HOME} />
-                        {libraries.map((library) => (
-                            <MenuItem
-                                key={library}
-                                title={getLibraryItemTitle(library)}
-                                link={joinLibraryRoute(library)}
-                            />
-                        ))}
-                        <MenuItem title={strings.logs} link={Paths.LOGS} />
-                    </ul>
-                </div>
-                {/* Header Search */}
-                <div className="header__wrap header__wrap--width-restricted header__search__wrap">
-                    <div>
-                        <div className="header__search">
-                            <div className="header__search__left">
-                                <input
-                                    className="header__search__input"
-                                    ref={this.searchInputRef}
-                                    value={searchText}
-                                    placeholder={strings.searchPlaceholder}
-                                    onChange={this.onSearchChange}
-                                />
-                            </div>
-                            <div
-                                className="header__search__right"
-                                onClick={
-                                    searchText ? this.onClearClick : undefined
-                                }
-                            >
-                                <div className="header__search__right__inner">
-                                    <OpenIcon
-                                        className="header__search__icon"
-                                        icon={
-                                            searchText
-                                                ? "circle-x"
-                                                : "magnifying-glass"
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {/* Header Drop-downs */}
-                <div className="header__wrap">
-                    <div>
-                        <GameOrder
-                            onChange={onOrderChange}
-                            orderBy={this.props.order.orderBy}
-                            orderReverse={this.props.order.orderReverse}
-                        />
-                    </div>
-                </div>
-                <div className="header__wrap">
-                    <div
-                        className="simple-button"
-                        onClick={() => this.onReset(onOrderChange)}
-                    >
-                        {strings.reset}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    onReset = (
-        onOrderChange: ((event: GameOrderChangeEvent) => void) | undefined
-    ) => {
-        if (onOrderChange)
-            onOrderChange({
-                orderBy: DefaultGameOrderBy,
-                orderReverse: DefaultGameOrderReverse,
-            });
-        setTimeout(this.onClearClick, 0);
-    };
-
-    onSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        const value = event.target.value;
-        this.setState({ searchText: value });
-        this.props.onSearch(value, true);
-        // "Clear" the search when the search field gets empty
-        if (value === "") {
-            this.props.onSearch("", false);
-        }
-    };
-
-    onKeypress = (event: KeyboardEvent): void => {
+    const onKeypress = (event: KeyboardEvent) => {
         if (event.ctrlKey && event.code === "KeyF") {
-            const element = this.searchInputRef.current;
+            const element = searchInputRef.current;
             if (element) {
                 element.select();
                 event.preventDefault();
@@ -176,10 +46,99 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
         }
     };
 
-    onClearClick = (): void => {
-        this.setState({ searchText: "" });
-        this.props.onSearch("", false);
+    React.useEffect(() => {
+        window.addEventListener('keypress', onKeypress);
+
+        return () => {
+            window.removeEventListener('keypress', onKeypress);
+        };
+    }, []);
+
+    const onSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const view = props.gameLibrary || (props.libraries.length > 0 ? props.libraries[0] : '');
+        if (view) {
+            dispatch(setSearchText({
+                view,
+                text: event.currentTarget.value,
+            }));
+        }
     };
+
+    const onClearClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        const view = props.gameLibrary || (props.libraries.length > 0 ? props.libraries[0] : '');
+        if (view) {
+            dispatch(setSearchText({
+                view,
+                text: '',
+            }));
+        }
+    }
+
+    return (
+        <div className="header">
+            {/* Header Menu */}
+            <div className="header__wrap">
+                <ul className="header__menu">
+                    <MenuItem title={strings.home} link={Paths.HOME} />
+                    {libraries.map((library) => (
+                        <MenuItem
+                            key={library}
+                            title={getLibraryItemTitle(library)}
+                            link={joinLibraryRoute(library)}
+                        />
+                    ))}
+                    <MenuItem title={strings.logs} link={Paths.LOGS} />
+                </ul>
+            </div>
+            {/* Header Search */}
+            <div className="header__wrap header__wrap--width-restricted header__search__wrap">
+                <div>
+                    <div className="header__search">
+                        <div className="header__search__left">
+                            <input
+                                className="header__search__input"
+                                ref={searchInputRef}
+                                value={view ? view.text : ''}
+                                placeholder={strings.searchPlaceholder}
+                                onChange={onSearchChange}
+                            />
+                        </div>
+                        <div
+                            className="header__search__right"
+                            onClick={onClearClick} >
+                            <div className="header__search__right__inner">
+                                <OpenIcon
+                                    className="header__search__icon"
+                                    icon={
+                                        view && view.text
+                                            ? "circle-x"
+                                            : "magnifying-glass"
+                                    }
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Header Drop-downs */}
+            <div className="header__wrap">
+                <div>
+                    <GameOrder
+                        onChange={onOrderChange}
+                        orderBy={props.order.orderBy}
+                        orderReverse={props.order.orderReverse}
+                    />
+                </div>
+            </div>
+            {/* <div className="header__wrap">
+                <div
+                    className="simple-button"
+                    onClick={() => onReset(onOrderChange)} >
+                    {strings.reset}
+                </div>
+            </div> */}
+        </div>
+    );
 }
 
 /** An item in the header menu. Used as buttons to switch between tabs/pages. */

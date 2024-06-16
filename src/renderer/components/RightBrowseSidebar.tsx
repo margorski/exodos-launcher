@@ -12,7 +12,6 @@ import {
     getGameImagePath
 } from "../Util";
 import { WithPreferencesProps } from "../containers/withPreferences";
-import { WithSearchProps } from "../containers/withSearch";
 import { DropdownInputField } from "./DropdownInputField";
 import { FormattedGameMedia, GameImageCarousel } from "./GameImageCarousel";
 import { MediaPreview } from "./ImagePreview";
@@ -30,15 +29,9 @@ type OwnProps = {
     currentLibrary: string;
     /** Currently selected game entry (if any) */
     gamePlaylistEntry?: GamePlaylistEntry;
-    /** Called when a playlist is deselected (searching game fields) */
-    onDeselectPlaylist: () => void;
-    /** If the selected game is installed */
-    isInstalled: boolean;
 };
 
-export type RightBrowseSidebarProps = OwnProps &
-    WithPreferencesProps &
-    WithSearchProps;
+export type RightBrowseSidebarProps = OwnProps & WithPreferencesProps;
 
 type RightBrowseSidebarState = {
     /** If a preview of the current game's selected media. */
@@ -65,15 +58,15 @@ export class RightBrowseSidebar extends React.Component<
         // HACK: This is a hacky solution to determine if the selected item is a game or a magazine
         if (game) {
             const {
+                currentGame,
                 currentAddApps,
                 gamePlaylistEntry,
                 currentPlaylistNotes,
-                isInstalled,
             } = this.props;
 
             const isGame = !!game?.configurationPath;
             const playButtonLabel = isGame
-                ? isInstalled
+                ? currentGame?.installed
                     ? strings.play
                     : strings.install
                 : strings.open;
@@ -109,7 +102,7 @@ export class RightBrowseSidebar extends React.Component<
                                         <input
                                             type="button"
                                             className="simple-button"
-                                            disabled={!isInstalled}
+                                            disabled={!currentGame?.installed}
                                             value={strings.setup}
                                             onClick={() =>
                                                 window.External.back.send<LaunchGameData>(
@@ -214,15 +207,6 @@ export class RightBrowseSidebar extends React.Component<
                                     .toString()}
                                 placeholder={strings.noReleaseDate}
                                 className="browse-right-sidebar__searchable"
-                                onClick={() =>
-                                    this.props.onSearch(
-                                        `releaseDate:${new Date(
-                                            game.releaseDate
-                                        )
-                                            .getFullYear()
-                                            .toString()}`
-                                    )
-                                }
                             />
                         </div>
                     </div>

@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as chokidar from "chokidar";
 import { promisify } from "util";
-import { copyError, loadGameMedia, walkSync } from "../util/misc";
+import { copyError, walkSync } from "../util/misc";
 import { GameManagerState, LoadPlatformError, ThumbnailList } from "./types";
 import {
     PlaylistManager,
@@ -22,7 +22,6 @@ import {
     orderGames,
 } from "@shared/game/GameFilter";
 import { readPlatformsFile } from "@back/platform/PlatformFile";
-import { findGameImageCollection, findGameVideos } from "@back/util/images";
 import { fixSlashes } from "@shared/Util";
 import { onGameUpdated } from "..";
 
@@ -364,16 +363,6 @@ export class GameManager {
                     
                     // Load games
                     platform.collection = GameParser.parse(data, platform.name, exodosPath);
-
-                    // Load images
-                    const imagesRoot = path.join(exodosPath, imagesPath, platform.name);
-                    const videoRoot = path.join(exodosPath, "Videos", platform.name);
-                    const images = await findGameImageCollection(imagesRoot);
-                    const videos = findGameVideos(videoRoot);
-                    console.log(JSON.stringify(videos, undefined, 2));
-                    for (const game of platform.collection.games) {
-                        loadGameMedia(game, images, videos);
-                    }
 
                     // Success!
                     this._state.platforms.push(platform);

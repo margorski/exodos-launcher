@@ -11,11 +11,9 @@ import { englishTranslation } from "@renderer/lang/en";
 type OwnProps = {
     playlists: GamePlaylist[];
     /** ID of the playlist that is selected (empty string if none). */
-    selectedPlaylistID: string;
     currentPlaylist?: GamePlaylist;
-    currentPlaylistFilename?: string;
     playlistIconCache: Record<string, string>;
-    onItemClick: (playlistId: string, selected: boolean) => void;
+    onItemClick: (playlist: GamePlaylist, selected: boolean) => void;
     onSetIcon: () => void;
     onShowAllClick?: () => void;
     onTitleChange: (event: React.ChangeEvent<InputElement>) => void;
@@ -35,7 +33,6 @@ export class LeftBrowseSidebar extends React.Component<LeftBrowseSidebarProps> {
             onShowAllClick,
             playlistIconCache,
             playlists,
-            selectedPlaylistID,
         } = this.props;
         return (
             <div className="browse-left-sidebar">
@@ -59,7 +56,6 @@ export class LeftBrowseSidebar extends React.Component<LeftBrowseSidebarProps> {
                         playlists,
                         playlistIconCache,
                         currentPlaylist,
-                        selectedPlaylistID
                     )}
                 </div>
             </div>
@@ -71,14 +67,14 @@ export class LeftBrowseSidebar extends React.Component<LeftBrowseSidebarProps> {
             playlists: GamePlaylist[],
             playlistIconCache: Record<string, string>,
             currentPlaylist: GamePlaylist | undefined,
-            selectedPlaylistID: string
         ) => {
             const renderItem = (
                 playlist: GamePlaylist,
                 isNew: boolean
             ): void => {
+                const currentPlaylistFilename = currentPlaylist?.filename;
                 const isSelected =
-                    isNew || playlist.filename === selectedPlaylistID;
+                    isNew || playlist.filename === currentPlaylistFilename;
                 const p =
                     isSelected && currentPlaylist ? currentPlaylist : playlist;
                 const key = isNew ? "?new" : playlist.filename;
@@ -88,7 +84,7 @@ export class LeftBrowseSidebar extends React.Component<LeftBrowseSidebarProps> {
                         playlist={p}
                         iconFilename={
                             isSelected
-                                ? this.props.currentPlaylistFilename
+                                ? currentPlaylistFilename
                                 : undefined
                         }
                         selected={isSelected}

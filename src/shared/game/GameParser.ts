@@ -258,3 +258,7 @@ const escapeHTML = (function () {
         });
     };
 })();
+
+export function parse(data: IRawPlatformFile, name: any, exodosPath: any): any {
+  throw new Error('Function not implemented.');
+}

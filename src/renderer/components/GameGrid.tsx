@@ -29,7 +29,6 @@ type ColumnsRows = {
 };
 
 export type GameGridProps = {
-    onRequestGames: (offset: number, limit: number) => void;
     onGameLaunch: (gameId: string) => void;
     /** All games that will be shown in the grid (filter it before passing it here). */
     games?: GAMES;
@@ -165,7 +164,6 @@ export class GameGrid extends React.Component<GameGridProps> {
                                             noContentRenderer={
                                                 this.props.noRowsRenderer
                                             }
-                                            onScroll={this.onScroll}
                                             // ArrowKeyStepper props
                                             scrollToColumn={scrollToColumn}
                                             scrollToRow={scrollToRow}
@@ -248,26 +246,6 @@ export class GameGrid extends React.Component<GameGridProps> {
                 });
             }
         }
-    };
-
-    onScroll = (params: ScrollParams) => {
-        const { rows, columns } = this.calculateSize(
-            this.props.gamesTotal,
-            params.clientWidth
-        );
-
-        const top = Math.max(
-            0,
-            Math.floor(params.scrollTop / this.props.cellHeight) - BACK_OVERSCAN
-        );
-        const bot = Math.min(
-            Math.ceil(
-                (params.scrollTop + params.clientHeight) / this.props.cellHeight
-            ) + BACK_OVERSCAN,
-            rows
-        );
-
-        this.props.onRequestGames(top * columns, (bot - top) * columns);
     };
 
     /** When a key is pressed (while the grid, or one of its children, is selected). */

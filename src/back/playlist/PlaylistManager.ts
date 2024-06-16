@@ -75,7 +75,6 @@ export class PlaylistManager {
             description: "A list of installed games.",
             author: "",
             icon: "",
-            library: platform.name,
             filename: `${INSTALLED_GAMES_PLAYLIST_PREFIX}_${platform.name}`,
             games: [],
         });
@@ -96,32 +95,12 @@ export class PlaylistManager {
                     content: `Error while parsing playlist "${filePath}". ${error}`,
                 })
             );
+            console.log(JSON.stringify(data, undefined, 2));
 
-            const hasGames =
-                data.games &&
-                Array.isArray(data.games) &&
-                data.games.length > 0;
-            if (hasGames) {
-                const gamesPlatform =
-                    data.library ?? data.games[0].platform ?? "";
-                if (gamesPlatform === "") {
-                    opts.log({
-                        source: "Playlist",
-                        content: `Playlist "${filePath}" doesn't have a library. Skipping.`,
-                    });
-                } else {
-                    playlist = {
-                        ...data,
-                        library: gamesPlatform.slice(0, -4),
-                        filename,
-                    };
-                }
-            } else {
-                opts.log({
-                    source: "Playlist",
-                    content: `Playlist "${filePath}" doesn't have games. Skipping.`,
-                });
-            }
+            playlist = {
+                ...data,
+                filename,
+            };
         } catch (error) {
             opts.log({
                 source: "Playlist",

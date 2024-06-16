@@ -16,8 +16,9 @@ export function addGamesMiddleware() {
     effect: async (_action, listenerApi) => {
       const state = listenerApi.getState();
 
-      if (state.gamesState.initState > GamesInitState.WAITING) {
-        return; // Already loading
+      console.log(state.gamesState.initState);
+      if (state.gamesState.initState === GamesInitState.LOADED) {
+        return; // Already loaded
       }
       
       // Do load
@@ -76,6 +77,8 @@ export function addGamesMiddleware() {
             // Load games
             const fileCollection = GameParser.parse(data, platform, window.External.config.fullExodosPath);
 
+            console.log(platformFile);
+            console.log(fileCollection.games.length);
             for (const game of fileCollection.games) {
               loadGameMedia(game, images, videos);
             }

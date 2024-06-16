@@ -49,7 +49,8 @@ const gamesSlice = createSlice({
         ...state,
         games: payload.games,
         addApps: payload.addApps,
-        totalGames: Object.keys(payload.games).length
+        totalGames: Object.keys(payload.games).length,
+        initState: GamesInitState.LOADED,
       }
     },
     /** Set whether a game is installed or not */
