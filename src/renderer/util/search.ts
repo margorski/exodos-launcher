@@ -1,4 +1,4 @@
-import { FieldFilter, GameFilter } from "@shared/interfaces";
+import { BooleanFilter, FieldFilter, GameFilter } from "@shared/interfaces";
 
 enum KeyChar {
   MATCHES = ':',
@@ -11,6 +11,12 @@ const KEY_CHARS = [
 ];
 
 const REPLACEMENT = "awgdty7awgvbduiawdjnujioawd888";
+
+export function getDefaultBooleanFilter(): BooleanFilter {
+  return {
+    installed: undefined
+  };
+}
 
 export function getDefaultFieldFilter(): FieldFilter {
   return {
@@ -33,6 +39,7 @@ export function getDefaultGameFilter(): GameFilter {
     blacklist: getDefaultFieldFilter(),
     exactWhitelist: getDefaultFieldFilter(),
     exactBlacklist: getDefaultFieldFilter(),
+    booleans: getDefaultBooleanFilter(),
     matchAny: false
   };
 }
@@ -44,6 +51,7 @@ export function parseUserInput(input: string) {
     blacklist: getDefaultFieldFilter(),
     exactWhitelist: getDefaultFieldFilter(),
     exactBlacklist: getDefaultFieldFilter(),
+    booleans: getDefaultBooleanFilter(),
     matchAny: false
   };
 
@@ -270,4 +278,31 @@ export function mergeGameFilters(a: GameFilter, b: GameFilter): GameFilter {
   }
 
   return newFilter;
+}
+
+export function isGameFilterEmpty(filter: GameFilter) {
+  return isFilterEmpty(filter.whitelist) &&
+    isFilterEmpty(filter.blacklist) &&
+    isFilterEmpty(filter.exactWhitelist) &&
+    isFilterEmpty(filter.exactBlacklist) &&
+    isBooleanFilterEmpty(filter.booleans);
+}
+
+export function isFilterEmpty(filter: FieldFilter) {
+  return !(
+    filter.generic.length > 0 ||
+    filter.id.length > 0 ||
+    filter.title.length > 0 ||
+    filter.series.length > 0 ||
+    filter.developer.length > 0 ||
+    filter.publisher.length > 0 ||
+    filter.platform.length > 0 ||
+    filter.genre.length > 0
+  )
+}
+
+export function isBooleanFilterEmpty(filter: BooleanFilter) {
+  return !(
+    filter.installed !== undefined
+  )
 }

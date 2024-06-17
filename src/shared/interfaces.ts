@@ -208,12 +208,17 @@ export interface FieldFilter {
     releaseDate: Array<string>,
 }
 
+export interface BooleanFilter {
+    installed?: boolean;
+}
+
 export type GameFilter = {
     subfilters: Array<GameFilter>,
     whitelist: FieldFilter,
     blacklist: FieldFilter,
     exactWhitelist: FieldFilter,
     exactBlacklist: FieldFilter,
+    booleans: BooleanFilter,
     matchAny: boolean,
 }
 

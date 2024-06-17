@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { getDefaultFieldFilter, mergeGameFilters, parseUserInput } from "@renderer/util/search";
+import { getDefaultBooleanFilter, getDefaultFieldFilter, getDefaultGameFilter, isGameFilterEmpty, mergeGameFilters, parseUserInput } from "@renderer/util/search";
 import { deepCopy, fixSlashes } from "@shared/Util";
 import { IGameInfo } from "@shared/game/interfaces";
 import { GameFilter, GamePlaylist } from "@shared/interfaces";
@@ -15,7 +15,9 @@ export type ResultsView = {
   orderBy: GameOrderBy;
   orderReverse: GameOrderReverse
   text: string;
+  advancedFilter: GameFilter;
   filter: GameFilter;
+  filterRecommended?: boolean;
   loaded: boolean;
 }
 
@@ -53,6 +55,16 @@ export type SearchOrderReverseAction = {
   value: GameOrderReverse;
 }
 
+export type SearchAdvancedFilterAction = {
+  view: string;
+  filter: GameFilter;
+}
+
+export type SearchFilterRecommendedAction = {
+  view: string;
+  value?: boolean;
+}
+
 export type SearchViewAction = {
   view: string;
 }
@@ -74,6 +86,7 @@ const searchSlice = createSlice({
             text: "",
             orderBy: "title",
             orderReverse: "ascending",
+            advancedFilter: getDefaultGameFilter(),
             loaded: false,
             filter: {
               subfilters: [],
@@ -81,6 +94,7 @@ const searchSlice = createSlice({
               blacklist: getDefaultFieldFilter(),
               exactWhitelist: getDefaultFieldFilter(),
               exactBlacklist: getDefaultFieldFilter(),
+              booleans: getDefaultBooleanFilter(),
               matchAny: false
             }
           }
@@ -91,12 +105,7 @@ const searchSlice = createSlice({
       const view = state.views[payload.view];
       if (view) {
         view.text = payload.text;
-        // Build filter for this new search
-        view.filter = parseUserInput(payload.text);
-        // Merge all filters
-        if (view.selectedPlaylist && view.selectedPlaylist.filter) {
-          view.filter = mergeGameFilters(view.selectedPlaylist.filter, view.filter);
-        }
+        view.filter = createFilter(view);
       }
     },
     setViewGames(state: SearchState, { payload }: PayloadAction<SearchSetViewGamesAction>) {
@@ -109,16 +118,7 @@ const searchSlice = createSlice({
       if (view) {
         const playlist = payload.playlist ? deepCopy(payload.playlist) : undefined;
         view.selectedPlaylist = playlist;
-
-        // Changed playlist, rebuild query
-        view.filter = parseUserInput(view.text);
-
-        if (view && payload.playlist && payload.playlist.filter) {
-          // Merge all filters
-          view.filter = mergeGameFilters(payload.playlist.filter, view.filter);
-        }
-
-        console.log(view.filter);
+        view.filter = createFilter(view);
       }
     },
     selectGame(state: SearchState, { payload }: PayloadAction<SearchSetGameAction>) {
@@ -130,12 +130,7 @@ const searchSlice = createSlice({
     forceSearch(state: SearchState, { payload }: PayloadAction<SearchViewAction>) {
       const view = state.views[payload.view];
       if (view) {
-        // Build filter for this new search
-        view.filter = parseUserInput(view.text);
-        // Merge all filters
-        if (view.selectedPlaylist && view.selectedPlaylist.filter) {
-          view.filter = mergeGameFilters(view.selectedPlaylist.filter, view.filter);
-        }
+        view.filter = createFilter(view);
       }
     },
     setOrderBy(state: SearchState, { payload }: PayloadAction<SearchOrderByAction>) {
@@ -152,6 +147,19 @@ const searchSlice = createSlice({
         view.orderReverse = payload.value;
         const orderFn = getOrderFunction(view.orderBy, view.orderReverse);
         view.games = view.games.sort(orderFn);
+      }
+    },
+    setAdvancedFilter(state: SearchState, { payload }: PayloadAction<SearchAdvancedFilterAction>) {
+      const view = state.views[payload.view];
+      if (view) {
+        view.advancedFilter = payload.filter;
+        view.filter = createFilter(view);
+      }
+    },
+    setFilterRecommended(state: SearchState, { payload }: PayloadAction<SearchFilterRecommendedAction>) {
+      const view = state.views[payload.view];
+      if (view) {
+        view.filterRecommended = payload.value;
       }
     }
   },
@@ -172,5 +180,20 @@ const searchSlice = createSlice({
   },
 });
 
-export const { setSearchText, setViewGames, initializeViews, selectPlaylist, selectGame, forceSearch, setOrderBy, setOrderReverse } = searchSlice.actions;
+function createFilter(view: ResultsView): GameFilter {
+  // Build filter for this new search
+  let newView = parseUserInput(view.text);
+  // Merge all filters
+  if (view.selectedPlaylist && view.selectedPlaylist.filter) {
+    newView = mergeGameFilters(view.selectedPlaylist.filter, newView);
+  }
+  if (!isGameFilterEmpty(view.advancedFilter)) {
+    newView = mergeGameFilters(view.advancedFilter, newView);
+  }
+
+  return newView;
+}
+
+export const { setSearchText, setViewGames, initializeViews, selectPlaylist, selectGame, forceSearch, setOrderBy, setOrderReverse,
+  setAdvancedFilter, setFilterRecommended } = searchSlice.actions;
 export default searchSlice.reducer;

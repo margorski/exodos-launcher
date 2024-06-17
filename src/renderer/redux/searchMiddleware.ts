@@ -1,15 +1,43 @@
 import { PayloadAction, isAnyOf } from "@reduxjs/toolkit";
-import { startAppListening } from "./listenerMiddleware";
-import { ResultsView, SearchSetTextAction, SearchViewAction, forceSearch, selectPlaylist, setSearchText, setViewGames } from "./searchSlice";
+import { isFilterEmpty } from "@renderer/util/search";
+import { getOrderFunction } from "@shared/game/GameFilter";
 import { IGameInfo } from "@shared/game/interfaces";
-import { FieldFilter, GameFilter } from "@shared/interfaces";
+import { BooleanFilter, FieldFilter, GameFilter } from "@shared/interfaces";
 import { debounce } from "@shared/utils/debounce";
+import { startAppListening } from "./listenerMiddleware";
+import { ResultsView, SearchViewAction, forceSearch, selectPlaylist, setAdvancedFilter, setFilterRecommended, setSearchText, setViewGames } from "./searchSlice";
 import store, { RootState } from "./store";
-import { INSTALLED_GAMES_PLAYLIST_PREFIX, getOrderFunction } from "@shared/game/GameFilter";
+
+export function addSearchMiddleware() {
+  startAppListening({
+    matcher: isAnyOf(setSearchText, selectPlaylist, setAdvancedFilter, setFilterRecommended, forceSearch),
+    effect: async(action: PayloadAction<SearchViewAction>, listenerApi) => {
+      const state = listenerApi.getState();
+      const view = state.searchState.views[action.payload.view];
+
+      if (view) {
+        // Perform search
+        debounceSearch(state, action.payload.view, view);
+      }
+    }
+  })
+};
 
 const debounceSearch = debounce((state: RootState, viewName: string, view: ResultsView) => {
   let games = state.gamesState.games;
   console.log('Start count ' + games.length);
+
+  // Filter recommended games
+  if (view.filterRecommended !== undefined) {
+    const filterFunc = view.filterRecommended ?
+      (g: IGameInfo) => {
+        return state.gamesState.recommendedIds.has(g.id)
+      } :
+      (g: IGameInfo) => {
+        return !state.gamesState.recommendedIds.has(g.id)
+      };
+    games = games.filter(filterFunc);
+  }
 
   // Check if we're a special installed games playlist
   if (view.selectedPlaylist) {
@@ -21,8 +49,6 @@ const debounceSearch = debounce((state: RootState, viewName: string, view: Resul
     // Not in a playlist, treat view name as platform
     games = games.filter(g => g.platform === viewName);
   }
-
-  console.log(view.filter);
 
   console.log('Results after playlist ' + games.length);
 
@@ -40,21 +66,6 @@ const debounceSearch = debounce((state: RootState, viewName: string, view: Resul
     games,
   }));
 }, 125);
-
-export function addSearchMiddleware() {
-  startAppListening({
-    matcher: isAnyOf(setSearchText, selectPlaylist, forceSearch),
-    effect: async(action: PayloadAction<SearchViewAction>, listenerApi) => {
-      const state = listenerApi.getState();
-      const view = state.searchState.views[action.payload.view];
-
-      if (view) {
-        // Perform search
-        debounceSearch(state, action.payload.view, view);
-      }
-    }
-  })
-};
 
 function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
   let newGames = [...games];
@@ -111,6 +122,9 @@ function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
     newGames = newGames.filter(filterFunc);
   }
 
+  const filterFunc = booleanFilterFactory(filter.booleans, filter.matchAny);
+  newGames = newGames.filter(filterFunc);
+
   return newGames;
 }
 
@@ -142,6 +156,11 @@ const fieldFilterKeys: Array<keyof FieldFilter> = [
   'publisher',
   'platform',
   'genre',
+];
+
+
+const booleanFilterKeys: Array<keyof BooleanFilter> = [
+  'installed',
 ];
 
 function exactStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
@@ -258,15 +277,27 @@ function fuzzyStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
   };
 }
 
-function isFilterEmpty(filter: FieldFilter) {
-  return !(
-    filter.generic.length > 0 ||
-    filter.id.length > 0 ||
-    filter.title.length > 0 ||
-    filter.series.length > 0 ||
-    filter.developer.length > 0 ||
-    filter.publisher.length > 0 ||
-    filter.platform.length > 0 ||
-    filter.genre.length > 0
-  )
+function booleanFilterFactory(filter: BooleanFilter, matchAny: boolean) {
+  return (game: IGameInfo) => {
+    // Compare each field that is filterable by a string
+    for (const key of booleanFilterKeys) {
+      if (filter[key] !== undefined) {
+        if (!matchAny) {
+          // Match all terms
+          if (!((game[key as keyof IGameInfo] as boolean) === filter[key])) {
+            return false;
+          }
+        } else {
+          // Match any term
+          if ((game[key as keyof IGameInfo] as boolean) === filter[key]) {
+            return true;
+          }
+        }
+      }
+    }
+
+    // If we made it here, we've either matched all (AND) or matched none (OR)
+    return !matchAny;
+  }
+   
 }
