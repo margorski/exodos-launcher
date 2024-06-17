@@ -39,28 +39,18 @@ const gamesSlice = createSlice({
   reducers: {
     /** Initialize the games collection */
     initialize: (state: GamesState) => {
-      // Loading occurs inside middleware since it's asynchronous
-      return {
-        ...state,
-        initState: Math.max(GamesInitState.LOADING, state.initState)
-      };
+      state.initState = Math.max(GamesInitState.LOADING, state.initState);
     },
     /** Overwrite the entire games collection */
     setGames: (state: GamesState, { payload }: PayloadAction<GamesCollection>) => {      
-      return {
-        ...state,
-        games: payload.games,
-        addApps: payload.addApps,
-        totalGames: Object.keys(payload.games).length,
-        initState: GamesInitState.LOADED,
-      }
+      state.games = payload.games;
+      state.addApps = payload.addApps;
+      state.totalGames = payload.games.length;
+      state.initState = GamesInitState.LOADED;
     },
     /** Set list of libraries */
     setLibraries: (state: GamesState, { payload }: PayloadAction<string[]>) => {      
-      return {
-        ...state,
-        libraries: payload,
-      };
+      state.libraries = payload;
     },
     /** Set whether a game is installed or not */
     setGameInstalled: (state: GamesState, { payload }: PayloadAction<GameInstalledAction>) => {

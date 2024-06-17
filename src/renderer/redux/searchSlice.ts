@@ -67,10 +67,9 @@ const searchSlice = createSlice({
   reducers: {
     initializeViews(state: SearchState, { payload }: PayloadAction<string[]>) {
       console.log(`Creating views for: ${payload}`);
-      const newViews = {...state.views};
       for (const view of payload) {
-        if (!newViews[view]) {
-          const newView: ResultsView = {
+        if (!state.views[view]) {
+          state.views[view] = {
             games: [],
             text: "",
             orderBy: "title",
@@ -85,40 +84,20 @@ const searchSlice = createSlice({
               matchAny: false
             }
           }
-
-          newViews[view] = newView;
         }
       }
-      
-      return {
-        ...state,
-        views: newViews
-      };
     },
     setSearchText(state: SearchState, { payload }: PayloadAction<SearchSetTextAction>) {
       const view = state.views[payload.view];
       if (view) {
+        view.text = payload.text;
         // Build filter for this new search
-        let newFilter = parseUserInput(payload.text);
+        view.filter = parseUserInput(payload.text);
         // Merge all filters
         if (view.selectedPlaylist && view.selectedPlaylist.filter) {
-          newFilter = mergeGameFilters(view.selectedPlaylist.filter, newFilter);
-        }
-
-        return {
-          ...state,
-          views: {
-            ...state.views,
-            [payload.view]: {
-              ...state.views[payload.view],
-              text: payload.text,
-              filter: newFilter,
-            }
-          }
+          view.filter = mergeGameFilters(view.selectedPlaylist.filter, view.filter);
         }
       }
-
-      return state;
     },
     setViewGames(state: SearchState, { payload }: PayloadAction<SearchSetViewGamesAction>) {
       if (state.views[payload.view]) {
@@ -143,22 +122,10 @@ const searchSlice = createSlice({
       }
     },
     selectGame(state: SearchState, { payload }: PayloadAction<SearchSetGameAction>) {
-      if (state.views[payload.view]) {
-        const game = payload.game ? deepCopy(payload.game) : undefined;
-
-        return {
-          ...state,
-          views: {
-            ...state.views,
-            [payload.view]: {
-              ...state.views[payload.view],
-              selectedGame: game
-            }
-          }
-        }
+      const view = state.views[payload.view];
+      if (view) {
+        view.selectedGame = payload.game ? deepCopy(payload.game) : undefined;
       }
-
-      return state;
     },
     forceSearch(state: SearchState, { payload }: PayloadAction<SearchViewAction>) {
       const view = state.views[payload.view];
