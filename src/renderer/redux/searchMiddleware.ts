@@ -13,11 +13,7 @@ const debounceSearch = debounce((state: RootState, viewName: string, view: Resul
 
   // Check if we're a special installed games playlist
   if (view.selectedPlaylist) {
-    if (view.selectedPlaylist.filename.startsWith(INSTALLED_GAMES_PLAYLIST_PREFIX)) {
-      const platform = view.selectedPlaylist.filename.split('_').slice(1).join('_');
-      games = games.filter(g => g.installed && g.platform === platform);
-    // Narrow by playlist if has explicit games and no dynamic filters
-    } else if (view.selectedPlaylist.games.length > 0) {
+    if (view.selectedPlaylist.games.length > 0) {
       const playlistGameIds = view.selectedPlaylist.games.map(g => g.id);
       games = games.filter(g => playlistGameIds.includes(g.id));
     }
@@ -25,6 +21,8 @@ const debounceSearch = debounce((state: RootState, viewName: string, view: Resul
     // Not in a playlist, treat view name as platform
     games = games.filter(g => g.platform === viewName);
   }
+
+  console.log(view.filter);
 
   console.log('Results after playlist ' + games.length);
 

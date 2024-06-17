@@ -115,17 +115,15 @@ const searchSlice = createSlice({
         const playlist = payload.playlist ? deepCopy(payload.playlist) : undefined;
         view.selectedPlaylist = playlist;
 
-        if (view && !payload.playlist) {
-          // Deselected playlist, rebuild query
-          view.filter = parseUserInput(view.text);
-        }
+        // Changed playlist, rebuild query
+        view.filter = parseUserInput(view.text);
 
         if (view && payload.playlist && payload.playlist.filter) {
-          // Build filter for this new search
-          view.filter = parseUserInput(view.text);
           // Merge all filters
           view.filter = mergeGameFilters(payload.playlist.filter, view.filter);
         }
+
+        console.log(view.filter);
       }
     },
     selectGame(state: SearchState, { payload }: PayloadAction<SearchSetGameAction>) {

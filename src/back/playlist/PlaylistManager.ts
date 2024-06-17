@@ -54,32 +54,6 @@ export class PlaylistManager {
         }
     }
 
-    public addInstalledGamesPlaylist(
-        platform: GamePlatform
-    ) {
-        if (!this._initialized) {
-            console.log("PlaylistManager not initialized. Leaving");
-            return;
-        }
-
-        if (!platform.isGamePlatform) {
-            console.log(
-                `Platform ${platform.name} is not a game platform. Doesn't need installed games playlist.`
-            );
-            return;
-        }
-
-        // Add a stub playlist for installed games, we'll use special behaviour when reading later
-        this.playlists.unshift({
-            title: `Installed games (${platform.name})`,
-            description: "A list of installed games.",
-            author: "",
-            icon: "",
-            filename: `${INSTALLED_GAMES_PLAYLIST_PREFIX}_${platform.name}`,
-            games: [],
-        });
-    }
-
     private async _onPlaylistAddOrChange(
         filename: string,
         opts: PlaylistManagerOpts
