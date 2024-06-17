@@ -25,6 +25,7 @@ import { englishTranslation } from "@renderer/lang/en";
 import { RootState } from "@renderer/redux/store";
 import { ConnectedProps, connect } from "react-redux";
 import { forceSearch, selectGame, selectPlaylist } from "@renderer/redux/searchSlice";
+import { SearchBar } from "../SearchBar";
 
 export type BrowsePageProps = {
     playlists: GamePlaylist[];
@@ -130,7 +131,7 @@ class BrowsePage extends React.Component<
     }
 
     render() {
-        const { playlists, searchState, gameLibrary } =
+        const { searchState, gameLibrary } =
             this.props;
         const { draggedGameId } = this.state;
         const view = searchState.views[gameLibrary];
@@ -147,7 +148,6 @@ class BrowsePage extends React.Component<
                 (g) => g.id === selectedGame.id
             );
         }
-        console.log(`total result list ` + view?.games.length);
 
         // Render
         return (
@@ -177,6 +177,7 @@ class BrowsePage extends React.Component<
                     className="game-browser__center"
                     onKeyDown={this.onCenterKeyDown}
                 >
+                    <SearchBar view={this.props.gameLibrary}/>
                     {(() => {
                         const installedGameIds =
                             this.props.playlists.length > 0

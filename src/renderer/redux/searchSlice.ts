@@ -5,11 +5,15 @@ import { IGameInfo } from "@shared/game/interfaces";
 import { GameFilter, GamePlaylist } from "@shared/interfaces";
 import { setGameInstalled } from "./gamesSlice";
 import * as path from 'path';
+import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
+import { getOrderFunction } from "@shared/game/GameFilter";
 
 export type ResultsView = {
   selectedGame?: IGameInfo,
   selectedPlaylist?: GamePlaylist,
   games: IGameInfo[];
+  orderBy: GameOrderBy;
+  orderReverse: GameOrderReverse
   text: string;
   filter: GameFilter;
   loaded: boolean;
@@ -39,6 +43,16 @@ export type SearchSetPlaylistAction = {
   playlist?: GamePlaylist;
 }
 
+export type SearchOrderByAction = {
+  view: string;
+  value: GameOrderBy;
+}
+
+export type SearchOrderReverseAction = {
+  view: string;
+  value: GameOrderReverse;
+}
+
 export type SearchViewAction = {
   view: string;
 }
@@ -59,6 +73,8 @@ const searchSlice = createSlice({
           const newView: ResultsView = {
             games: [],
             text: "",
+            orderBy: "title",
+            orderReverse: "ascending",
             loaded: false,
             filter: {
               subfilters: [],
@@ -154,7 +170,23 @@ const searchSlice = createSlice({
           view.filter = mergeGameFilters(view.selectedPlaylist.filter, view.filter);
         }
       }
-    } 
+    },
+    setOrderBy(state: SearchState, { payload }: PayloadAction<SearchOrderByAction>) {
+      const view = state.views[payload.view];
+      if (view) {
+        view.orderBy = payload.value;
+        const orderFn = getOrderFunction(view.orderBy, view.orderReverse);
+        view.games = view.games.sort(orderFn);
+      }
+    },
+    setOrderReverse(state: SearchState, { payload }: PayloadAction<SearchOrderReverseAction>) {
+      const view = state.views[payload.view];
+      if (view) {
+        view.orderReverse = payload.value;
+        const orderFn = getOrderFunction(view.orderBy, view.orderReverse);
+        view.games = view.games.sort(orderFn);
+      }
+    }
   },
   extraReducers: (builder) => {
     builder.addCase(setGameInstalled, (state, { payload }) => {
@@ -173,5 +205,5 @@ const searchSlice = createSlice({
   },
 });
 
-export const { setSearchText, setViewGames, initializeViews, selectPlaylist, selectGame, forceSearch } = searchSlice.actions;
+export const { setSearchText, setViewGames, initializeViews, selectPlaylist, selectGame, forceSearch, setOrderBy, setOrderReverse } = searchSlice.actions;
 export default searchSlice.reducer;

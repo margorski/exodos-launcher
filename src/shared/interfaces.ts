@@ -205,6 +205,7 @@ export interface FieldFilter {
     publisher: Array<string>,
     platform: Array<string>,
     genre: Array<string>,
+    releaseDate: Array<string>,
 }
 
 export type GameFilter = {

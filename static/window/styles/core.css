@@ -2077,3 +2077,30 @@ body {
 .cursor {
   cursor: pointer;
 }
+
+/** --- Search bar --- */
+
+.search-bar {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: row;
+}
+
+.search-bar > :not(:first-child) {
+  margin-left: 0.5rem;
+}
+
+.search-bar-icon {
+  padding: 0.1rem;
+}
+
+.search-bar-icon .icon {
+  width: 100%;
+  height: 100%;
+}
+
+.search-bar-text-input {
+  flex-grow: 1;
+}

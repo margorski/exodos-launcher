@@ -21,7 +21,8 @@ export function getDefaultFieldFilter(): FieldFilter {
     developer: [],
     publisher: [],
     platform: [],
-    genre: []
+    genre: [],
+    releaseDate: [],
   };
 }
 
@@ -206,6 +207,13 @@ export function parseUserInput(input: string) {
           }
           case 'genre': {
             list.genre.push(value);
+            break;
+          }
+          case 'year':
+          case 'releaseDate':
+          case 'date':
+          case 'releaseYear': {
+            list.releaseDate.push(value);
             break;
           }
           default: {

@@ -462,7 +462,6 @@ class App extends React.Component<AppProps, AppState> {
                             <>
                                 {/* Header */}
                                 <HeaderContainer
-                                    gameLibrary={libraryPath}
                                     libraries={this.props.libraries}
                                     onToggleLeftSidebarClick={
                                         this.onToggleLeftSidebarClick
@@ -470,7 +469,6 @@ class App extends React.Component<AppProps, AppState> {
                                     onToggleRightSidebarClick={
                                         this.onToggleRightSidebarClick
                                     }
-                                    order={this.state.order}
                                 />
                                 {/* Main */}
                                 <div className="main">

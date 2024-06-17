@@ -883,3 +883,12 @@ body {
 .game-grid-item__thumb__icons {
   filter: drop-shadow(1px 1px 4px var(--layout__game-grid-icon-shadow));
 }
+
+/** --- Search bar --- */
+.search-bar-text-input {
+  padding: 0.3rem;
+  border: 1px solid var(--layout__primary-outline-color);
+  color: white;
+  background-color: var(--layout__primary-background);
+  border-radius: 2px;
+}

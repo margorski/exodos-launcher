@@ -5,7 +5,7 @@ import { IGameInfo } from "@shared/game/interfaces";
 import { FieldFilter, GameFilter } from "@shared/interfaces";
 import { debounce } from "@shared/utils/debounce";
 import store, { RootState } from "./store";
-import { INSTALLED_GAMES_PLAYLIST_PREFIX } from "@shared/game/GameFilter";
+import { INSTALLED_GAMES_PLAYLIST_PREFIX, getOrderFunction } from "@shared/game/GameFilter";
 
 const debounceSearch = debounce((state: RootState, viewName: string, view: ResultsView) => {
   let games = state.gamesState.games;
@@ -28,6 +28,9 @@ const debounceSearch = debounce((state: RootState, viewName: string, view: Resul
 
   // Narrow by filter
   games = filterGames(games, view.filter);
+
+  const orderFn = getOrderFunction(view.orderBy, view.orderReverse);
+  games = games.sort(orderFn);
 
   console.log(`Final Results: ${games.length}`);
 
@@ -121,6 +124,7 @@ function lowerCaseFilter(filter: FieldFilter): FieldFilter {
     publisher: filter.publisher.map(s => s.toLowerCase()),
     platform: filter.platform.map(s => s.toLowerCase()),
     genre: filter.genre.map(s => s.toLowerCase()),
+    releaseDate: filter.genre.map(s => s.toLowerCase()),
   }
 }
 

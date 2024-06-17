@@ -34,14 +34,11 @@ function orderByDateAdded(a: IGameInfo, b: IGameInfo): number {
 }
 
 /** Order games by the date-time they were released (ascending) */
-function orderByReleasedDate(a: IGameInfo, b: IGameInfo): number {
-    const aYear = new Date(a.releaseDate).getFullYear().toString();
-    const bYear = new Date(b.releaseDate).getFullYear().toString();
-
-    if (aYear < bYear) {
+function orderByReleaseDate(a: IGameInfo, b: IGameInfo): number {
+    if (a.releaseDate < b.releaseDate) {
         return -1;
     }
-    if (aYear > bYear) {
+    if (a.releaseDate > b.releaseDate) {
         return 1;
     }
     return orderByTitle(a, b);
@@ -106,14 +103,14 @@ function reverseOrder(compareFn: OrderFn): OrderFn {
 }
 
 /** Get the order function for a given game order */
-function getOrderFunction(
+export function getOrderFunction(
     orderBy: GameOrderBy,
     orderReverse: GameOrderReverse
 ): OrderFn {
     let orderFn: OrderFn;
     switch (orderBy) {
         case "releaseDate":
-            orderFn = orderByReleasedDate;
+            orderFn = orderByReleaseDate;
             break;
         case "dateAdded":
             orderFn = orderByDateAdded;
