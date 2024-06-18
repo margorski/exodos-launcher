@@ -2117,6 +2117,7 @@ body {
 
 .search-bar-text-input {
   flex-grow: 1;
+  font-size: medium;
 }
 
 .search-bar-expansion {
@@ -2158,3 +2159,67 @@ body {
   width: 100%;
 }
 
+/** --- Searchable select -- */
+.searchable-select {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.searchable-select-header {
+  display: flex;
+  flex-direction: row;
+}
+
+.searchable-select-header > :not(:first-child) {
+  margin-left: 0.2rem;
+}
+
+.searchable-select-title {
+  font-weight: bold;
+}
+
+.searchable-select-number {
+  font-weight: bold;
+  font-size: 0.9em;
+  padding-top: 0.05em;
+  padding-top: 0.05em;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+}
+
+.searchable-select-chevron {
+  width: 1rem;
+  height: 1rem;
+}
+
+.searchable-select-chevron > .icon {
+  width: auto;
+  height: auto;
+}
+
+.searchable-select-dropdown-search-bar {
+  width: 100%;
+}
+
+.searchable-select-dropdown {
+  position: absolute;
+  z-index: 9999999;
+  top: 100%;
+  margin-top: 0.3rem;
+  margin-left: -0.3rem;
+  padding: 0.3rem;
+}
+
+.searchable-select-dropdown-item--selected {
+  font-weight: bold;
+}
+
+.searchable-select-dropdown-results {
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.searchable-select-dropdown-item {
+  white-space: nowrap;
+}

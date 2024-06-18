@@ -34,6 +34,7 @@ export class GameInfo {
             configurationPath: "",
             installed: false,
             favorite: false,
+            recommended: false,
             rating: "",
             region: "",
             media: {

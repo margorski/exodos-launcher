@@ -1,16 +1,16 @@
 import { PayloadAction, isAnyOf } from "@reduxjs/toolkit";
-import { isFilterEmpty } from "@renderer/util/search";
+import { isBooleanFilterEmpty, isFilterEmpty } from "@renderer/util/search";
 import { getOrderFunction } from "@shared/game/GameFilter";
 import { IGameInfo } from "@shared/game/interfaces";
 import { BooleanFilter, FieldFilter, GameFilter } from "@shared/interfaces";
 import { debounce } from "@shared/utils/debounce";
 import { startAppListening } from "./listenerMiddleware";
-import { ResultsView, SearchViewAction, forceSearch, selectPlaylist, setAdvancedFilter, setFilterRecommended, setSearchText, setViewGames } from "./searchSlice";
+import { ResultsView, SearchViewAction, forceSearch, selectPlaylist, setAdvancedFilter, setSearchText, setViewGames } from "./searchSlice";
 import store, { RootState } from "./store";
 
 export function addSearchMiddleware() {
   startAppListening({
-    matcher: isAnyOf(setSearchText, selectPlaylist, setAdvancedFilter, setFilterRecommended, forceSearch),
+    matcher: isAnyOf(setSearchText, selectPlaylist, setAdvancedFilter, forceSearch),
     effect: async(action: PayloadAction<SearchViewAction>, listenerApi) => {
       const state = listenerApi.getState();
       const view = state.searchState.views[action.payload.view];
@@ -26,18 +26,6 @@ export function addSearchMiddleware() {
 const debounceSearch = debounce((state: RootState, viewName: string, view: ResultsView) => {
   let games = state.gamesState.games;
   console.log('Start count ' + games.length);
-
-  // Filter recommended games
-  if (view.filterRecommended !== undefined) {
-    const filterFunc = view.filterRecommended ?
-      (g: IGameInfo) => {
-        return state.gamesState.recommendedIds.has(g.id)
-      } :
-      (g: IGameInfo) => {
-        return !state.gamesState.recommendedIds.has(g.id)
-      };
-    games = games.filter(filterFunc);
-  }
 
   // Check if we're a special installed games playlist
   if (view.selectedPlaylist) {
@@ -69,6 +57,8 @@ const debounceSearch = debounce((state: RootState, viewName: string, view: Resul
 
 function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
   let newGames = [...games];
+  console.log('filtering ' + games.length);
+  console.log(filter);
 
   // Handle subfilters
   if (filter.subfilters.length > 0) {
@@ -99,6 +89,8 @@ function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
     }
   }
 
+  console.log('after subfilters ' + newGames.length);
+
 
   // Handle own filter
 
@@ -122,8 +114,10 @@ function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
     newGames = newGames.filter(filterFunc);
   }
 
-  const filterFunc = booleanFilterFactory(filter.booleans, filter.matchAny);
-  newGames = newGames.filter(filterFunc);
+  if (!isBooleanFilterEmpty(filter.booleans)) {
+    const filterFunc = booleanFilterFactory(filter.booleans, filter.matchAny);
+    newGames = newGames.filter(filterFunc);
+  }
 
   return newGames;
 }
@@ -161,6 +155,7 @@ const fieldFilterKeys: Array<keyof FieldFilter> = [
 
 const booleanFilterKeys: Array<keyof BooleanFilter> = [
   'installed',
+  'recommended',
 ];
 
 function exactStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {

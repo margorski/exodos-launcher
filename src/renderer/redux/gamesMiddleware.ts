@@ -8,7 +8,7 @@ import { IAdditionalApplicationInfo, IGameInfo } from '@shared/game/interfaces';
 import * as fastXmlParser from "fast-xml-parser";
 import * as fs from 'fs';
 import * as path from 'path';
-import { GamesCollection, GamesInitState, initialize, setGames, setLibraries, setRecommended } from './gamesSlice';
+import { GamesCollection, GamesInitState, initialize, setGames, setLibraries } from './gamesSlice';
 import { startAppListening } from './listenerMiddleware';
 import { initializeViews } from './searchSlice';
 
@@ -41,7 +41,6 @@ export function addGamesMiddleware() {
       );
 
       let libraries: string[] = [];
-      const recommendedIds: Set<string> = new Set();
 
       // Load each platforms games into the collection
       for (const platform of platformsFile.platforms) {
@@ -90,9 +89,6 @@ export function addGamesMiddleware() {
 
             // Load extra game data and add to collection
             for (const game of fileCollection.games) {
-              if (game.favorite) {
-                recommendedIds.add(game.id);
-              }
               loadGameMedia(game, images, videos);
             }
             collection.games.push(...fileCollection.games);
@@ -125,7 +121,6 @@ export function addGamesMiddleware() {
       // Set collection in state
       libraries = libraries.sort();
       listenerApi.dispatch(setLibraries(libraries));
-      listenerApi.dispatch(setRecommended(recommendedIds));
       listenerApi.dispatch(initializeViews(libraries));
       listenerApi.dispatch(setGames(collection));
     }

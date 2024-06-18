@@ -210,6 +210,7 @@ export interface FieldFilter {
 
 export interface BooleanFilter {
     installed?: boolean;
+    recommended?: boolean;
 }
 
 export type GameFilter = {

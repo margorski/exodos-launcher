@@ -18,7 +18,6 @@ export type GamesState = {
   initState: GamesInitState,
   totalGames: number;
   libraries: string[];
-  recommendedIds: Set<string>;
 } & GamesCollection;
 
 export type GameInstalledAction = {
@@ -32,7 +31,6 @@ const initialState: GamesState = {
   initState: GamesInitState.WAITING,
   totalGames: 0,
   libraries: [],
-  recommendedIds: new Set(),
 };
 
 const gamesSlice = createSlice({
@@ -42,10 +40,6 @@ const gamesSlice = createSlice({
     /** Initialize the games collection */
     initialize: (state: GamesState) => {
       state.initState = Math.max(GamesInitState.LOADING, state.initState);
-    },
-    /** Overwrite the game recommendations */
-    setRecommended: (state: GamesState, { payload }: PayloadAction<Set<string>>) => {
-      state.recommendedIds = payload;
     },
     /** Overwrite the entire games collection */
     setGames: (state: GamesState, { payload }: PayloadAction<GamesCollection>) => {      
@@ -74,5 +68,5 @@ const gamesSlice = createSlice({
   }
 });
 
-export const { initialize, setLibraries, setGames, setGameInstalled, setRecommended } = gamesSlice.actions;
+export const { initialize, setLibraries, setGames, setGameInstalled } = gamesSlice.actions;
 export default gamesSlice.reducer;

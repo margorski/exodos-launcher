@@ -897,3 +897,16 @@ body {
   border: 1px solid var(--layout__primary-outline-color);
   border-radius: 2px;
 }
+
+
+/** --- Searchable select -- */
+.searchable-select-number {
+  color: black;
+  background-color: var(--layout__game-item-color-selected);
+}
+
+.searchable-select-dropdown {
+  border: 1px solid var(--layout__primary-outline-color);
+  
+  background-color: var(--layout__game-image-split-hover-color);
+}

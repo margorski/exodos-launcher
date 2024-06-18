@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { getDefaultBooleanFilter, getDefaultFieldFilter, getDefaultGameFilter, isGameFilterEmpty, mergeGameFilters, parseUserInput } from "@renderer/util/search";
+import { getDefaultBooleanFilter, getDefaultFieldFilter, getDefaultGameFilter, isGameFilterEmpty, mergeGameFilters, parseAdvancedFilter, parseUserInput } from "@renderer/util/search";
 import { deepCopy, fixSlashes } from "@shared/Util";
 import { IGameInfo } from "@shared/game/interfaces";
 import { GameFilter, GamePlaylist } from "@shared/interfaces";
@@ -15,10 +15,17 @@ export type ResultsView = {
   orderBy: GameOrderBy;
   orderReverse: GameOrderReverse
   text: string;
-  advancedFilter: GameFilter;
+  advancedFilter: AdvancedFilter;
   filter: GameFilter;
-  filterRecommended?: boolean;
   loaded: boolean;
+}
+
+export type AdvancedFilter = {
+  installed?: boolean;
+  recommended?: boolean;
+  series: string[];
+  developer: string[];
+  publisher: string[];
 }
 
 type SearchState = {
@@ -57,7 +64,7 @@ export type SearchOrderReverseAction = {
 
 export type SearchAdvancedFilterAction = {
   view: string;
-  filter: GameFilter;
+  filter: AdvancedFilter;
 }
 
 export type SearchFilterRecommendedAction = {
@@ -86,7 +93,11 @@ const searchSlice = createSlice({
             text: "",
             orderBy: "title",
             orderReverse: "ascending",
-            advancedFilter: getDefaultGameFilter(),
+            advancedFilter: {
+              series: [],
+              developer: [],
+              publisher: [],
+            },
             loaded: false,
             filter: {
               subfilters: [],
@@ -156,12 +167,6 @@ const searchSlice = createSlice({
         view.filter = createFilter(view);
       }
     },
-    setFilterRecommended(state: SearchState, { payload }: PayloadAction<SearchFilterRecommendedAction>) {
-      const view = state.views[payload.view];
-      if (view) {
-        view.filterRecommended = payload.value;
-      }
-    }
   },
   extraReducers: (builder) => {
     builder.addCase(setGameInstalled, (state, { payload }) => {
@@ -182,18 +187,29 @@ const searchSlice = createSlice({
 
 function createFilter(view: ResultsView): GameFilter {
   // Build filter for this new search
-  let newView = parseUserInput(view.text);
+  let newFilter = parseUserInput(view.text);
   // Merge all filters
   if (view.selectedPlaylist && view.selectedPlaylist.filter) {
-    newView = mergeGameFilters(view.selectedPlaylist.filter, newView);
+    if (isGameFilterEmpty(newFilter)) {
+      newFilter = view.selectedPlaylist.filter;
+    } else {
+      newFilter = mergeGameFilters(view.selectedPlaylist.filter, newFilter);
+    }
   }
-  if (!isGameFilterEmpty(view.advancedFilter)) {
-    newView = mergeGameFilters(view.advancedFilter, newView);
+  const advFilter = parseAdvancedFilter(view.advancedFilter);
+  if (!isGameFilterEmpty(advFilter)) {
+    if (isGameFilterEmpty(newFilter)) {
+      newFilter = advFilter;
+    } else {
+      newFilter = mergeGameFilters(advFilter, newFilter);
+    }
   }
 
-  return newView;
+  console.log(newFilter);
+
+  return newFilter;
 }
 
 export const { setSearchText, setViewGames, initializeViews, selectPlaylist, selectGame, forceSearch, setOrderBy, setOrderReverse,
-  setAdvancedFilter, setFilterRecommended } = searchSlice.actions;
+  setAdvancedFilter } = searchSlice.actions;
 export default searchSlice.reducer;

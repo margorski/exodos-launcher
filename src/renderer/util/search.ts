@@ -1,3 +1,4 @@
+import { AdvancedFilter } from "@renderer/redux/searchSlice";
 import { BooleanFilter, FieldFilter, GameFilter } from "@shared/interfaces";
 
 enum KeyChar {
@@ -281,7 +282,8 @@ export function mergeGameFilters(a: GameFilter, b: GameFilter): GameFilter {
 }
 
 export function isGameFilterEmpty(filter: GameFilter) {
-  return isFilterEmpty(filter.whitelist) &&
+  return filter.subfilters.length === 0 &&
+    isFilterEmpty(filter.whitelist) &&
     isFilterEmpty(filter.blacklist) &&
     isFilterEmpty(filter.exactWhitelist) &&
     isFilterEmpty(filter.exactBlacklist) &&
@@ -303,6 +305,39 @@ export function isFilterEmpty(filter: FieldFilter) {
 
 export function isBooleanFilterEmpty(filter: BooleanFilter) {
   return !(
-    filter.installed !== undefined
+    filter.installed !== undefined ||
+    filter.recommended !== undefined
   )
+}
+
+export function parseAdvancedFilter(filter: AdvancedFilter): GameFilter {
+  const newFilter = getDefaultGameFilter();
+
+  newFilter.booleans.installed = filter.installed;
+  newFilter.booleans.recommended = filter.recommended;
+
+  if (filter.developer.length > 0) {
+    const developerFilter = getDefaultGameFilter();
+    developerFilter.matchAny = true;
+    developerFilter.whitelist.developer = filter.developer;
+    newFilter.subfilters.push(developerFilter);
+  }
+
+  if (filter.publisher.length > 0) {
+    const publisherFilter = getDefaultGameFilter();
+    publisherFilter.matchAny = true;
+    publisherFilter.whitelist.publisher = filter.publisher;
+    newFilter.subfilters.push(publisherFilter);
+  }
+
+  if (filter.series.length > 0) {
+    const seriesFilter = getDefaultGameFilter();
+    seriesFilter.matchAny = true;
+    seriesFilter.whitelist.series = filter.series;
+    newFilter.subfilters.push(seriesFilter);
+  }
+
+  console.log(newFilter);
+
+  return newFilter;
 }
