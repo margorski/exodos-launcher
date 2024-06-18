@@ -121,6 +121,72 @@ export function SearchBar(props: SearchBarProps) {
                 value={view.filterRecommended}
                 onChange={onRecommendedChange}/>
             </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
+            <div className='search-bar-simple-box'>
+              <b>Recommended</b>
+              <ThreeStateCheckbox
+                value={view.filterRecommended}
+                onChange={onRecommendedChange}/>
+            </div>
           </div>
         ))
       }

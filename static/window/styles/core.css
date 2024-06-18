@@ -1079,7 +1079,7 @@ body {
 }
 /* Center */
 .game-browser__center {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
 }
 .game-browser__center-inner {
   display: flex;
@@ -2087,7 +2087,7 @@ body {
 }
 
 .search-bar-wrapper--expanded-simple {
-  height: 5rem;
+  height: auto;
 }
 
 .search-bar-wrapper--expanded-advanced {
@@ -2120,22 +2120,19 @@ body {
 }
 
 .search-bar-expansion {
-  padding: 0.5rem;
-  overflow-y: auto;
+  margin-right: 0.5rem;
   flex-grow: 1;
 }
 
 .search-bar-expansion-simple {
   padding-top: 0;
   display: flex;
-  flex-direction: row;
-}
-
-.search-bar-expansion-simple > :not(:first-child) {
-  margin-left: 0.3rem;
+  flex-wrap: wrap;
 }
 
 .search-bar-simple-box {
+  margin-left: 0.5rem;
+  margin-bottom: 0.5rem;
   align-items: center;
   padding: 0.3rem;
   display: flex;
