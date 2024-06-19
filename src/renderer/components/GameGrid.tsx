@@ -18,7 +18,7 @@ import { GameGridItem } from "./GameGridItem";
 import { GameItemContainer } from "./GameItemContainer";
 import { IGameInfo } from "@shared/game/interfaces";
 
-const RENDERER_OVERSCAN = 5;
+const RENDERER_OVERSCAN = 9;
 const BACK_OVERSCAN = 50;
 
 /** A function that receives an HTML element. */

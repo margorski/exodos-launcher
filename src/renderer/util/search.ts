@@ -337,6 +337,13 @@ export function parseAdvancedFilter(filter: AdvancedFilter): GameFilter {
     newFilter.subfilters.push(seriesFilter);
   }
 
+  if (filter.genre.length > 0) {
+    const genreFilter = getDefaultGameFilter();
+    genreFilter.matchAny = true;
+    genreFilter.whitelist.genre = filter.genre;
+    newFilter.subfilters.push(genreFilter);
+  }
+
   console.log(newFilter);
 
   return newFilter;

@@ -34,6 +34,11 @@ export function SearchBar(props: SearchBarProps) {
     return Array.from(set).sort();
   }, [view.games]);
 
+  const genreItems = React.useMemo(() => {
+    const set = new Set(view.games.flatMap(g => g.genre.split(';').map(s => s.trim())));
+    return Array.from(set).sort();
+  }, [view.games]);
+
   const onTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchText({
       view: props.view,
@@ -66,7 +71,6 @@ export function SearchBar(props: SearchBarProps) {
       value,
     }))
   };
-
 
   React.useEffect(() => {
       window.addEventListener('keypress', onKeypress);
@@ -124,7 +128,6 @@ export function SearchBar(props: SearchBarProps) {
     }));
   }
 
-
   const onTogglePublisher = (publisher: string) => {
     const newPublisher = [...view.advancedFilter.publisher];
     const idx = newPublisher.findIndex(s => s === publisher);
@@ -153,7 +156,6 @@ export function SearchBar(props: SearchBarProps) {
     }));
   }
 
-
   const onToggleSeries = (series: string) => {
     const newSeries = [...view.advancedFilter.series];
     const idx = newSeries.findIndex(s => s === series);
@@ -178,6 +180,34 @@ export function SearchBar(props: SearchBarProps) {
       filter: {
         ...view.advancedFilter,
         series: [],
+      }
+    }));
+  }
+
+  const onToggleGenre = (genre: string) => {
+    const newGenre = [...view.advancedFilter.genre];
+    const idx = newGenre.findIndex(s => s === genre);
+    if (idx > -1) {
+      newGenre.splice(idx, 1);
+    } else {
+      newGenre.push(genre);
+    }
+
+    dispatch(setAdvancedFilter({
+      view: props.view,
+      filter: {
+        ...view.advancedFilter,
+        genre: newGenre,
+      }
+    }));
+  }
+
+  const onClearGenre = () => {
+    dispatch(setAdvancedFilter({
+      view: props.view,
+      filter: {
+        ...view.advancedFilter,
+        genre: [],
       }
     }));
   }
@@ -237,6 +267,12 @@ export function SearchBar(props: SearchBarProps) {
               onClear={onClearSeries}
               selected={view.advancedFilter.series}
               items={seriesItems}/>
+            <SearchableSelect 
+              title='Genre'
+              onToggle={onToggleGenre}
+              onClear={onClearGenre}
+              selected={view.advancedFilter.genre}
+              items={genreItems}/>
           </div>
         ))
       }
@@ -441,20 +477,6 @@ function SearchableSelectDropdown(props: SearchableSelectDropdownProps) {
           }}
         </AutoSizer>
       </div>
-      {/* <div className="searchable-select-dropdown-results">
-        {filteredItems.map((item, idx) => {
-          const marked = selected.includes(item);
-          
-          return (
-            <div
-              className={`searchable-select-dropdown-item ${marked && 'searchable-select-dropdown-item--selected'}`}
-              onClick={() => onToggle(item)}
-              key={idx}>
-              {item}
-            </div>
-          )
-        })}
-      </div> */}
     </div>
   );
 }

@@ -26,6 +26,7 @@ export type AdvancedFilter = {
   series: string[];
   developer: string[];
   publisher: string[];
+  genre: string[];
 }
 
 type SearchState = {
@@ -97,6 +98,7 @@ const searchSlice = createSlice({
               series: [],
               developer: [],
               publisher: [],
+              genre: [],
             },
             loaded: false,
             filter: {
