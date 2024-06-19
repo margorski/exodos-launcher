@@ -31,7 +31,7 @@ export class GameOrder extends React.Component<GameOrderProps> {
             <>
                 {/* Order By */}
                 <select
-                    className="simple-selector"
+                    className="simple-selector search-bar-order-dropdown"
                     value={this.props.orderBy}
                     onChange={this.onOrderByChange}
                 >
@@ -43,7 +43,7 @@ export class GameOrder extends React.Component<GameOrderProps> {
                 </select>
                 {/* Order Reverse */}
                 <select
-                    className="simple-selector"
+                    className="simple-selector search-bar-order-dropdown"
                     value={this.props.orderReverse}
                     onChange={this.onOrderReverseChange}
                 >

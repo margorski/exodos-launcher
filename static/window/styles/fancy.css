@@ -885,17 +885,29 @@ body {
 }
 
 /** --- Search bar --- */
+.searchable-select-dropdown-search-bar,
 .search-bar-text-input {
   padding: 0.3rem;
-  border: 1px solid var(--layout__primary-outline-color);
   color: white;
-  background-color: var(--layout__primary-background);
-  border-radius: 2px;
 }
 
+.searchable-select-dropdown-search-bar {
+  margin-bottom: 0.3rem;
+}
+
+.searchable-select-dropdown-search-bar,
+.searchable-select-dropdown,
+.search-bar-order-dropdown,
+.search-bar-text-input,
 .search-bar-simple-box {
+  background-color: var(--layout__quaternary-background);
   border: 1px solid var(--layout__primary-outline-color);
   border-radius: 2px;
+  box-shadow: 0px 2px 4px 0px #09090a;
+}
+
+.search-bar-simple-box > * {
+  filter: unset;
 }
 
 
@@ -905,8 +917,10 @@ body {
   background-color: var(--layout__game-item-color-selected);
 }
 
-.searchable-select-dropdown {
-  border: 1px solid var(--layout__primary-outline-color);
-  
-  background-color: var(--layout__game-image-split-hover-color);
+.searchable-select-dropdown-item {
+  border-bottom: 1px solid var(--layout__primary-outline-color);
+}
+
+.searchable-select-dropdown-item:hover {
+  background-color: var(--layout__header-menu-item-hover-background);
 }

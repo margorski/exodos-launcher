@@ -2132,6 +2132,8 @@ body {
 }
 
 .search-bar-simple-box {
+  cursor: pointer;
+  user-select: none;
   margin-left: 0.5rem;
   margin-bottom: 0.5rem;
   align-items: center;
@@ -2193,6 +2195,11 @@ body {
   height: 1rem;
 }
 
+.searchable-select-dropdown-item-marked > .icon {
+  width: 100%;
+  height: 100%;
+}
+
 .searchable-select-chevron > .icon {
   width: auto;
   height: auto;
@@ -2217,9 +2224,23 @@ body {
 
 .searchable-select-dropdown-results {
   overflow-y: auto;
-  max-height: 50vh;
+  height: 50vh;
+  width: 25vw;
 }
 
 .searchable-select-dropdown-item {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
   white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.searchable-select-dropdown-item-title {
+  flex-grow: 1;
+}
+
+.searchable-select-dropdown-item-marked {
+  height: 80%;
+  margin-right: 0.3rem;
 }
