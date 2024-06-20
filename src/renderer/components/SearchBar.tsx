@@ -1,4 +1,4 @@
-import { setAdvancedFilter, setOrderBy, setOrderReverse, setSearchText } from "@renderer/redux/searchSlice";
+import { AdvancedFilter, setAdvancedFilter, setOrderBy, setOrderReverse, setSearchText } from "@renderer/redux/searchSlice";
 import store, { RootState } from "@renderer/redux/store";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import * as React from 'react';
@@ -18,26 +18,6 @@ export function SearchBar(props: SearchBarProps) {
   const [expanded, setExpanded] = React.useState(true);
   const [advancedMode, setAdvancedMode] = React.useState(false);
   const view = searchState.views[props.view];
-
-  const seriesItems = React.useMemo(() => {
-    const set = new Set(view.games.flatMap(g => g.series.split(';').map(s => s.trim())));
-    return Array.from(set).sort();
-  }, [view.games]);
-
-  const developerItems = React.useMemo(() => {
-    const set = new Set(view.games.flatMap(g => g.developer.split(';').map(s => s.trim())));
-    return Array.from(set).sort();
-  }, [view.games]);
-
-  const publisherItems = React.useMemo(() => {
-    const set = new Set(view.games.flatMap(g => g.publisher.split(';').map(s => s.trim())));
-    return Array.from(set).sort();
-  }, [view.games]);
-
-  const genreItems = React.useMemo(() => {
-    const set = new Set(view.games.flatMap(g => g.genre.split(';').map(s => s.trim())));
-    return Array.from(set).sort();
-  }, [view.games]);
 
   const onTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchText({
@@ -100,117 +80,93 @@ export function SearchBar(props: SearchBarProps) {
     }));
   }
 
-  const onToggleDeveloper = (developer: string) => {
-    const newDeveloper = [...view.advancedFilter.developer];
-    const idx = newDeveloper.findIndex(s => s === developer);
-    if (idx > -1) {
-      newDeveloper.splice(idx, 1);
-    } else {
-      newDeveloper.push(developer);
-    }
-
-    dispatch(setAdvancedFilter({
-      view: props.view,
-      filter: {
-        ...view.advancedFilter,
-        developer: newDeveloper,
+  const onToggleFactory = (key: keyof AdvancedFilter) => {
+    return (value: string) => {
+      const newValues = [...(view.advancedFilter[key] as string[])];
+      const idx = newValues.findIndex(s => s === value);
+      if (idx > -1) {
+        newValues.splice(idx, 1);
+      } else {
+        newValues.push(value);
       }
-    }));
+  
+      dispatch(setAdvancedFilter({
+        view: props.view,
+        filter: {
+          ...view.advancedFilter,
+          [key]: newValues,
+        }
+      }));
+    };
   }
 
-  const onClearDeveloper = () => {
-    dispatch(setAdvancedFilter({
-      view: props.view,
-      filter: {
-        ...view.advancedFilter,
-        developer: [],
-      }
-    }));
+  const onClearFactory = (key: keyof AdvancedFilter) => {
+    return () => {
+      dispatch(setAdvancedFilter({
+        view: props.view,
+        filter: {
+          ...view.advancedFilter,
+          [key]: [],
+        }
+      }));
+    };
   }
 
-  const onTogglePublisher = (publisher: string) => {
-    const newPublisher = [...view.advancedFilter.publisher];
-    const idx = newPublisher.findIndex(s => s === publisher);
-    if (idx > -1) {
-      newPublisher.splice(idx, 1);
-    } else {
-      newPublisher.push(publisher);
-    }
+  // Developer
+  const developerItems = React.useMemo(() => {
+    const set = new Set(view.games.flatMap(g => g.developer.split(';').map(s => s.trim())));
+    return Array.from(set).sort();
+  }, [view.games]);
+  const onToggleDeveloper = onToggleFactory('developer');
+  const onClearDeveloper = onClearFactory('developer');
 
-    dispatch(setAdvancedFilter({
-      view: props.view,
-      filter: {
-        ...view.advancedFilter,
-        publisher: newPublisher,
-      }
-    }));
-  }
+  // Publisher
+  const publisherItems = React.useMemo(() => {
+    const set = new Set(view.games.flatMap(g => g.publisher.split(';').map(s => s.trim())));
+    return Array.from(set).sort();
+  }, [view.games]);
+  const onTogglePublisher = onToggleFactory('publisher');
+  const onClearPublisher = onClearFactory('publisher');
 
-  const onClearPublisher = () => {
-    dispatch(setAdvancedFilter({
-      view: props.view,
-      filter: {
-        ...view.advancedFilter,
-        publisher: [],
-      }
-    }));
-  }
+  // Series
+  const seriesItems = React.useMemo(() => {
+    const set = new Set(view.games.flatMap(g => g.series.split(';').map(s => s.trim())));
+    return Array.from(set).sort();
+  }, [view.games]);
+  const onToggleSeries = onToggleFactory('series');
+  const onClearSeries = onClearFactory('series');
 
-  const onToggleSeries = (series: string) => {
-    const newSeries = [...view.advancedFilter.series];
-    const idx = newSeries.findIndex(s => s === series);
-    if (idx > -1) {
-      newSeries.splice(idx, 1);
-    } else {
-      newSeries.push(series);
-    }
+  // Genre
+  const genreItems = React.useMemo(() => {
+    const set = new Set(view.games.flatMap(g => g.genre.split(';').map(s => s.trim())));
+    return Array.from(set).sort();
+  }, [view.games]);
+  const onToggleGenre = onToggleFactory('genre');
+  const onClearGenre = onClearFactory('genre');
 
-    dispatch(setAdvancedFilter({
-      view: props.view,
-      filter: {
-        ...view.advancedFilter,
-        series: newSeries,
-      }
-    }));
-  }
+  // Region
+  const playModeItems = React.useMemo(() => {
+    const set = new Set(view.games.flatMap(g => g.playMode.split(';').map(s => s.trim())));
+    return Array.from(set).sort();
+  }, [view.games]);
+  const onTogglePlayMode = onToggleFactory('playMode');
+  const onClearPlayMode = onClearFactory('playMode');
 
-  const onClearSeries = () => {
-    dispatch(setAdvancedFilter({
-      view: props.view,
-      filter: {
-        ...view.advancedFilter,
-        series: [],
-      }
-    }));
-  }
+  // Region
+  const regionItems = React.useMemo(() => {
+    const set = new Set(view.games.flatMap(g => g.region.split(';').map(s => s.trim())));
+    return Array.from(set).sort();
+  }, [view.games]);
+  const onToggleRegion = onToggleFactory('region');
+  const onClearRegion = onClearFactory('region');
 
-  const onToggleGenre = (genre: string) => {
-    const newGenre = [...view.advancedFilter.genre];
-    const idx = newGenre.findIndex(s => s === genre);
-    if (idx > -1) {
-      newGenre.splice(idx, 1);
-    } else {
-      newGenre.push(genre);
-    }
-
-    dispatch(setAdvancedFilter({
-      view: props.view,
-      filter: {
-        ...view.advancedFilter,
-        genre: newGenre,
-      }
-    }));
-  }
-
-  const onClearGenre = () => {
-    dispatch(setAdvancedFilter({
-      view: props.view,
-      filter: {
-        ...view.advancedFilter,
-        genre: [],
-      }
-    }));
-  }
+  // Rating
+  const ratingItems = React.useMemo(() => {
+    const set = new Set(view.games.flatMap(g => g.rating.split(';').map(s => s.trim())));
+    return Array.from(set).sort();
+  }, [view.games]);
+  const onToggleRating = onToggleFactory('rating');
+  const onClearRating = onClearFactory('rating');
 
   return (
     <div className={`search-bar-wrapper ${expanded ?
@@ -273,6 +229,24 @@ export function SearchBar(props: SearchBarProps) {
               onClear={onClearGenre}
               selected={view.advancedFilter.genre}
               items={genreItems}/>
+            <SearchableSelect 
+              title='Play Mode'
+              onToggle={onTogglePlayMode}
+              onClear={onClearPlayMode}
+              selected={view.advancedFilter.playMode}
+              items={playModeItems}/>
+            <SearchableSelect 
+              title='Region'
+              onToggle={onToggleRegion}
+              onClear={onClearRegion}
+              selected={view.advancedFilter.region}
+              items={regionItems}/>
+            <SearchableSelect 
+              title='Rating'
+              onToggle={onToggleRating}
+              onClear={onClearRating}
+              selected={view.advancedFilter.rating}
+              items={ratingItems}/>
           </div>
         ))
       }

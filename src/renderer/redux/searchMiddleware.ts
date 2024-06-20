@@ -131,6 +131,9 @@ function lowerCaseFilter(filter: FieldFilter): FieldFilter {
     publisher: filter.publisher.map(s => s.toLowerCase()),
     platform: filter.platform.map(s => s.toLowerCase()),
     genre: filter.genre.map(s => s.toLowerCase()),
+    playMode: filter.playMode.map(s => s.toLowerCase()),
+    region: filter.region.map(s => s.toLowerCase()),
+    rating: filter.rating.map(s => s.toLowerCase()),
     releaseDate: filter.genre.map(s => s.toLowerCase()),
   }
 }
@@ -149,6 +152,9 @@ const fieldFilterKeys: Array<keyof FieldFilter> = [
   'publisher',
   'platform',
   'genre',
+  'playMode',
+  'region',
+  'rating',
 ];
 
 

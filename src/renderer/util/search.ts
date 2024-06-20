@@ -1,5 +1,5 @@
 import { AdvancedFilter } from "@renderer/redux/searchSlice";
-import { BooleanFilter, FieldFilter, GameFilter } from "@shared/interfaces";
+import { BooleanFilter, CompareFilter, FieldFilter, GameFilter } from "@shared/interfaces";
 
 enum KeyChar {
   MATCHES = ':',
@@ -29,8 +29,15 @@ export function getDefaultFieldFilter(): FieldFilter {
     publisher: [],
     platform: [],
     genre: [],
+    playMode: [],
+    region: [],
+    rating: [],
     releaseDate: [],
   };
+}
+
+export function getDefaultCompareFilter(): CompareFilter {
+  return {};
 }
 
 export function getDefaultGameFilter(): GameFilter {
@@ -40,6 +47,8 @@ export function getDefaultGameFilter(): GameFilter {
     blacklist: getDefaultFieldFilter(),
     exactWhitelist: getDefaultFieldFilter(),
     exactBlacklist: getDefaultFieldFilter(),
+    greaterThan: getDefaultCompareFilter(),
+    lessThan: getDefaultCompareFilter(),
     booleans: getDefaultBooleanFilter(),
     matchAny: false
   };
@@ -52,6 +61,8 @@ export function parseUserInput(input: string) {
     blacklist: getDefaultFieldFilter(),
     exactWhitelist: getDefaultFieldFilter(),
     exactBlacklist: getDefaultFieldFilter(),
+    greaterThan: getDefaultCompareFilter(),
+    lessThan: getDefaultCompareFilter(),
     booleans: getDefaultBooleanFilter(),
     matchAny: false
   };
@@ -218,6 +229,14 @@ export function parseUserInput(input: string) {
             list.genre.push(value);
             break;
           }
+          case 'region': {
+            list.region.push(value);
+            break;
+          }
+          case 'rating': {
+            list.rating.push(value);
+            break;
+          }
           case 'year':
           case 'releaseDate':
           case 'date':
@@ -299,7 +318,10 @@ export function isFilterEmpty(filter: FieldFilter) {
     filter.developer.length > 0 ||
     filter.publisher.length > 0 ||
     filter.platform.length > 0 ||
-    filter.genre.length > 0
+    filter.genre.length > 0 ||
+    filter.playMode.length > 0 ||
+    filter.region.length > 0 ||
+    filter.rating.length > 0
   )
 }
 
@@ -342,6 +364,27 @@ export function parseAdvancedFilter(filter: AdvancedFilter): GameFilter {
     genreFilter.matchAny = true;
     genreFilter.whitelist.genre = filter.genre;
     newFilter.subfilters.push(genreFilter);
+  }
+
+  if (filter.playMode.length > 0) {
+    const playModeFilter = getDefaultGameFilter();
+    playModeFilter.matchAny = true;
+    playModeFilter.whitelist.playMode = filter.playMode;
+    newFilter.subfilters.push(playModeFilter);
+  }
+
+  if (filter.region.length > 0) {
+    const regionFilter = getDefaultGameFilter();
+    regionFilter.matchAny = true;
+    regionFilter.whitelist.region = filter.region;
+    newFilter.subfilters.push(regionFilter);
+  }
+
+  if (filter.rating.length > 0) {
+    const ratingFilter = getDefaultGameFilter();
+    ratingFilter.matchAny = true;
+    ratingFilter.whitelist.rating = filter.rating;
+    newFilter.subfilters.push(ratingFilter);
   }
 
   return newFilter;

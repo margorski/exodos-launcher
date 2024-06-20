@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { getDefaultBooleanFilter, getDefaultFieldFilter, getDefaultGameFilter, isGameFilterEmpty, mergeGameFilters, parseAdvancedFilter, parseUserInput } from "@renderer/util/search";
+import { getDefaultBooleanFilter, getDefaultCompareFilter, getDefaultFieldFilter, getDefaultGameFilter, isGameFilterEmpty, mergeGameFilters, parseAdvancedFilter, parseUserInput } from "@renderer/util/search";
 import { deepCopy, fixSlashes } from "@shared/Util";
 import { IGameInfo } from "@shared/game/interfaces";
 import { GameFilter, GamePlaylist } from "@shared/interfaces";
@@ -27,6 +27,9 @@ export type AdvancedFilter = {
   developer: string[];
   publisher: string[];
   genre: string[];
+  playMode: string[];
+  region: string[];
+  rating: string[];
 }
 
 type SearchState = {
@@ -99,6 +102,9 @@ const searchSlice = createSlice({
               developer: [],
               publisher: [],
               genre: [],
+              playMode: [],
+              region: [],
+              rating: [],
             },
             loaded: false,
             filter: {
@@ -107,6 +113,8 @@ const searchSlice = createSlice({
               blacklist: getDefaultFieldFilter(),
               exactWhitelist: getDefaultFieldFilter(),
               exactBlacklist: getDefaultFieldFilter(),
+              greaterThan: getDefaultCompareFilter(),
+              lessThan: getDefaultCompareFilter(),
               booleans: getDefaultBooleanFilter(),
               matchAny: false
             }

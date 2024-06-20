@@ -205,7 +205,15 @@ export interface FieldFilter {
     publisher: Array<string>,
     platform: Array<string>,
     genre: Array<string>,
+    playMode: Array<string>,
+    region: Array<string>,
+    rating: Array<string>,
     releaseDate: Array<string>,
+}
+
+export interface CompareFilter {
+    releaseYear?: string;
+    maxPlayers?: number;
 }
 
 export interface BooleanFilter {
@@ -219,6 +227,8 @@ export type GameFilter = {
     blacklist: FieldFilter,
     exactWhitelist: FieldFilter,
     exactBlacklist: FieldFilter,
+    lessThan: CompareFilter,
+    greaterThan: CompareFilter,
     booleans: BooleanFilter,
     matchAny: boolean,
 }
