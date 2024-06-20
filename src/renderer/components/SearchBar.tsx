@@ -390,13 +390,21 @@ function SearchableSelectDropdown(props: SearchableSelectDropdownProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = React.useState('');
-  const [storedItems, _setStoredItems] = React.useState(items); // 'cache' the items
+  const [storedItems, setStoredItems] = React.useState(items); // 'cache' the items
 
   const filteredItems = React.useMemo(() => {
     const lowerSearch = search.toLowerCase().replace(' ', '');
     return storedItems.filter((item) => item && item.toLowerCase().replace(' ', '').includes(lowerSearch));
   }, [search, storedItems]);
   console.log(filteredItems);
+
+  // Update the stored items when all selections removed
+  // Too difficult to do this any other way
+  React.useEffect(() => {
+    if (selected.length === 0) {
+      setStoredItems(items);
+    }
+  }, [items]);
 
   const rowRenderer = (props: ListRowProps) => {
     const { style } = props;

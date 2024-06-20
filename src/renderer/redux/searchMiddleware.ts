@@ -58,7 +58,6 @@ const debounceSearch = debounce((state: RootState, viewName: string, view: Resul
 function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
   let newGames = [...games];
   console.log('filtering ' + games.length);
-  console.log(filter);
 
   // Handle subfilters
   if (filter.subfilters.length > 0) {

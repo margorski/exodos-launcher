@@ -207,8 +207,6 @@ function createFilter(view: ResultsView): GameFilter {
     }
   }
 
-  console.log(newFilter);
-
   return newFilter;
 }
 
