@@ -317,12 +317,28 @@ export function parseUserInput(input: string) {
               break;
             }
             default: {
-              if (workingKeyChar) {
-                const fullValue = workingKey + workingKeyChar + value;
-                list.generic.push(fullValue);
+              // Cheat a little and assume nobody is writing installed or recommended as a value
+              if (!workingKeyChar && value.toLowerCase() === 'installed') {
+                if (negative) {
+                  filter.booleans.installed = false;
+                } else {
+                  filter.booleans.installed = true;
+                }
+              } else if (!workingKeyChar && value.toLowerCase() === 'recommended') {
+                if (negative) {
+                  filter.booleans.recommended = false;
+                } else {
+                  filter.booleans.recommended = true;
+                }
               } else {
-                list.generic.push(value)
+                if (workingKeyChar) {
+                  const fullValue = workingKey + workingKeyChar + value;
+                  list.generic.push(fullValue);
+                } else {
+                  list.generic.push(value)
+                }
               }
+
               break;
             }
           }
