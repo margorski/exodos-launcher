@@ -113,6 +113,7 @@ const searchSlice = createSlice({
               blacklist: getDefaultFieldFilter(),
               exactWhitelist: getDefaultFieldFilter(),
               exactBlacklist: getDefaultFieldFilter(),
+              equalTo: getDefaultCompareFilter(),
               greaterThan: getDefaultCompareFilter(),
               lessThan: getDefaultCompareFilter(),
               booleans: getDefaultBooleanFilter(),

@@ -1,8 +1,8 @@
 import { PayloadAction, isAnyOf } from "@reduxjs/toolkit";
-import { isBooleanFilterEmpty, isFilterEmpty } from "@renderer/util/search";
+import { isBooleanFilterEmpty, isCompareFilterEmpty, isFilterEmpty } from "@renderer/util/search";
 import { getOrderFunction } from "@shared/game/GameFilter";
 import { IGameInfo } from "@shared/game/interfaces";
-import { BooleanFilter, FieldFilter, GameFilter } from "@shared/interfaces";
+import { BooleanFilter, CompareFilter, FieldFilter, GameFilter } from "@shared/interfaces";
 import { debounce } from "@shared/utils/debounce";
 import { startAppListening } from "./listenerMiddleware";
 import { ResultsView, SearchViewAction, forceSearch, selectPlaylist, setAdvancedFilter, setSearchText, setViewGames } from "./searchSlice";
@@ -93,6 +93,11 @@ function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
 
   // Handle own filter
 
+  if (!isBooleanFilterEmpty(filter.booleans)) {
+    const filterFunc = booleanFilterFactory(filter.booleans, filter.matchAny);
+    newGames = newGames.filter(filterFunc);
+  }
+
   if (!isFilterEmpty(filter.exactWhitelist)) {
     const filterFunc = exactStringFilterFieldFactory(filter.exactWhitelist, filter.matchAny);
     newGames = newGames.filter(filterFunc);
@@ -113,8 +118,18 @@ function filterGames(games: IGameInfo[], filter: GameFilter): IGameInfo[] {
     newGames = newGames.filter(filterFunc);
   }
 
-  if (!isBooleanFilterEmpty(filter.booleans)) {
-    const filterFunc = booleanFilterFactory(filter.booleans, filter.matchAny);
+  if (!isCompareFilterEmpty(filter.equalTo)) {
+    const filterFunc = equalToFilterFactory(filter.equalTo);
+    newGames = newGames.filter(filterFunc);
+  }
+
+  if (!isCompareFilterEmpty(filter.greaterThan)) {
+    const filterFunc = greaterThanFilterFactory(filter.greaterThan);
+    newGames = newGames.filter(filterFunc);
+  }
+
+  if (!isCompareFilterEmpty(filter.lessThan)) {
+    const filterFunc = lessThanFilterFactory(filter.lessThan);
     newGames = newGames.filter(filterFunc);
   }
 
@@ -134,7 +149,6 @@ function lowerCaseFilter(filter: FieldFilter): FieldFilter {
     playMode: filter.playMode.map(s => s.toLowerCase()),
     region: filter.region.map(s => s.toLowerCase()),
     rating: filter.rating.map(s => s.toLowerCase()),
-    releaseDate: filter.genre.map(s => s.toLowerCase()),
   }
 }
 
@@ -161,6 +175,11 @@ const fieldFilterKeys: Array<keyof FieldFilter> = [
 const booleanFilterKeys: Array<keyof BooleanFilter> = [
   'installed',
   'recommended',
+];
+
+const compareFilterKeys: Array<keyof CompareFilter> = [
+  'releaseYear',
+  'maxPlayers',
 ];
 
 function exactStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
@@ -300,4 +319,49 @@ function booleanFilterFactory(filter: BooleanFilter, matchAny: boolean) {
     return !matchAny;
   }
    
+}
+
+function equalToFilterFactory(filter: CompareFilter) {
+  return (game: IGameInfo) => {
+    // Compare each field that is filterable by a string
+    for (const key of compareFilterKeys) {
+      const val = filter[key];
+      if (val !== undefined) {
+        return (game[key as any as keyof IGameInfo] as any) === val;
+      }
+    }
+
+    // If we made it here, we've either matched all (AND) or matched none (OR)
+    return false;
+  }
+}
+
+function greaterThanFilterFactory(filter: CompareFilter) {
+  return (game: IGameInfo) => {
+    // Compare each field that is filterable by a string
+    for (const key of compareFilterKeys) {
+      const val = filter[key];
+      if (val !== undefined) {
+        return (game[key as any as keyof IGameInfo] as any) >= val;
+      }
+    }
+
+    // If we made it here, we've either matched all (AND) or matched none (OR)
+    return false;
+  }
+}
+
+function lessThanFilterFactory(filter: CompareFilter) {
+  return (game: IGameInfo) => {
+    // Compare each field that is filterable by a string
+    for (const key of compareFilterKeys) {
+      const val = filter[key];
+      if (val !== undefined) {
+        return (game[key as any as keyof IGameInfo] as any) < val;
+      }
+    }
+
+    // If we made it here, we've either matched all (AND) or matched none (OR)
+    return false;
+  }
 }

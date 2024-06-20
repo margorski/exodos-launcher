@@ -208,7 +208,6 @@ export interface FieldFilter {
     playMode: Array<string>,
     region: Array<string>,
     rating: Array<string>,
-    releaseDate: Array<string>,
 }
 
 export interface CompareFilter {
@@ -228,6 +227,7 @@ export type GameFilter = {
     exactWhitelist: FieldFilter,
     exactBlacklist: FieldFilter,
     lessThan: CompareFilter,
+    equalTo: CompareFilter,
     greaterThan: CompareFilter,
     booleans: BooleanFilter,
     matchAny: boolean,
@@ -250,7 +250,7 @@ export type GameSearchSortable = "title"
     | "series"
     | "developer"
     | "publisher"
-    | "releaseDate";
+    | "releaseYear";
 
 export type GameSearchOrder = {
     column: GameSearchSortable,

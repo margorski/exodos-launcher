@@ -94,7 +94,7 @@ export class GameParser {
             applicationPath: unescapeHTML(data.ApplicationPath),
             rootFolder: unescapeHTML(data.RootFolder),
             launchCommand: unescapeHTML(data.CommandLine),
-            releaseDate: unescapeHTML(data.ReleaseDate),
+            releaseYear: unescapeHTML(data.ReleaseDate),
             version: unescapeHTML(data.Version),
             originalDescription: unescapeHTML(data.OriginalDescription),
             language: unescapeHTML(data.Language),

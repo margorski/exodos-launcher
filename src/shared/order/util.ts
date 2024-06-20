@@ -9,7 +9,7 @@ export const gameOrderByOptions: GameOrderBy[] = [
     "title",
     "developer",
     "publisher",
-    "releaseDate",
+    "releaseYear",
 ];
 
 /** An array with all valid values of GameOrderReverse */

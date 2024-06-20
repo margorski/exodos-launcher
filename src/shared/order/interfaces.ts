@@ -7,7 +7,7 @@ export type GameOrderBy =
     | "series"
     | "developer"
     | "publisher"
-    | "releaseDate";
+    | "releaseYear";
 export const DefaultGameOrderBy: GameOrderBy = "title";
 
 /** Ways to order games */

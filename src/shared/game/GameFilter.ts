@@ -34,11 +34,11 @@ function orderByDateAdded(a: IGameInfo, b: IGameInfo): number {
 }
 
 /** Order games by the date-time they were released (ascending) */
-function orderByReleaseDate(a: IGameInfo, b: IGameInfo): number {
-    if (a.releaseDate < b.releaseDate) {
+function orderByReleaseYear(a: IGameInfo, b: IGameInfo): number {
+    if (a.releaseYear < b.releaseYear) {
         return -1;
     }
-    if (a.releaseDate > b.releaseDate) {
+    if (a.releaseYear > b.releaseYear) {
         return 1;
     }
     return orderByTitle(a, b);
@@ -109,8 +109,8 @@ export function getOrderFunction(
 ): OrderFn {
     let orderFn: OrderFn;
     switch (orderBy) {
-        case "releaseDate":
-            orderFn = orderByReleaseDate;
+        case "releaseYear":
+            orderFn = orderByReleaseYear;
             break;
         case "dateAdded":
             orderFn = orderByDateAdded;

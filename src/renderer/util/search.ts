@@ -4,11 +4,15 @@ import { BooleanFilter, CompareFilter, FieldFilter, GameFilter } from "@shared/i
 enum KeyChar {
   MATCHES = ':',
   EQUALS = '=',
+  LESS_THAN = '<',
+  GREATER_THAN = '>',
 };
 
 const KEY_CHARS = [
   "=",
   ":",
+  '<',
+  '>',
 ];
 
 const REPLACEMENT = "awgdty7awgvbduiawdjnujioawd888";
@@ -32,7 +36,6 @@ export function getDefaultFieldFilter(): FieldFilter {
     playMode: [],
     region: [],
     rating: [],
-    releaseDate: [],
   };
 }
 
@@ -47,6 +50,7 @@ export function getDefaultGameFilter(): GameFilter {
     blacklist: getDefaultFieldFilter(),
     exactWhitelist: getDefaultFieldFilter(),
     exactBlacklist: getDefaultFieldFilter(),
+    equalTo: getDefaultCompareFilter(),
     greaterThan: getDefaultCompareFilter(),
     lessThan: getDefaultCompareFilter(),
     booleans: getDefaultBooleanFilter(),
@@ -61,6 +65,7 @@ export function parseUserInput(input: string) {
     blacklist: getDefaultFieldFilter(),
     exactWhitelist: getDefaultFieldFilter(),
     exactBlacklist: getDefaultFieldFilter(),
+    equalTo: getDefaultCompareFilter(),
     greaterThan: getDefaultCompareFilter(),
     lessThan: getDefaultCompareFilter(),
     booleans: getDefaultBooleanFilter(),
@@ -138,13 +143,13 @@ export function parseUserInput(input: string) {
 
     // Try parsing what we have left into a proper key value pair
     if (!workingValue) {
-      const keyChar = getKeyChar(token);
+      workingKeyChar = getKeyChar(token);
 
-      if (keyChar) {
-        let parts = token.split(keyChar);
+      if (workingKeyChar) {
+        let parts = token.split(workingKeyChar);
         if (parts.length > 1) {
           workingKey = parts[0];
-          token = parts.slice(1).join(keyChar);
+          token = parts.slice(1).join(workingKeyChar);
         }
       }
 
@@ -190,7 +195,7 @@ export function parseUserInput(input: string) {
           }
         }
 
-        console.log(`key: ${workingKey}, value: ${workingValue}, negative: ${negative}, exact: ${exact}`);
+        console.log(`key: ${workingKey}, value: ${workingValue}, keychar: ${workingKeyChar}, negative: ${negative}, exact: ${exact}`);
 
         let list = (negative && exact) ? filter.exactBlacklist :
            (negative && !exact) ? filter.blacklist :
@@ -199,59 +204,127 @@ export function parseUserInput(input: string) {
 
         let value = workingValue; // Reassign here so we can expand typings later, trust me
 
-        // Handle adding string values to filter
-        switch (workingKey.toLowerCase()) {
-          case 'id': {
-            list.id.push(value);
-            break;
-          }
-          case 'title': {
-            list.title.push(value);
-            break;
-          }
-          case 'series': {
-            list.series.push(value);
-            break;
-          }
-          case 'developer': {
-            list.developer.push(value);
-            break;
-          }
-          case 'publisher': {
-            list.publisher.push(value);
-            break;
-          }
-          case 'platform': {
-            list.platform.push(value);
-            break;
-          }
-          case 'genre': {
-            list.genre.push(value);
-            break;
-          }
-          case 'region': {
-            list.region.push(value);
-            break;
-          }
-          case 'rating': {
-            list.rating.push(value);
-            break;
-          }
-          case 'year':
-          case 'releaseDate':
-          case 'date':
-          case 'releaseYear': {
-            list.releaseDate.push(value);
-            break;
-          }
-          default: {
-            if (workingKeyChar) {
-              const fullValue = workingKey + workingKeyChar + value;
-              list.generic.push(fullValue);
-            } else {
-              list.generic.push(value)
+        let processed = true;
+
+        if (workingKeyChar !== undefined) {
+          switch (workingKeyChar) {
+            case KeyChar.LESS_THAN: {
+              switch (workingKey) {
+                case 'players':
+                case 'maxPlayers': {
+                  filter.lessThan.maxPlayers = Number(value);
+                  break;
+                }
+                case 'release':
+                case 'releaseDate':
+                case 'releaseYear':
+                case 'year': {
+                  filter.lessThan.releaseYear = value;
+                  break;
+                }
+                default: {
+                  processed = false;
+                }
+              }
+              break;
             }
-            break;
+            case KeyChar.GREATER_THAN: {
+              switch (workingKey) {
+                case 'players':
+                case 'maxPlayers': {
+                  filter.greaterThan.maxPlayers = Number(value);
+                  break;
+                }
+                case 'release':
+                case 'releaseDate':
+                case 'releaseYear':
+                case 'year': {
+                  filter.greaterThan.releaseYear = value;
+                  break;
+                }
+                default: {
+                  processed = false;
+                }
+              }
+              break;
+            }
+            case KeyChar.EQUALS:
+            case KeyChar.MATCHES: {
+              switch (workingKey) {
+                case 'players':
+                case 'maxPlayers': {
+                  filter.equalTo.maxPlayers = Number(value);
+                  break;
+                }
+                case 'release':
+                case 'releaseDate':
+                case 'releaseYear':
+                case 'year': {
+                  filter.equalTo.releaseYear = value;
+                  break;
+                }
+                default: {
+                  processed = false;
+                }
+              }
+              break;
+            }
+            default: {
+              processed = false;
+            }
+          }
+        } else {
+          processed = false;
+        }
+
+        if (!processed) {
+          // Handle adding string values to filter
+          switch (workingKey.toLowerCase()) {
+            case 'id': {
+              list.id.push(value);
+              break;
+            }
+            case 'title': {
+              list.title.push(value);
+              break;
+            }
+            case 'series': {
+              list.series.push(value);
+              break;
+            }
+            case 'developer': {
+              list.developer.push(value);
+              break;
+            }
+            case 'publisher': {
+              list.publisher.push(value);
+              break;
+            }
+            case 'platform': {
+              list.platform.push(value);
+              break;
+            }
+            case 'genre': {
+              list.genre.push(value);
+              break;
+            }
+            case 'region': {
+              list.region.push(value);
+              break;
+            }
+            case 'rating': {
+              list.rating.push(value);
+              break;
+            }
+            default: {
+              if (workingKeyChar) {
+                const fullValue = workingKey + workingKeyChar + value;
+                list.generic.push(fullValue);
+              } else {
+                list.generic.push(value)
+              }
+              break;
+            }
           }
         }
 
@@ -261,6 +334,8 @@ export function parseUserInput(input: string) {
       }
     }
   }
+
+  console.log(filter);
 
   return filter;
 }
@@ -282,6 +357,10 @@ function getKeyChar(token: string): KeyChar | undefined {
       return KeyChar.EQUALS
     case ':':
       return KeyChar.MATCHES
+    case '>':
+      return KeyChar.GREATER_THAN
+    case '<':
+      return KeyChar.LESS_THAN
     default:
       return undefined;
   }
@@ -322,14 +401,21 @@ export function isFilterEmpty(filter: FieldFilter) {
     filter.playMode.length > 0 ||
     filter.region.length > 0 ||
     filter.rating.length > 0
-  )
+  );
+}
+
+export function isCompareFilterEmpty(filter: CompareFilter) {
+  return !(
+    filter.maxPlayers !== undefined ||
+    filter.releaseYear !== undefined
+  );
 }
 
 export function isBooleanFilterEmpty(filter: BooleanFilter) {
   return !(
     filter.installed !== undefined ||
     filter.recommended !== undefined
-  )
+  );
 }
 
 export function parseAdvancedFilter(filter: AdvancedFilter): GameFilter {

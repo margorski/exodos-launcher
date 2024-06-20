@@ -21,7 +21,7 @@ export class GameInfo {
             applicationPath: "",
             rootFolder: "",
             launchCommand: "",
-            releaseDate: "",
+            releaseYear: "",
             version: "",
             originalDescription: "",
             language: "",
