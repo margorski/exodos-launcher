@@ -58,7 +58,7 @@ export function getDefaultGameFilter(): GameFilter {
   };
 }
 
-export function parseUserInput(input: string) {
+export function parseUserInput(input: string): GameFilter {
   const filter: GameFilter = {
     subfilters: [],
     whitelist: getDefaultFieldFilter(),
@@ -156,7 +156,7 @@ export function parseUserInput(input: string) {
       // Entire token is wrapped, must be a generic value
       if (token.endsWith('"') && token.startsWith('"')) {
         if (token.length == 2) {
-          if (!workingKey) {
+          if (workingKey !== "") {
             // It has a key? Must be a deliberately empty value, fill with a replacement string for now
             workingValue = REPLACEMENT;
           }

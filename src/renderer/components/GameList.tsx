@@ -165,7 +165,7 @@ export class GameList extends React.Component<GameListProps> {
                 developer={game.developer}
                 publisher={game.publisher}
                 releaseYear={this.getPrintableYearFromDateString(
-                    game.releaseDate,
+                    game.releaseYear,
                 )}
                 isDraggable={true}
                 isSelected={game.id === selectedGame?.id}

@@ -235,7 +235,7 @@ function exactStringFilterFieldFactory(filter: FieldFilter, matchAny: boolean) {
     }
 
     // If we made it here, we've either matched all (AND) or matched none (OR)
-    return matchAny;
+    return !matchAny;
   };
 }
 

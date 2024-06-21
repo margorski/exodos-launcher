@@ -198,7 +198,7 @@ export class RightBrowseSidebar extends React.Component<
                         <div className="browse-right-sidebar__row browse-right-sidebar__row--one-line">
                             <p>{strings.releaseYear}: </p>
                             <InputField
-                                text={new Date(game.releaseDate)
+                                text={new Date(game.releaseYear)
                                     .getFullYear()
                                     .toString()}
                                 placeholder={strings.noReleaseDate}
