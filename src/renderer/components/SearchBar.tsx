@@ -400,6 +400,7 @@ function SearchableSelectDropdown(props: SearchableSelectDropdownProps) {
     return (
       <div
         style={style}
+        title={item ? item : 'None'}
         className={`searchable-select-dropdown-item ${marked && 'searchable-select-dropdown-item--selected'}`}
         onClick={() => onToggle(item)}
         key={item}>

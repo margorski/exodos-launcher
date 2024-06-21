@@ -292,10 +292,12 @@ export function parseUserInput(input: string): GameFilter {
               list.series.push(value);
               break;
             }
+            case 'dev':
             case 'developer': {
               list.developer.push(value);
               break;
             }
+            case 'pub':
             case 'publisher': {
               list.publisher.push(value);
               break;
@@ -304,6 +306,7 @@ export function parseUserInput(input: string): GameFilter {
               list.platform.push(value);
               break;
             }
+            case 'tag':
             case 'genre': {
               list.genre.push(value);
               break;
