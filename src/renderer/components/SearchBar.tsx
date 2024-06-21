@@ -82,12 +82,21 @@ export function SearchBar(props: SearchBarProps) {
 
   const onToggleFactory = (key: keyof AdvancedFilter) => {
     return (value: string) => {
-      const newValues = [...(view.advancedFilter[key] as string[])];
+      let newValues = [...(view.advancedFilter[key] as string[])];
       const idx = newValues.findIndex(s => s === value);
       if (idx > -1) {
         newValues.splice(idx, 1);
       } else {
-        newValues.push(value);
+        // None is mutually exclusive to every other value
+        if (value === "") {
+          newValues = [value];
+        } else {
+          const noneIdx = newValues.findIndex(s => s === "");
+          if (noneIdx > -1) {
+            newValues.splice(noneIdx, 1);
+          }
+          newValues.push(value);
+        }
       }
   
       dispatch(setAdvancedFilter({
@@ -178,6 +187,7 @@ export function SearchBar(props: SearchBarProps) {
         </div>
         <input
           ref={searchInputRef}
+          placeholder="Search"
           className="search-bar-text-input"
           value={view.text}
           onChange={onTextChange} />
@@ -368,7 +378,7 @@ function SearchableSelectDropdown(props: SearchableSelectDropdownProps) {
 
   const filteredItems = React.useMemo(() => {
     const lowerSearch = search.toLowerCase().replace(' ', '');
-    return storedItems.filter((item) => item && item.toLowerCase().replace(' ', '').includes(lowerSearch));
+    return storedItems.filter((item) => item.toLowerCase().replace(' ', '').includes(lowerSearch));
   }, [search, storedItems]);
   console.log(filteredItems);
 
@@ -383,12 +393,7 @@ function SearchableSelectDropdown(props: SearchableSelectDropdownProps) {
   const rowRenderer = (props: ListRowProps) => {
     const { style } = props;
     const item = filteredItems[props.index];
-
-    if (!item) {
-      return (
-        <div style={style} key={props.index}>{props.index}</div>
-      );
-    }
+    console.log(filteredItems[0]);
 
     const marked = selected.includes(item);
           
@@ -399,7 +404,7 @@ function SearchableSelectDropdown(props: SearchableSelectDropdownProps) {
         onClick={() => onToggle(item)}
         key={item}>
         <div className="searchable-select-dropdown-item-title">
-          {item}
+          {item ? item : <i>None</i>}
         </div>
         { marked && (
           <div className="searchable-select-dropdown-item-marked">
@@ -429,6 +434,7 @@ function SearchableSelectDropdown(props: SearchableSelectDropdownProps) {
         ref={inputRef}
         className="searchable-select-dropdown-search-bar"
         value={search}
+        placeholder="Search"
         onChange={(event) => setSearch(event.currentTarget.value)}/>
       <div className="searchable-select-dropdown-results">
         <AutoSizer>

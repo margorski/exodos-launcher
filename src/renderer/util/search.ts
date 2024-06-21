@@ -443,49 +443,56 @@ export function parseAdvancedFilter(filter: AdvancedFilter): GameFilter {
   if (filter.developer.length > 0) {
     const developerFilter = getDefaultGameFilter();
     developerFilter.matchAny = true;
-    developerFilter.whitelist.developer = filter.developer;
+    developerFilter.whitelist.developer = filter.developer.filter(s => s !== "");
+    developerFilter.exactWhitelist.developer = filter.developer.filter(s => s === "");
     newFilter.subfilters.push(developerFilter);
   }
 
   if (filter.publisher.length > 0) {
     const publisherFilter = getDefaultGameFilter();
     publisherFilter.matchAny = true;
-    publisherFilter.whitelist.publisher = filter.publisher;
+    publisherFilter.whitelist.publisher = filter.publisher.filter(s => s !== "");
+    publisherFilter.exactWhitelist.publisher = filter.publisher.filter(s => s === "");
     newFilter.subfilters.push(publisherFilter);
   }
 
   if (filter.series.length > 0) {
     const seriesFilter = getDefaultGameFilter();
     seriesFilter.matchAny = true;
-    seriesFilter.whitelist.series = filter.series;
+    seriesFilter.whitelist.series = filter.series.filter(s => s !== "");
+    seriesFilter.exactWhitelist.series = filter.series.filter(s => s === "");
     newFilter.subfilters.push(seriesFilter);
   }
 
   if (filter.genre.length > 0) {
     const genreFilter = getDefaultGameFilter();
     genreFilter.matchAny = true;
-    genreFilter.whitelist.genre = filter.genre;
+    genreFilter.whitelist.genre = filter.genre.filter(s => s !== "");
+    genreFilter.exactWhitelist.genre = filter.genre.filter(s => s === "");
     newFilter.subfilters.push(genreFilter);
   }
 
   if (filter.playMode.length > 0) {
     const playModeFilter = getDefaultGameFilter();
     playModeFilter.matchAny = true;
-    playModeFilter.whitelist.playMode = filter.playMode;
+    playModeFilter.whitelist.playMode = filter.playMode.filter(s => s !== "");
+    playModeFilter.exactWhitelist.playMode = filter.playMode.filter(s => s === "");
     newFilter.subfilters.push(playModeFilter);
   }
 
   if (filter.region.length > 0) {
     const regionFilter = getDefaultGameFilter();
     regionFilter.matchAny = true;
-    regionFilter.whitelist.region = filter.region;
+    regionFilter.whitelist.region = filter.region.filter(s => s !== "");
+    regionFilter.exactWhitelist.region = filter.region.filter(s => s === "");
     newFilter.subfilters.push(regionFilter);
   }
 
   if (filter.rating.length > 0) {
     const ratingFilter = getDefaultGameFilter();
     ratingFilter.matchAny = true;
-    ratingFilter.whitelist.rating = filter.rating;
+    ratingFilter.whitelist.rating = filter.rating.filter(s => s !== "");
+    ratingFilter.exactWhitelist.rating = filter.rating.filter(s => s === "");
     newFilter.subfilters.push(ratingFilter);
   }
 
