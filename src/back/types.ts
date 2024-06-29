@@ -9,8 +9,8 @@ import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { IAppPreferencesData } from "@shared/preferences/interfaces";
 import { Theme } from "@shared/ThemeFile";
-import { GameManager } from "./game/GameManager";
 import { FileServer } from "./backend/fileServer";
+import { PlaylistManager } from "./playlist/PlaylistManager";
 
 export type BackState = {
     isInitialized: boolean;
@@ -23,10 +23,10 @@ export type BackState = {
     configFolder: string;
     exePath: string;
     localeCode: string;
-    gameManager: GameManager;
     messageQueue: WebSocket.MessageEvent[];
     isHandling: boolean;
     messageEmitter: MessageEmitter;
+    playlistManager: PlaylistManager;
     init: { [key in BackInit]: boolean };
     initEmitter: InitEmitter;
     queries: Record<string, BackQueryCache>;

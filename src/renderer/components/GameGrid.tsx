@@ -16,8 +16,9 @@ import {
 } from "../Util";
 import { GameGridItem } from "./GameGridItem";
 import { GameItemContainer } from "./GameItemContainer";
+import { IGameInfo } from "@shared/game/interfaces";
 
-const RENDERER_OVERSCAN = 5;
+const RENDERER_OVERSCAN = 9;
 const BACK_OVERSCAN = 50;
 
 /** A function that receives an HTML element. */
@@ -29,16 +30,15 @@ type ColumnsRows = {
 };
 
 export type GameGridProps = {
-    onRequestGames: (offset: number, limit: number) => void;
     onGameLaunch: (gameId: string) => void;
     /** All games that will be shown in the grid (filter it before passing it here). */
-    games?: GAMES;
+    games?: IGameInfo[];
     /** Array of installed games */
     installedGameIds: Array<string>;
     /** Total number of games there are. */
     gamesTotal: number;
     /** Currently selected game (if any). */
-    selectedGameId?: string;
+    selectedGame?: IGameInfo;
     /** Currently dragged game (if any). */
     draggedGameId?: string;
     /** Width of each cell in the grid (in pixels). */
@@ -48,7 +48,7 @@ export type GameGridProps = {
     /** Function that renders the elements to show instead of the grid if there are no games (render prop). */
     noRowsRenderer?: () => JSX.Element;
     /** Called when the user attempts to select a game. */
-    onGameSelect: (gameId?: string) => void;
+    onGameSelect: (game?: IGameInfo) => void;
     /** Called when the user attempts to open a context menu (at a game). */
     onContextMenu?: (gameId: string) => void;
     /** Called when the user starts to drag a game. */
@@ -123,10 +123,10 @@ export class GameGrid extends React.Component<GameGridProps> {
                         // Calculate column and row of selected item
                         let scrollToColumn: number = -1;
                         let scrollToRow: number = -1;
-                        if (this.props.selectedGameId) {
+                        if (this.props.selectedGame) {
                             const index: number = findGameIndex(
                                 this.props.games,
-                                this.props.selectedGameId
+                                this.props.selectedGame.id
                             );
                             if (index >= 0) {
                                 scrollToColumn = index % this.columns;
@@ -165,7 +165,6 @@ export class GameGrid extends React.Component<GameGridProps> {
                                             noContentRenderer={
                                                 this.props.noRowsRenderer
                                             }
-                                            onScroll={this.onScroll}
                                             // ArrowKeyStepper props
                                             scrollToColumn={scrollToColumn}
                                             scrollToRow={scrollToRow}
@@ -194,7 +193,7 @@ export class GameGrid extends React.Component<GameGridProps> {
 
     /** Renders a single cell in the game grid. */
     cellRenderer = (props: GridCellProps): React.ReactNode => {
-        const { draggedGameId, games, selectedGameId } = this.props;
+        const { draggedGameId, games, selectedGame } = this.props;
         if (!games) {
             throw new Error(
                 "Trying to render a cell in game grid, but no games are found?"
@@ -212,7 +211,7 @@ export class GameGrid extends React.Component<GameGridProps> {
                 platform={game.platform}
                 thumbnail={getGameThumbnailUrl(game.thumbnailPath)}
                 isDraggable={true}
-                isSelected={game.id === selectedGameId}
+                isSelected={game.id === selectedGame?.id}
                 isDragged={game.id === draggedGameId}
                 isInstalled={this.props.installedGameIds.includes(game.id)}
             />
@@ -250,31 +249,11 @@ export class GameGrid extends React.Component<GameGridProps> {
         }
     };
 
-    onScroll = (params: ScrollParams) => {
-        const { rows, columns } = this.calculateSize(
-            this.props.gamesTotal,
-            params.clientWidth
-        );
-
-        const top = Math.max(
-            0,
-            Math.floor(params.scrollTop / this.props.cellHeight) - BACK_OVERSCAN
-        );
-        const bot = Math.min(
-            Math.ceil(
-                (params.scrollTop + params.clientHeight) / this.props.cellHeight
-            ) + BACK_OVERSCAN,
-            rows
-        );
-
-        this.props.onRequestGames(top * columns, (bot - top) * columns);
-    };
-
     /** When a key is pressed (while the grid, or one of its children, is selected). */
     onKeyPress = (event: React.KeyboardEvent): void => {
         if (event.key === "Enter") {
-            if (this.props.selectedGameId) {
-                this.props.onGameLaunch(this.props.selectedGameId);
+            if (this.props.selectedGame) {
+                this.props.onGameLaunch(this.props.selectedGame.id);
             }
         }
     };
@@ -284,7 +263,12 @@ export class GameGrid extends React.Component<GameGridProps> {
         event: React.MouseEvent,
         gameId: string | undefined
     ): void => {
-        this.props.onGameSelect(gameId);
+        if (this.props.games) {
+            const game = this.props.games.find(g => g.id === gameId);
+            if (game) {
+                this.props.onGameSelect(game);
+            }
+        }
     };
 
     /** When a cell is double clicked. */
@@ -341,7 +325,7 @@ export class GameGrid extends React.Component<GameGridProps> {
                     params.scrollToRow * this.columns + params.scrollToColumn
                 ];
             if (game) {
-                this.props.onGameSelect(game.id);
+                this.props.onGameSelect(game);
             }
         }
     };

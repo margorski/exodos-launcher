@@ -54,33 +54,6 @@ export class PlaylistManager {
         }
     }
 
-    public addInstalledGamesPlaylist(
-        platform: GamePlatform
-    ) {
-        if (!this._initialized) {
-            console.log("PlaylistManager not initialized. Leaving");
-            return;
-        }
-
-        if (!platform.isGamePlatform) {
-            console.log(
-                `Platform ${platform.name} is not a game platform. Doesn't need installed games playlist.`
-            );
-            return;
-        }
-
-        // Add a stub playlist for installed games, we'll use special behaviour when reading later
-        this.playlists.unshift({
-            title: `Installed games (${platform.name})`,
-            description: "A list of installed games.",
-            author: "",
-            icon: "",
-            library: platform.name,
-            filename: `${INSTALLED_GAMES_PLAYLIST_PREFIX}_${platform.name}`,
-            games: [],
-        });
-    }
-
     private async _onPlaylistAddOrChange(
         filename: string,
         opts: PlaylistManagerOpts
@@ -96,32 +69,12 @@ export class PlaylistManager {
                     content: `Error while parsing playlist "${filePath}". ${error}`,
                 })
             );
+            console.log(JSON.stringify(data, undefined, 2));
 
-            const hasGames =
-                data.games &&
-                Array.isArray(data.games) &&
-                data.games.length > 0;
-            if (hasGames) {
-                const gamesPlatform =
-                    data.library ?? data.games[0].platform ?? "";
-                if (gamesPlatform === "") {
-                    opts.log({
-                        source: "Playlist",
-                        content: `Playlist "${filePath}" doesn't have a library. Skipping.`,
-                    });
-                } else {
-                    playlist = {
-                        ...data,
-                        library: gamesPlatform.slice(0, -4),
-                        filename,
-                    };
-                }
-            } else {
-                opts.log({
-                    source: "Playlist",
-                    content: `Playlist "${filePath}" doesn't have games. Skipping.`,
-                });
-            }
+            playlist = {
+                ...data,
+                filename,
+            };
         } catch (error) {
             opts.log({
                 source: "Playlist",

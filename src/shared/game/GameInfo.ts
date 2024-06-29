@@ -21,7 +21,7 @@ export class GameInfo {
             applicationPath: "",
             rootFolder: "",
             launchCommand: "",
-            releaseDate: "",
+            releaseYear: "",
             version: "",
             originalDescription: "",
             language: "",
@@ -34,6 +34,7 @@ export class GameInfo {
             configurationPath: "",
             installed: false,
             favorite: false,
+            recommended: false,
             rating: "",
             region: "",
             media: {

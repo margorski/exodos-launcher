@@ -47,7 +47,7 @@ export interface IPureGameInfo {
     rootFolder: string;
     launchCommand: string;
     /** Date of when the game was released */
-    releaseDate: string;
+    releaseYear: string;
     /** Version of the game */
     version: string;
     /** Original description of the game (probably given by the game's creator or publisher) */
@@ -55,6 +55,7 @@ export interface IPureGameInfo {
     /** The language(s) the game is in */
     language: string;
     favorite: boolean;
+    recommended: boolean;
     region: string;
     rating: string;
     maxPlayers?: number;

@@ -3,6 +3,7 @@ import { GamePlaylistContent, GamePlaylistEntry } from "@shared/interfaces";
 import { Coerce } from "@shared/utils/Coerce";
 import { IObjectParserProp, ObjectParser } from "@shared/utils/ObjectParser";
 import * as fastXmlParser from "fast-xml-parser";
+import { getDefaultGameFilter } from "@renderer/util/search";
 
 const { str } = Coerce;
 
@@ -51,7 +52,6 @@ export namespace PlaylistFile {
             description: "",
             author: "",
             icon: undefined,
-            library: undefined,
         };
 
         const playlistInfo = data && data.Playlist ? data.Playlist : {};
@@ -59,6 +59,11 @@ export namespace PlaylistFile {
             ? Array.isArray(data.PlaylistGame)
                 ? data.PlaylistGame
                 : [data.PlaylistGame]
+            : [];
+        const playlistFilters = data.PlaylistFilter
+            ? Array.isArray(data.PlaylistFilter)
+                ? data.PlaylistFilter
+                : [data.PlaylistFilter]
             : [];
         const intermediatePlaylistFormat = {
             title: playlistInfo.Name,
@@ -73,6 +78,13 @@ export namespace PlaylistFile {
                     platform: game.GamePlatform,
                 };
             }),
+            filters: playlistFilters.map((filter: any) => {
+                return {
+                    key: filter.FieldKey,
+                    value: filter.Value,
+                    comparisonKey: filter.ComparisonTypeKey
+                }
+            })
         };
 
         const parser = new ObjectParser({
@@ -88,19 +100,28 @@ export namespace PlaylistFile {
         parser.prop("description", (v) => (playlist.description = str(v)));
         parser.prop("author", (v) => (playlist.author = str(v)));
         parser.prop("icon", (v) => (playlist.icon = str(v)), true);
-        parser.prop("library", (v) => (playlist.library = str(v)), true);
         parser.prop("games").array((item) => {
             playlist.games.push(parseGamePlaylistEntry(item));
         });
+        for (const filter of intermediatePlaylistFormat.filters) {
+            if (playlist.filter === undefined) {
+                playlist.filter = getDefaultGameFilter();
+            }
 
-        // When playlist library is not set, deduce it from the games.
-        if (!playlist.library) {
-            const gameDeductedPlatform = playlist.games.find(
-                (g) => !!g.platform
-            )?.platform;
-            if (gameDeductedPlatform)
-                playlist.library = `${gameDeductedPlatform}.xml`;
+            switch (filter.key.toLowerCase()) {
+                case 'series': {
+                    playlist.filter.whitelist.series.push(filter.value);
+                    break;
+                }
+                case 'platform': {
+                    playlist.filter.exactWhitelist.platform.push(filter.value);
+                    break;
+                }
+                default:
+                    break;
+            }
         }
+
         return playlist;
     }
 

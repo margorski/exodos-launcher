@@ -3,8 +3,8 @@ import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { englishTranslation } from "@renderer/lang/en";
 
 export type GameOrderProps = {
-    /** Called when the either the property to order by, or what way to order in, is changed. */
-    onChange?: (event: GameOrderChangeEvent) => void;
+    onChangeOrderBy: (value: GameOrderBy) => void;
+    onChangeOrderReverse: (value: GameOrderReverse) => void;
     /** What property to order the games by. */
     orderBy: GameOrderBy;
     /** What way to order the games in. */
@@ -31,19 +31,19 @@ export class GameOrder extends React.Component<GameOrderProps> {
             <>
                 {/* Order By */}
                 <select
-                    className="simple-selector"
+                    className="simple-selector search-bar-order-dropdown"
                     value={this.props.orderBy}
                     onChange={this.onOrderByChange}
                 >
                     <option value="title">{strings.title}</option>
-                    <option value="releaseDate">{strings.releaseDate}</option>
+                    <option value="releaseYear">{strings.releaseDate}</option>
                     <option value="developer">{strings.developer}</option>
                     <option value="publisher">{strings.publisher}</option>
                     <option value="tags">{strings.tags}</option>
                 </select>
                 {/* Order Reverse */}
                 <select
-                    className="simple-selector"
+                    className="simple-selector search-bar-order-dropdown"
                     value={this.props.orderReverse}
                     onChange={this.onOrderReverseChange}
                 >
@@ -54,28 +54,27 @@ export class GameOrder extends React.Component<GameOrderProps> {
         );
     }
 
-    onOrderByChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-        this.updateOrder({
-            orderBy: validateOrderBy(event.target.value),
-        });
+    onOrderByChange = (
+        event: React.ChangeEvent<HTMLSelectElement>,
+    ): void => {
+        try {
+            const orderBy = validateOrderBy(event.target.value);
+            this.props.onChangeOrderBy(orderBy);
+        } catch (error) {
+            console.log('Failed to update order by: ' + error);
+        }
     };
 
     onOrderReverseChange = (
         event: React.ChangeEvent<HTMLSelectElement>,
     ): void => {
-        this.updateOrder({
-            orderReverse: validateOrderReverse(event.target.value),
-        });
-    };
-
-    updateOrder(data: Partial<GameOrderChangeEvent>): void {
-        if (this.props.onChange) {
-            this.props.onChange({
-                orderBy: data.orderBy || this.props.orderBy,
-                orderReverse: data.orderReverse || this.props.orderReverse,
-            });
+        try {
+            const orderReverse = validateOrderReverse(event.target.value);
+            this.props.onChangeOrderReverse(orderReverse);
+        } catch (error) {
+            console.log('Failed to update order reverse: ' + error);
         }
-    }
+    };
 }
 
 /**
@@ -85,8 +84,8 @@ export class GameOrder extends React.Component<GameOrderProps> {
  */
 function validateOrderBy(value: string): GameOrderBy {
     switch (value) {
-        case "releaseDate":
-            return "releaseDate";
+        case "releaseYear":
+            return "releaseYear";
         case "dateAdded":
             return "dateAdded";
         case "tags":

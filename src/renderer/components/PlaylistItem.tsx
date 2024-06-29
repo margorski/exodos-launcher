@@ -9,7 +9,7 @@ export type PlaylistItemProps = {
     iconFilename?: string;
     selected: boolean;
     playlistIconCache: Record<string, string>;
-    onHeadClick: (playlistId: string, selected: boolean) => void;
+    onHeadClick: (playlist: GamePlaylist, selected: boolean) => void;
     onSetIcon: () => void;
     onTitleChange: (event: React.ChangeEvent<InputElement>) => void;
     onAuthorChange: (event: React.ChangeEvent<InputElement>) => void;
@@ -19,7 +19,7 @@ export function PlaylistItem(props: PlaylistItemProps) {
     const strings = englishTranslation.playlist;
 
     const onHeadClick = useCallback(() => {
-        props.onHeadClick(props.playlist.filename, props.selected);
+        props.onHeadClick(props.playlist, props.selected);
     }, [props.playlist.filename, props.selected]);
 
     const onIconClick = useCallback(() => {

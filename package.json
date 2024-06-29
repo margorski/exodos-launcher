@@ -40,6 +40,7 @@
     "dependencies": {
         "@electron/remote": "^2.1.2",
         "@lagunovsky/redux-react-router": "^4.3.2",
+        "@reduxjs/toolkit": "^2.2.5",
         "chokidar": "^3.6.0",
         "electron-updater": "^6.1.8",
         "fast-xml-parser": "^3.12.19",
@@ -50,7 +51,7 @@
         "mime": "^3.0.0",
         "node-7z": "^3.0.0",
         "react": "^18.2.0",
-        "react-redux": "^7.1.33",
+        "react-redux": "9.1.2",
         "react-router": "^6.22.3",
         "react-router-dom": "^6.22.3",
         "react-virtualized": "^9.22.5",

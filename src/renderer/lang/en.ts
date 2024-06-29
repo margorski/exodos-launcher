@@ -113,7 +113,7 @@ export const englishTranslation = {
 		publisher: "Publisher",
 		ascending: "Ascending",
 		descending: "Descending",
-		releaseDate: "Release Date",
+		releaseDate: "Release Year",
 	},
 	developer: {
 		developerHeader: "Developer",
@@ -196,7 +196,7 @@ export const englishTranslation = {
 		version: "Version",
 		noVersion: "No Version",
 		releaseYear: "Release Year",
-		noReleaseDate: "No Release Date",
+		noReleaseDate: "No Release Year",
 		language: "Language",
 		noLanguage: "No Language",
 		dateAdded: "Date Added",
@@ -304,7 +304,7 @@ export const englishTranslation = {
 		invalidLaunchCommand:
 			"'Launch Command' does not fit these URL requirements:",
 		releaseDateInvalid:
-			"'Release Date' must follow YYYY-MM-DD (month and day are optional).",
+			"'Release Year' must follow YYYY-MM-DD (month and day are optional).",
 		unusedApplicationPath:
 			"'Application Path' has an unused value. Make sure it's spelled correctly!",
 		unusedTags:

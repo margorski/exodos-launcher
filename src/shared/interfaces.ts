@@ -80,7 +80,6 @@ export interface IMainWindowExternal {
 
     initialThemes: Theme[];
     initialPlaylists?: GamePlaylist[];
-    initialPlatforms: Record<string, string[]>;
     initialLocaleCode: string;
 
     /**
@@ -172,8 +171,8 @@ export type GamePlaylistContent = {
     author: string;
     /** Icon of the playlist (Base64 encoded image). */
     icon?: string;
-    /** Route of the library this playlist is for. */
-    library?: string;
+    /** Dynamic filter */
+    filter?: GameFilter;
 };
 
 /** An entry inside a Playlist file. */
@@ -196,3 +195,64 @@ export type ExodosBackendInfo = {
     changelog: string;
     version: string;
 };
+
+export interface FieldFilter {
+    generic: Array<string>,
+    id: Array<string>
+    title: Array<string>,
+    series: Array<string>,
+    developer: Array<string>,
+    publisher: Array<string>,
+    platform: Array<string>,
+    genre: Array<string>,
+    playMode: Array<string>,
+    region: Array<string>,
+    rating: Array<string>,
+}
+
+export interface CompareFilter {
+    releaseYear?: string;
+    maxPlayers?: number;
+}
+
+export interface BooleanFilter {
+    installed?: boolean;
+    recommended?: boolean;
+}
+
+export type GameFilter = {
+    subfilters: Array<GameFilter>,
+    whitelist: FieldFilter,
+    blacklist: FieldFilter,
+    exactWhitelist: FieldFilter,
+    exactBlacklist: FieldFilter,
+    lessThan: CompareFilter,
+    equalTo: CompareFilter,
+    greaterThan: CompareFilter,
+    booleans: BooleanFilter,
+    matchAny: boolean,
+}
+
+export type GameSearch = {
+    filter: GameFilter,
+    order: GameSearchOrder,
+}
+
+export enum GameSearchDirection {
+    ASC,
+    DESC,
+}
+
+export type GameSearchSortable = "title"
+    | "dateAdded"
+    | "genre"
+    | "platform"
+    | "series"
+    | "developer"
+    | "publisher"
+    | "releaseYear";
+
+export type GameSearchOrder = {
+    column: GameSearchSortable,
+    direction: GameSearchDirection,
+}
