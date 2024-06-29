@@ -57,7 +57,7 @@
         "react-virtualized": "^9.22.5",
         "typesafe-actions": "^5.1.0",
         "uuid": "^9.0.1",
-        "ws": "^7.4.6"
+        "ws": "^7.5.10"
     },
     "devDependencies": {
         "@types/follow-redirects": "^1.14.4",
