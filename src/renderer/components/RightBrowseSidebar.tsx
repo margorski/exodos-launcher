@@ -2,15 +2,12 @@ import { BrowserWindow, shell } from "@electron/remote";
 import { openContextMenu } from "@main/Util";
 import { englishTranslation } from "@renderer/lang/en";
 import { getFileServerURL } from "@shared/Util";
-import { BackIn, LaunchAddAppData, LaunchGameData } from "@shared/back/types";
 import { LOGOS, SCREENSHOTS } from "@shared/constants";
-import { GameMedia, IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
+import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylistEntry } from "@shared/interfaces";
 import { MenuItemConstructorOptions } from "electron";
 import * as React from "react";
-import {
-    getGameImagePath
-} from "../Util";
+import { getGameImagePath } from "../Util";
 import { WithPreferencesProps } from "../containers/withPreferences";
 import { DropdownInputField } from "./DropdownInputField";
 import { FormattedGameMedia, GameImageCarousel } from "./GameImageCarousel";
@@ -97,15 +94,21 @@ export class RightBrowseSidebar extends React.Component<
                                         type="button"
                                         className="simple-button"
                                         value={playButtonLabel}
-                                        onClick={() => this.props.onGameLaunch(game.id)}
+                                        onClick={() =>
+                                            this.props.onGameLaunch(game.id)
+                                        }
                                     />
                                     {isGame ? (
                                         <input
                                             type="button"
                                             className="simple-button"
-                                            disabled={!(currentGame?.installed)}
+                                            disabled={!currentGame?.installed}
                                             value={strings.setup}
-                                            onClick={() => this.props.onGameLaunchSetup(game.id)}
+                                            onClick={() =>
+                                                this.props.onGameLaunchSetup(
+                                                    game.id
+                                                )
+                                            }
                                         />
                                     ) : null}
                                 </div>
@@ -118,8 +121,9 @@ export class RightBrowseSidebar extends React.Component<
                         <GameImageCarousel
                             imgKey={game.id}
                             media={game.media}
-                            platform={game.platform} 
-                            onPreviewMedia={this.onPreviewMedia} />
+                            platform={game.platform}
+                            onPreviewMedia={this.onPreviewMedia}
+                        />
                     </div>
 
                     {/* -- Most Fields -- */}
@@ -256,7 +260,9 @@ export class RightBrowseSidebar extends React.Component<
                                     <RightBrowseSidebarAddApp
                                         key={addApp.id}
                                         addApp={addApp}
-                                        onLaunch={this.onAddAppLaunch}
+                                        onLaunch={this.onAddAppLaunch.bind(
+                                            this
+                                        )}
                                     />
                                 ))}
                         </div>
