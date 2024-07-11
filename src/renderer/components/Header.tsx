@@ -31,7 +31,6 @@ export function Header(props: HeaderProps) {
             {/* Header Menu */}
             <div className="header__wrap">
                 <ul className="header__menu">
-                    <MenuItem title={strings.home} link={Paths.HOME} />
                     {libraries.map((library) => (
                         <MenuItem
                             key={library}

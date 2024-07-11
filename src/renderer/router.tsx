@@ -64,7 +64,7 @@ export class AppRouter extends React.Component<AppRouterProps> {
             <Routes>
                 <Route
                     path={Paths.HOME}
-                    element={<ConnectedHomePage {...homeProps} />}
+                    element={<BrowsePage {...browseProps} />}
                 />
                 <Route
                     path={Paths.BROWSE}

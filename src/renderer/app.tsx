@@ -16,7 +16,7 @@ import {
     LogEntryAddedData,
     PlaylistRemoveData,
     ThemeChangeData,
-    ThemeListChangeData
+    ThemeListChangeData,
 } from "@shared/back/types";
 import { APP_TITLE } from "@shared/constants";
 import { IGameInfo } from "@shared/game/interfaces";
@@ -36,7 +36,10 @@ import { SplashScreen } from "./components/SplashScreen";
 import { TitleBar } from "./components/TitleBar";
 import { ConnectedFooter } from "./containers/ConnectedFooter";
 import HeaderContainer from "./containers/HeaderContainer";
-import { WithPreferencesProps, withPreferences } from "./containers/withPreferences";
+import {
+    WithPreferencesProps,
+    withPreferences,
+} from "./containers/withPreferences";
 import { WithRouterProps, withRouter } from "./containers/withRouter";
 import { GamesInitState, initialize } from "./redux/gamesSlice";
 import { initializeViews } from "./redux/searchSlice";
@@ -72,14 +75,17 @@ const mapState = (state: RootState) => ({
 
 const mapDispatch = {
     initializeGames: initialize,
-    initializeViews: initializeViews
-}
+    initializeViews: initializeViews,
+};
 
 const connector = connect(mapState, mapDispatch);
 
 type OwnProps = {};
 
-export type AppProps = ConnectedProps<typeof connector> & OwnProps & WithRouterProps & WithPreferencesProps;
+export type AppProps = ConnectedProps<typeof connector> &
+    OwnProps &
+    WithRouterProps &
+    WithPreferencesProps;
 
 export type AppState = {
     playlists: GamePlaylist[];
@@ -348,7 +354,10 @@ class App extends React.Component<AppProps, AppState> {
                 case BackOut.GAME_CHANGE:
                     {
                         // We don't track selected game here, so we'll just force a game update anyway
-                        this.setState({ currentGameRefreshKey: this.state.currentGameRefreshKey + 1 });
+                        this.setState({
+                            currentGameRefreshKey:
+                                this.state.currentGameRefreshKey + 1,
+                        });
                     }
                     break;
             }
@@ -417,9 +426,14 @@ class App extends React.Component<AppProps, AppState> {
             this.props.gamesLoaded === GamesInitState.LOADED &&
             this.state.loaded[BackInit.PLAYLISTS] &&
             this.state.loaded[BackInit.EXEC];
-        const libraryPath = getBrowseSubPath(this.props.location.pathname);
+        const libraryPath =
+            getBrowseSubPath(this.props.location.pathname) ??
+            Object.keys(this.props.searchState.views)?.[0] ??
+            "";
         const view = this.props.searchState.views[libraryPath];
-        const playlists = this.orderAndFilterPlaylistsMemo(this.state.playlists);
+        const playlists = this.orderAndFilterPlaylistsMemo(
+            this.state.playlists
+        );
 
         // Props to set to the router
         const routerProps: AppRouterProps = {
@@ -447,8 +461,12 @@ class App extends React.Component<AppProps, AppState> {
                     <>
                         {/* Splash screen */}
                         <SplashScreen
-                            gamesLoaded={this.props.gamesLoaded === GamesInitState.LOADED}
-                            playlistsLoaded={this.state.loaded[BackInit.PLAYLISTS]}
+                            gamesLoaded={
+                                this.props.gamesLoaded === GamesInitState.LOADED
+                            }
+                            playlistsLoaded={
+                                this.state.loaded[BackInit.PLAYLISTS]
+                            }
                             miscLoaded={this.state.loaded[BackInit.EXEC]}
                         />
                         {/* Title-bar (if enabled) */}
@@ -590,20 +608,17 @@ class App extends React.Component<AppProps, AppState> {
         });
     }
 
-    orderAndFilterPlaylistsMemo = memoizeOne(
-        (playlists: GamePlaylist[]) => {
-            return playlists
-                .sort((a, b) => {
-                    if (a.title < b.title) {
-                        return -1;
-                    }
-                    if (a.title > b.title) {
-                        return 1;
-                    }
-                    return 0;
-                });
-        }
-    );
+    orderAndFilterPlaylistsMemo = memoizeOne((playlists: GamePlaylist[]) => {
+        return playlists.sort((a, b) => {
+            if (a.title < b.title) {
+                return -1;
+            }
+            if (a.title > b.title) {
+                return 1;
+            }
+            return 0;
+        });
+    });
 
     private unmountBeforeClose = (): void => {
         this.setState({ stopRender: true });
@@ -633,15 +648,15 @@ class App extends React.Component<AppProps, AppState> {
 export default withRouter(withPreferences(connector(App)));
 
 /** Get the "library route" of a url (returns empty string if URL is not a valid "sub-browse path") */
-function getBrowseSubPath(urlPath: string): string {
+function getBrowseSubPath(urlPath: string) {
     if (urlPath.startsWith(Paths.BROWSE)) {
         let str = urlPath.substring(Paths.BROWSE.length);
         if (str[0] === "/") {
             str = str.substring(1);
         }
-        return str;
+        return decodeURIComponent(str);
     }
-    return "";
+    return;
 }
 
 async function cacheIcon(icon: string): Promise<string> {
