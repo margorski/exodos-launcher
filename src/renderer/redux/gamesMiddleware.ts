@@ -181,18 +181,15 @@ export function addGamesMiddleware() {
     });
 }
 
-const EXTRAS_DIR = "Extra";
+const EXTRAS_DIR = "Extras";
 
 function loadDynamicExtrasForGame(
     game: IGameInfo
 ): IAdditionalApplicationInfo[] {
-    if (!game?.applicationPath)
-        throw new Error("Game application path not set. Invalid data.");
+    if (!game?.rootFolder)
+        throw new Error("Game root folder path not set. Invalid data.");
 
-    const relativeExtras = path.join(
-        fixSlashes(game?.applicationPath),
-        EXTRAS_DIR
-    );
+    const relativeExtras = path.join(fixSlashes(game?.rootFolder), EXTRAS_DIR);
     const gameExtrasPath = path.join(
         window.External.config.fullExodosPath,
         relativeExtras
