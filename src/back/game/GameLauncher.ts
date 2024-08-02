@@ -251,14 +251,37 @@ export namespace GameLauncher {
         return filePath;
     }
 
+    const FOOBAR_EXECUTABLE = "foobar2000.exe";
     function createCommand(filename: string, args: string): string {
         let escFilename: string = escapeShell(filename);
         let escArgs: string = escapeLinuxArgs(args);
 
-        const isCommandFile = filename.toLocaleLowerCase().endsWith(".command");
         const commandWithArguments = `${escFilename} ${escArgs}`;
-        if (isCommandFile) return commandWithArguments;
-        else return `xdg-open ${commandWithArguments}`;
+        switch (getCommandType(filename)) {
+            case "CommandFile":
+                return commandWithArguments;
+            case "Soundtrack":
+                const foobarDirectory = escFilename.slice(
+                    0,
+                    -FOOBAR_EXECUTABLE.length
+                );
+                return `cd ${foobarDirectory} && flatpak run com.retro_exo.wine-9-0 ${FOOBAR_EXECUTABLE} ${args}`;
+            case "General":
+                return `xdg-open ${commandWithArguments}`;
+        }
+    }
+
+    type CommandType = "CommandFile" | "Soundtrack" | "General";
+    function getCommandType(filename: string): CommandType {
+        const isCommandFile = filename.toLocaleLowerCase().endsWith(".command");
+        if (isCommandFile) return "CommandFile";
+
+        const isSoundtrack = filename
+            .toLocaleLowerCase()
+            .endsWith(FOOBAR_EXECUTABLE);
+        if (isSoundtrack) return "Soundtrack";
+
+        return "General";
     }
 
     function logProcessOutput(proc: ChildProcess, log: LogFunc): void {
