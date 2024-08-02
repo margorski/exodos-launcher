@@ -69,7 +69,6 @@ export class PlaylistManager {
                     content: `Error while parsing playlist "${filePath}". ${error}`,
                 })
             );
-            console.log(JSON.stringify(data, undefined, 2));
 
             playlist = {
                 ...data,
