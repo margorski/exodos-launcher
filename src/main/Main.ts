@@ -32,6 +32,11 @@ import { promisify } from "util";
 import * as WebSocket from "ws";
 import { Init } from "./types";
 import * as Util from "./Util";
+const {
+    default: installExtension,
+    REDUX_DEVTOOLS,
+    REACT_DEVELOPER_TOOLS,
+} = require("electron-devtools-installer");
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -300,8 +305,8 @@ export function main(init: Init): void {
             }
         }
         // Reject all permission requests since we don't need any permissions.
-        session.defaultSession.setPermissionRequestHandler(
-            (_, __, callback) => callback(false)
+        session.defaultSession.setPermissionRequestHandler((_, __, callback) =>
+            callback(false)
         );
         // Ignore proxy settings with chromium APIs (makes WebSockets not close when the Redirector changes proxy settings)
         session.defaultSession.setProxy({
@@ -419,7 +424,12 @@ export function main(init: Init): void {
         window.loadFile(path.join(__dirname, "../window/index.html"));
         // Open the DevTools. Don't open if using a remote debugger (like vscode)
         if (Util.isDev && !process.env.REMOTE_DEBUG) {
-            window.webContents.openDevTools();
+            installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
+                .then((name: any) => console.log(`Added Extension:  ${name}`))
+                .catch((err: any) => console.log("An error occurred: ", err))
+                .finally(() => {
+                    window.webContents.openDevTools();
+                });
         }
         // Maximize window
         if (mw.maximized) {
