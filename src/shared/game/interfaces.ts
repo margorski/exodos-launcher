@@ -6,7 +6,7 @@ export const UNKNOWN_LIBRARY = "unknown";
 /** Represents a collection of games */
 export interface IGameCollection {
     games: IGameInfo[];
-    additionalApplications: IAdditionalApplicationInfo[];
+    addApps: IAdditionalApplicationInfo[];
 }
 
 /**
@@ -68,14 +68,14 @@ export type GameImages = {
 export type GameMedia = {
     images: GameImages;
     video: string;
-}
+};
 
 export type GameImagesCollection = {
     [key: string]: GameImages; // "Box - Front" - "<GameTitle>" - "<FilePath>"
-}
+};
 
 export type GameVideosCollection = {
-    [key: string]: string; // "<game title> (from app path)" - "<FilePath>" 
+    [key: string]: string; // "<game title> (from app path)" - "<FilePath>"
 };
 
 /** Represents the meta data for a single Game (including temporary data) */

@@ -1,6 +1,5 @@
-import { GameImages, GameImagesCollection, IGameCollection, IGameInfo } from "../game/interfaces";
-import { fixSlashes, removeLowestDirectory } from "../../shared/Util";
-import { getLaunchboxFilename } from "@back/game/LaunchBoxHelper";
+import { IGameCollection } from "../game/interfaces";
+import { removeLowestDirectory } from "../../shared/Util";
 
 export type PlatformInfo = {
     name: string;
@@ -10,7 +9,7 @@ export type PlatformInfo = {
 
 export class GamePlatform {
     collection: IGameCollection = {
-        additionalApplications: [],
+        addApps: [],
         games: [],
     };
 

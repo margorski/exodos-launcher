@@ -49,6 +49,8 @@ function parsePlatformsFile(data: any): PlatformsFile {
         : [];
     const platforms = platformsRaw
         .map((platform: any) => platform.Name ?? "")
+        // Fix for the Magazines which have incorrect encoding of the ampersand character
+        .map((p: string) => p.replace("&amp;", "&"))
         .filter((p: string) => !!p);
 
     const mediaRaw = data.PlatformFolder

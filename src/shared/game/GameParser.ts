@@ -10,18 +10,18 @@ import {
     IGameInfo,
 } from "./interfaces";
 import { v4 as uuid } from "uuid";
-import * as path from 'path';
+import * as path from "path";
 import { fixSlashes } from "@shared/Util";
 
 export class GameParser {
     public static parse(
         data: IRawPlatformFile,
         filename: string,
-        exodosPath: string,
+        exodosPath: string
     ): IGameCollection {
         const collection: IGameCollection = {
             games: [],
-            additionalApplications: [],
+            addApps: [],
         };
         let apps = data.LaunchBox.AdditionalApplication;
         if (apps) {
@@ -29,7 +29,7 @@ export class GameParser {
                 apps = [apps];
             }
             for (let i = apps.length - 1; i >= 0; i--) {
-                collection.additionalApplications[i] =
+                collection.addApps[i] =
                     GameParser.parseRawAdditionalApplication(apps[i]);
             }
         }
@@ -43,10 +43,10 @@ export class GameParser {
                 collection.games[i] = GameParser.parseRawGame(
                     games[i],
                     filename,
-                    exodosPath,
+                    exodosPath
                 );
                 if (games[i].ManualPath) {
-                    collection.additionalApplications.push({
+                    collection.addApps.push({
                         id: uuid(),
                         applicationPath: games[i].ManualPath || "",
                         autoRunBefore: false,
@@ -71,7 +71,7 @@ export class GameParser {
     public static parseRawGame(
         data: Partial<IRawGameInfo>,
         library: string,
-        exodosPath: string,
+        exodosPath: string
     ): IGameInfo {
         const title = data.Title
             ? this.convertTheInTitle(data.Title.toString())
@@ -119,15 +119,15 @@ export class GameParser {
 
         /**
          * XML application path refers to a different folder, but we can predict the real name based on the final segment
-         * 
+         *
          * e.g
          * gamesPath: eXo/eXoDOS/1Ton
          * xml root: eXo/eXoDOS/!dos/1Ton
          * Capture dirname `1Ton` and compare that instead
          *  */
-        const parts = fixSlashes(game.rootFolder).split('/');
+        const parts = fixSlashes(game.rootFolder).split("/");
         parts.splice(parts.length - 2, 1);
-        const gameDataPath = path.join(exodosPath, parts.join('/'));
+        const gameDataPath = path.join(exodosPath, parts.join("/"));
         game.installed = fs.existsSync(gameDataPath);
         return game;
     }
@@ -261,5 +261,5 @@ const escapeHTML = (function () {
 })();
 
 export function parse(data: IRawPlatformFile, name: any, exodosPath: any): any {
-  throw new Error('Function not implemented.');
+    throw new Error("Function not implemented.");
 }

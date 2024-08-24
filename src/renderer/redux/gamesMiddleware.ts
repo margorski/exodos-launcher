@@ -2,19 +2,18 @@ import { isAnyOf } from "@reduxjs/toolkit";
 import { readPlatformsFile } from "@renderer/file/PlatformFile";
 import { formatPlatformFileData } from "@renderer/util/LaunchBoxHelper";
 import {
-    findGameImageCollection,
-    findGameVideos,
+    findGameImageCollection as findPlatformImages,
+    findVideo as findPlatformVideos,
     initExodosInstalledGamesWatcher,
-    loadGameMedia,
-} from "@renderer/util/images";
-import { fixSlashes, removeLowestDirectory } from "@shared/Util";
+    loadDynamicExtrasForGame,
+    mapGamesMedia,
+} from "@renderer/util/gamesHelper";
+import { removeLowestDirectory } from "@shared/Util";
 import { GameParser } from "@shared/game/GameParser";
-import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import * as fastXmlParser from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
 import {
-    GamesCollection,
     GamesInitState,
     initialize,
     setGames,
@@ -22,158 +21,48 @@ import {
 } from "./gamesSlice";
 import { startAppListening } from "./listenerMiddleware";
 import { initializeViews } from "./searchSlice";
+import { IGameCollection, IGameInfo } from "@shared/game/interfaces";
+import { GameCollection } from "@shared/game/GameCollection";
+
+// @TODO - watchable platforms should be defined in seperate file to be easily adjustable, ideally in the json cfg file
+const watchablePlatforms = ["MS-DOS"];
 
 export function addGamesMiddleware() {
     startAppListening({
         matcher: isAnyOf(initialize),
         effect: async (_action, listenerApi) => {
             const state = listenerApi.getState();
-
             if (state.gamesState.initState === GamesInitState.LOADED) {
                 return; // Already loaded
             }
 
             const startTime = Date.now();
-
-            // Do load
-
-            const collection: GamesCollection = {
-                games: [],
-                addApps: [],
-            };
+            const libraries: string[] = [];
+            const collection: GameCollection = new GameCollection();
 
             const platformsPath = path.join(
                 window.External.config.fullExodosPath,
                 window.External.config.data.platformFolderPath
             );
-
-            const platformsFile = await readPlatformsFile(
+            const { platforms } = await readPlatformsFile(
                 path.join(platformsPath, "../Platforms.xml")
             );
 
-            let libraries: string[] = [];
-
-            // Bug caused by the ampersand in the magazines platform
-            const platforms = platformsFile.platforms.map((p) =>
-                p.replace("&amp;", "&")
-            );
-
-            // Load each platforms games into the collection
             for (const platform of platforms) {
-                console.log(
-                    `Loading platform ${platform} from ${platformsPath}`
+                const platformCollection = await loadPlatform(
+                    platform,
+                    platformsPath
                 );
-
-                try {
-                    const platformFile = path.join(
-                        platformsPath,
-                        `${platform}.xml`
-                    );
-                    console.log(
-                        `Checking existence of platform ${platformFile} xml file..`
-                    );
-                    if ((await fs.promises.stat(platformFile)).isFile()) {
-                        console.log(`Platform file found: ${platformFile}`);
-
-                        const content = await fs.promises.readFile(
-                            platformFile,
-                            { encoding: "utf-8" }
-                        );
-
-                        const data: any | undefined = fastXmlParser.parse(
-                            content.toString(),
-                            {
-                                ignoreAttributes: true,
-                                ignoreNameSpace: true,
-                                parseNodeValue: true,
-                                parseAttributeValue: false,
-                                parseTrueNumberOnly: true,
-                                // @TODO Look into which settings are most appropriate
-                            }
-                        );
-
-                        if (!formatPlatformFileData(data)) {
-                            throw new Error(
-                                `Failed to parse XML file: ${platformFile}`
-                            );
-                        }
-
-                        // Load images ahead of time
-
-                        const imagesRoot = path.join(
-                            window.External.config.fullExodosPath,
-                            window.External.config.data.imageFolderPath,
-                            platform
-                        );
-                        const videoRoot = path.join(
-                            window.External.config.fullExodosPath,
-                            "Videos",
-                            platform
-                        );
-                        const images = await findGameImageCollection(
-                            imagesRoot
-                        );
-                        const videos = findGameVideos(videoRoot);
-
-                        // Load games
-                        const fileCollection = GameParser.parse(
-                            data,
-                            platform,
-                            window.External.config.fullExodosPath
-                        );
-
-                        // Only add to library list if has games
-                        if (fileCollection.games.length > 0) {
-                            libraries.push(platform);
-                        }
-
-                        // Load extra game data and add to collection
-                        for (const game of fileCollection.games) {
-                            loadGameMedia(game, images, videos);
-                        }
-                        collection.games.push(...fileCollection.games);
-                        collection.addApps.push(
-                            ...fileCollection.additionalApplications
-                        );
-
-                        // Load Extras add apps
-                        for (const game of fileCollection.games) {
-                            collection.addApps.push(
-                                ...loadDynamicExtrasForGame(game)
-                            );
-                        }
-
-                        // Create a watcher for this platform
-
-                        // If this platform has games, then start a watcher to update their install state
-                        if (fileCollection.games.length > 0) {
-                            const gameDirectory = removeLowestDirectory(
-                                fileCollection.games[0].rootFolder,
-                                2
-                            );
-                            initExodosInstalledGamesWatcher(
-                                path.join(
-                                    window.External.config.fullExodosPath,
-                                    gameDirectory
-                                )
-                            );
-                        }
-
-                        // Success!
-                    } else {
-                        console.log(`Platform file not found: ${platformFile}`);
-                    }
-                } catch (error) {
-                    console.error(
-                        `Failed to load Platform "${platform}": ${error}`
-                    );
+                if (platformCollection.games.length > 0) {
+                    libraries.push(platform);
                 }
+                collection.push(platformCollection);
+                if (watchablePlatforms.includes(platform))
+                    createGamesWatcher(platformCollection);
             }
+            console.debug(`Load time - ${Date.now() - startTime}ms`);
 
-            console.log(`Load time - ${Date.now() - startTime}ms`);
-
-            // Set collection in state
-            libraries = libraries.sort();
+            libraries.sort();
             listenerApi.dispatch(setLibraries(libraries));
             listenerApi.dispatch(initializeViews(libraries));
             listenerApi.dispatch(setGames(collection));
@@ -181,63 +70,96 @@ export function addGamesMiddleware() {
     });
 }
 
-const EXTRAS_DIR = "Extras";
-
-function loadDynamicExtrasForGame(
-    game: IGameInfo
-): IAdditionalApplicationInfo[] {
-    if (!game?.rootFolder)
-        throw new Error("Game root folder path not set. Invalid data.");
-
-    const relativeExtras = path.join(fixSlashes(game?.rootFolder), EXTRAS_DIR);
-    const gameExtrasPath = path.join(
-        window.External.config.fullExodosPath,
-        relativeExtras
-    );
-
-    const addApps: IAdditionalApplicationInfo[] = [];
+async function loadPlatform(platform: string, platformsPath: string) {
+    console.log(`Loading platform ${platform} from ${platformsPath}`);
 
     try {
-        if (
-            !fs.existsSync(gameExtrasPath) ||
-            !fs.statSync(gameExtrasPath).isDirectory()
-        ) {
-            return [];
-        }
-
-        const dir = fs.readdirSync(gameExtrasPath);
-        const files = dir.filter((f) =>
-            fs.statSync(path.join(gameExtrasPath, f)).isFile()
+        const platformFile = path.join(platformsPath, `${platform}.xml`);
+        console.debug(
+            `Checking existence of platform ${platformFile} xml file..`
         );
 
-        const ignoredExtensions = ["bat", "bsh", "msh", ""];
-        for (const file of files.filter(
-            (f) => !ignoredExtensions.includes(f.split(".")?.[1] ?? "")
-        )) {
-            const name = file.split(".")[0];
-            const id = getExtrasId(game.id, file);
-            addApps.push({
-                applicationPath: path.join(relativeExtras, file),
-                autoRunBefore: false,
-                gameId: game.id,
-                id,
-                launchCommand: ``,
-                name,
-                waitForExit: false,
+        if ((await fs.promises.stat(platformFile)).isFile()) {
+            console.debug(`Platform file found: ${platformFile}`);
+
+            const content = await fs.promises.readFile(platformFile, {
+                encoding: "utf-8",
             });
+
+            const data: any | undefined = fastXmlParser.parse(
+                content.toString(),
+                {
+                    ignoreAttributes: true,
+                    ignoreNameSpace: true,
+                    parseNodeValue: true,
+                    parseAttributeValue: false,
+                    parseTrueNumberOnly: true,
+                    // @TODO Look into which settings are most appropriate
+                }
+            );
+
+            if (!formatPlatformFileData(data)) {
+                throw new Error(`Failed to parse XML file: ${platformFile}`);
+            }
+
+            const images = await loadPlatformImages(platform);
+            const videos = await loadPlatformVideos(platform);
+            const platformCollection = GameParser.parse(
+                data,
+                platform,
+                window.External.config.fullExodosPath
+            );
+
+            for (const game of platformCollection.games) {
+                mapGamesMedia(game, images, videos);
+                platformCollection.addApps.push(
+                    ...loadDynamicExtrasForGame(game.rootFolder)
+                );
+            }
+
+            return platformCollection;
+        } else {
+            console.log(`Platform file not found: ${platformFile}`);
         }
-    } catch (e) {
-        console.error(
-            `Error while reading extras directory: ${gameExtrasPath} Error: ${e}`
-        );
-        return [];
+    } catch (error) {
+        console.error(`Failed to load Platform "${platform}": ${error}`);
     }
 
-    return addApps;
+    return { games: [], addApps: [] } as IGameCollection;
 }
 
-function getExtrasId(gameId: string, filename: string): string {
-    return `${gameId}-${filename}`;
+async function loadPlatformImages(platform: string) {
+    const imagesRoot = path.join(
+        window.External.config.fullExodosPath,
+        window.External.config.data.imageFolderPath,
+        platform
+    );
+    return await findPlatformImages(imagesRoot);
+}
+
+async function loadPlatformVideos(platform: string) {
+    const videosRoot = path.join(
+        window.External.config.fullExodosPath,
+        "Videos",
+        platform
+    );
+    return findPlatformVideos(videosRoot);
+}
+
+function createGamesWatcher(platformCollection: IGameCollection) {
+    const firstValidGame = platformCollection.games.find((g) => !!g.rootFolder);
+    const gamesRelativePath = removeLowestDirectory(
+        firstValidGame?.rootFolder ?? "",
+        2
+    );
+
+    if (!!gamesRelativePath) {
+        const gamesAbsolutePath = path.join(
+            window.External.config.fullExodosPath,
+            gamesRelativePath
+        );
+        initExodosInstalledGamesWatcher(gamesAbsolutePath);
+    }
 }
 
 export type ErrorCopy = {

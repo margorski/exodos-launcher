@@ -208,7 +208,7 @@ export const englishTranslation = {
 		noNotes: "No Notes",
 		originalDescription: "Original Description",
 		noOriginalDescription: "No Original Description",
-		additionalApplications: "Additional Resources",
+		addApps: "Additional Resources",
 		noName: "No Name",
 		launch: "Launch",
 		autoRunBefore: "Auto Run Before",

@@ -6,7 +6,7 @@ import {
 
 export class GameCollection implements IGameCollection {
     public games: IGameInfo[] = [];
-    public additionalApplications: IAdditionalApplicationInfo[] = [];
+    public addApps: IAdditionalApplicationInfo[] = [];
 
     /**
      * Find the first game with a given id (returns undefined if not found)
@@ -22,12 +22,10 @@ export class GameCollection implements IGameCollection {
      * @param addAppId ID of additional application
      * @returns Additional application with given id (or undefined if not found)
      */
-    public findAdditionalApplication(
-        addAppId: string,
+    public findAddApps(
+        addAppId: string
     ): IAdditionalApplicationInfo | undefined {
-        return this.additionalApplications[
-            this.indexOfAdditionalApplication(addAppId)
-        ];
+        return this.addApps[this.indexOfAddApps(addAppId)];
     }
 
     /**
@@ -50,8 +48,8 @@ export class GameCollection implements IGameCollection {
      * @param addAppId ID of additional application
      * @returns Index of additional application
      */
-    public indexOfAdditionalApplication(addAppId: string): number {
-        const addApps = this.additionalApplications;
+    public indexOfAddApps(addAppId: string): number {
+        const addApps = this.addApps;
         for (let i = addApps.length - 1; i >= 0; i--) {
             if (addApps[i].id === addAppId) {
                 return i;
@@ -68,33 +66,25 @@ export class GameCollection implements IGameCollection {
      */
     public push(collection: IGameCollection): GameCollection {
         Array.prototype.push.apply(this.games, collection.games);
-        Array.prototype.push.apply(
-            this.additionalApplications,
-            collection.additionalApplications,
-        );
+        Array.prototype.push.apply(this.addApps, collection.addApps);
         return this;
     }
 
     /** Empty the collection */
     public clear() {
         this.games.splice(0, this.games.length);
-        this.additionalApplications.splice(
-            0,
-            this.additionalApplications.length,
-        );
+        this.addApps.splice(0, this.addApps.length);
     }
 
     /**
      * Find all additional applications with a given gameId
      * @param gameId gameId to find all additional applications with
      */
-    public findAdditionalApplicationsByGameId(
-        gameId: string,
-    ): IAdditionalApplicationInfo[] {
+    public findAddAppsByGameId(gameId: string): IAdditionalApplicationInfo[] {
         const addApps: IAdditionalApplicationInfo[] = [];
-        for (let i = this.additionalApplications.length - 1; i >= 0; i--) {
-            if (this.additionalApplications[i].gameId === gameId) {
-                addApps.push(this.additionalApplications[i]);
+        for (let i = this.addApps.length - 1; i >= 0; i--) {
+            if (this.addApps[i].gameId === gameId) {
+                addApps.push(this.addApps[i]);
             }
         }
         return addApps;

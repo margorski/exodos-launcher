@@ -253,7 +253,7 @@ export class RightBrowseSidebar extends React.Component<
                     {currentAddApps && currentAddApps.length > 0 && (
                         <div className="browse-right-sidebar__section">
                             <div className="browse-right-sidebar__row browse-right-sidebar__row--additional-applications-header">
-                                <p>{strings.additionalApplications}:</p>
+                                <p>{strings.addApps}:</p>
                             </div>
                             {currentAddApps &&
                                 currentAddApps.map((addApp) => (
