@@ -3,9 +3,7 @@ import * as path from "path";
 
 import { PlaylistFile } from "./PlaylistFile";
 import { LogFunc } from "@back/types";
-import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
-import { GamePlatform } from "@shared/platform/interfaces";
-import { INSTALLED_GAMES_PLAYLIST_PREFIX } from "@shared/game/GameFilter";
+import { GamePlaylist } from "@shared/interfaces";
 
 export type PlaylistUpdatedFunc = (playlist: GamePlaylist) => void;
 export interface PlaylistManagerOpts {
@@ -16,7 +14,6 @@ export interface PlaylistManagerOpts {
 
 export class PlaylistManager {
     private _initialized = false;
-    private _opts?: PlaylistManagerOpts;
 
     public readonly playlists: GamePlaylist[] = [];
 
@@ -25,7 +22,6 @@ export class PlaylistManager {
             console.log("PlaylistManager already initialized. Leaving.");
             return;
         }
-        this._opts = opts;
 
         console.log("Loading playlists...");
         try {
