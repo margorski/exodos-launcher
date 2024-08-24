@@ -32,11 +32,6 @@ import { promisify } from "util";
 import * as WebSocket from "ws";
 import { Init } from "./types";
 import * as Util from "./Util";
-const {
-    default: installExtension,
-    REDUX_DEVTOOLS,
-    REACT_DEVELOPER_TOOLS,
-} = require("electron-devtools-installer");
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -83,6 +78,11 @@ export function main(init: Init): void {
     startup();
 
     function startup() {
+        if (process.env.APPIMAGE) {
+            app.commandLine.appendSwitch('no-sandbox');
+        }
+        app.disableHardwareAcceleration();
+
         // Add app event listener(s)
         app.once("ready", onAppReady);
         app.once("window-all-closed", onAppWindowAllClosed);
@@ -102,6 +102,7 @@ export function main(init: Init): void {
             .then((exists) => {
                 state._installed = exists;
                 state.mainFolderPath = Util.getMainFolderPath();
+                console.log('Main folder: ' + state.mainFolderPath);
             })
             // Load version number
             .then(
@@ -192,6 +193,7 @@ export function main(init: Init): void {
                             // On windows you have to wait for app to be ready before you call app.getLocale() (so it will be sent later)
                             localeCode: localeCode,
                             exePath: path.dirname(app.getPath("exe")),
+                            basePath: process.env.APPIMAGE ? path.dirname(app.getPath('appData')) : process.cwd(),
                             acceptRemote: !!init.args["host-remote"],
                         };
                         state.backProc.send(JSON.stringify(msg));
@@ -422,15 +424,6 @@ export function main(init: Init): void {
         window.setMenuBarVisibility(false);
         // and load the index.html of the app.
         window.loadFile(path.join(__dirname, "../window/index.html"));
-        // Open the DevTools. Don't open if using a remote debugger (like vscode)
-        if (Util.isDev && !process.env.REMOTE_DEBUG) {
-            installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
-                .then((name: any) => console.log(`Added Extension:  ${name}`))
-                .catch((err: any) => console.log("An error occurred: ", err))
-                .finally(() => {
-                    window.webContents.openDevTools();
-                });
-        }
         // Maximize window
         if (mw.maximized) {
             window.maximize();

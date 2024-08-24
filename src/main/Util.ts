@@ -40,9 +40,9 @@ export const isDev: boolean = (function () {
  * @param installed If the application is installed (instead of portable).
  */
 export function getMainFolderPath(): string {
-    return isDev
-        ? process.cwd() // Dev
-        : path.dirname(app.getPath("exe")); // Portable
+    return process.env.APPIMAGE ?
+        app.getPath('appData') :
+        process.cwd();
 }
 
 /** Open a context menu, built from the specified template. */

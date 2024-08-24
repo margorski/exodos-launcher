@@ -130,10 +130,10 @@ const onInit = (async () => {
                             window.External.config = {
                                 data: response.data.config,
                                 // @FIXTHIS This should take if this is installed into account
-                                fullExodosPath: path.resolve(
+                                fullExodosPath: path.join(
                                     response.data.config.exodosPath
                                 ),
-                                fullJsonFolderPath: path.resolve(
+                                fullJsonFolderPath: path.join(
                                     response.data.config.exodosPath,
                                     response.data.config.jsonFolderPath
                                 ),

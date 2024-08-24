@@ -67,6 +67,7 @@ import { BackQuery, BackState } from "./types";
 import { difObjects } from "./util/misc";
 import { FileServer } from "./backend/fileServer";
 import { PlaylistManager } from "./playlist/PlaylistManager";
+import app from "@renderer/app";
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
 const send: Required<typeof process.send> = process.send
@@ -85,6 +86,7 @@ const state: BackState = {
     config: createErrorProxy("config"),
     configFolder: createErrorProxy("configFolder"),
     exePath: createErrorProxy("exePath"),
+    basePath: createErrorProxy("basePath"),
     localeCode: createErrorProxy("countryCode"),
     playlistManager: new PlaylistManager(),
     messageQueue: [],
@@ -120,6 +122,7 @@ async function initialize(message: any, _: any): Promise<void> {
     state.configFolder = content.configFolder;
     state.localeCode = content.localeCode;
     state.exePath = content.exePath;
+    state.basePath = content.basePath;
 
     state.preferences = await PreferencesFile.readOrCreateFile(
         path.join(state.configFolder, preferencesFilename)
@@ -127,6 +130,10 @@ async function initialize(message: any, _: any): Promise<void> {
     state.config = await ConfigFile.readOrCreateFile(
         path.join(state.configFolder, configFilename)
     );
+    if (!path.isAbsolute(state.config.exodosPath)) {
+        state.config.exodosPath = path.join(state.basePath, state.config.exodosPath);
+    }
+    console.log("Exodos path: " + state.config.exodosPath);
 
     console.info(
         `Starting exogui with ${state.config.exodosPath} exodos path.`

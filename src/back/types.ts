@@ -22,6 +22,7 @@ export type BackState = {
     config: IAppConfigData;
     configFolder: string;
     exePath: string;
+    basePath: string;
     localeCode: string;
     messageQueue: WebSocket.MessageEvent[];
     isHandling: boolean;
