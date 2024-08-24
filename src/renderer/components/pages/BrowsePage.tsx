@@ -6,7 +6,7 @@ import {
     LaunchGameData,
 } from "@shared/back/types";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
-import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
+import { IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
 import { memoizeOne } from "@shared/memoize";
 import { updatePreferencesData } from "@shared/preferences/util";

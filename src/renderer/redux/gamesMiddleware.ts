@@ -112,9 +112,13 @@ async function loadPlatform(platform: string, platformsPath: string) {
 
             for (const game of platformCollection.games) {
                 mapGamesMedia(game, images, videos);
-                platformCollection.addApps.push(
-                    ...loadDynamicExtrasForGame(game.rootFolder)
-                );
+
+                const dynamicExtras = loadDynamicExtrasForGame(game);
+                if (dynamicExtras.length > 0)
+                    console.debug(
+                        `Found ${dynamicExtras.length} for ${game.title} game.`
+                    );
+                platformCollection.addApps.push(...dynamicExtras);
             }
 
             return platformCollection;

@@ -40,12 +40,6 @@ export type AppRouterProps = {
 
 export class AppRouter extends React.Component<AppRouterProps> {
     render() {
-        const homeProps: ConnectedHomePageProps = {
-            playlists: this.props.playlists,
-            exodosBackendInfo: this.props.exodosBackendInfo,
-            onLaunchGame: this.props.onLaunchGame,
-            updateInfo: this.props.updateInfo,
-        };
         const browseProps: BrowsePageProps = {
             playlists: this.props.playlists,
             playlistIconCache: this.props.playlistIconCache,

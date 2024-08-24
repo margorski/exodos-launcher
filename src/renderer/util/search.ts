@@ -194,7 +194,7 @@ export function parseUserInput(input: string): GameFilter {
                     }
                 }
 
-                console.log(
+                console.debug(
                     `key: ${workingKey}, value: ${workingValue}, keychar: ${workingKeyChar}, negative: ${negative}, exact: ${exact}`
                 );
 

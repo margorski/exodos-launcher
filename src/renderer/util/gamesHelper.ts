@@ -31,17 +31,17 @@ export function* walkSync(dir: string): IterableIterator<IFileInfo> {
 
 // Finds a list of all game images, returned in a map where the key is the type of image, and the value is an array of filenames
 export async function findGameImageCollection(
-    platImagesPath: string
+    platformImagesPath: string
 ): Promise<GameImagesCollection> {
-    const rootFolders = await fs.promises.readdir(platImagesPath, {
+    const rootFolders = await fs.promises.readdir(platformImagesPath, {
         withFileTypes: true,
     });
     const collection: GameImagesCollection = {};
 
-    if (fs.existsSync(platImagesPath)) {
+    if (fs.existsSync(platformImagesPath)) {
         for (const dir of rootFolders.filter((f) => f.isDirectory())) {
             collection[dir.name] = {}; // Initialize the image category
-            const folderPath = path.join(platImagesPath, dir.name);
+            const folderPath = path.join(platformImagesPath, dir.name);
 
             for (const s of walkSync(folderPath)) {
                 const lastIdx = s.filename.lastIndexOf("-0");
@@ -49,11 +49,11 @@ export async function findGameImageCollection(
                     const title = s.filename.slice(0, lastIdx);
                     if (!collection[dir.name][title]) {
                         collection[dir.name][title] = [
-                            path.relative(platImagesPath, s.path),
+                            path.relative(platformImagesPath, s.path),
                         ];
                     } else {
                         collection[dir.name][title].push(
-                            path.relative(platImagesPath, s.path)
+                            path.relative(platformImagesPath, s.path)
                         );
                     }
                 }
@@ -172,30 +172,24 @@ export function initExodosInstalledGamesWatcher(
 }
 
 export function loadDynamicExtrasForGame(
-    gamePath: string
+    game: IGameInfo
 ): IAdditionalApplicationInfo[] {
-    if (!gamePath) throw new Error("Game root folder path empty.");
-    const gameId = gamePath.split("\\").pop();
-
-    if (!gameId) {
-        console.debug(
-            "GameId infered from game path is invalid. Check if game path is correct."
-        );
-        return [];
-    }
-
-    const relativeExtras = path.join(fixSlashes(gamePath), EXTRAS_DIR);
-    const gameExtrasPath = path.join(
-        window.External.config.fullExodosPath,
-        relativeExtras
-    );
-
-    const addApps: IAdditionalApplicationInfo[] = [];
-
-    console.debug(
-        `Searching for extras in the ${gameExtrasPath} for game Id ${gameId}`
-    );
     try {
+        const { id: gameId, rootFolder } = game;
+        if (!rootFolder) throw new Error("Game root folder path empty.");
+
+        const relativeExtras = path.join(fixSlashes(rootFolder), EXTRAS_DIR);
+        const gameExtrasPath = path.join(
+            window.External.config.fullExodosPath,
+            relativeExtras
+        );
+
+        const addApps: IAdditionalApplicationInfo[] = [];
+
+        console.debug(
+            `Searching for extras in the ${gameExtrasPath} for game ${game.title}`
+        );
+
         if (
             !fs.existsSync(gameExtrasPath) ||
             !fs.statSync(gameExtrasPath).isDirectory()
@@ -208,6 +202,7 @@ export function loadDynamicExtrasForGame(
             fs.statSync(path.join(gameExtrasPath, f)).isFile()
         );
 
+        // @TODO Change blacklist for the whitelist
         const ignoredExtensions = ["bat", "bsh", "msh", ""];
         for (const file of files.filter(
             (f) => !ignoredExtensions.includes(f.split(".")?.[1] ?? "")
@@ -215,10 +210,10 @@ export function loadDynamicExtrasForGame(
             const name = file.split(".")[0];
             const id = getExtrasId(gameId, file);
             const addApp = {
+                id,
                 applicationPath: path.join(relativeExtras, file),
                 autoRunBefore: false,
-                gameId: gameId,
-                id,
+                gameId,
                 launchCommand: ``,
                 name,
                 waitForExit: false,
@@ -226,14 +221,13 @@ export function loadDynamicExtrasForGame(
             console.debug(`Found ${addApp.applicationPath} extras`);
             addApps.push(addApp);
         }
+        return addApps;
     } catch (e) {
         console.error(
-            `Error while reading extras directory: ${gameExtrasPath} Error: ${e}`
+            `Error while reading extras directory for game: ${game.title} Error: ${e}`
         );
         return [];
     }
-
-    return addApps;
 }
 
 function getExtrasId(gameId: string, filename: string): string {
