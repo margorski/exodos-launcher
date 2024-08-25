@@ -1,6 +1,6 @@
 {
     "name": "exogui",
-    "version": "1.0.6",
+    "version": "1.0.5",
     "description": "A desktop application used to browse, manage and play games from eXoDOS collection. Based on BlueMaxima's Flashpoint launcher.",
     "main": "build/main/index.js",
     "repository": {
@@ -73,7 +73,6 @@
         "cross-env": "^7.0.3",
         "electron": "^29.1.5",
         "electron-builder": "^24.13.3",
-        "electron-devtools-installer": "^3.2.0",
         "fs-extra": "^11.2.0",
         "gulp": "^4.0.2",
         "jest": "^29.7.0",
