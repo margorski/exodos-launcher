@@ -68,6 +68,7 @@
         "@types/react-dom": "^18.2.22",
         "@types/react-redux": "^7.1.33",
         "@types/react-virtualized": "^9.21.29",
+        "@types/semver": "^7.5.8",
         "@types/uuid": "^9.0.8",
         "@types/ws": "^7.4.7",
         "cross-env": "^7.0.3",
