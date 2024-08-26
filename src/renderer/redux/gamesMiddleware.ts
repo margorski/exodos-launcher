@@ -17,8 +17,8 @@ import { initializeViews } from "./searchSlice";
 import { IGameCollection } from "@shared/game/interfaces";
 import { GameCollection } from "@shared/game/GameCollection";
 import {
-    findGameImageCollection,
-    findVideosInPath,
+    loadPlatformImages,
+    loadPlatformVideos,
     mapGamesMedia,
 } from "@renderer/util/media";
 import { loadDynamicAddAppsForGame } from "@renderer/util/addApps";
@@ -58,7 +58,7 @@ export function addGamesMiddleware() {
                 }
                 collection.push(platformCollection);
                 if (watchablePlatforms.includes(platform))
-                    intializeGamesWatcher(platformCollection);
+                    createGamesWatcher(platformCollection);
             }
             console.debug(`Load time - ${Date.now() - startTime}ms`);
 
@@ -103,8 +103,8 @@ async function loadPlatform(platform: string, platformsPath: string) {
             }
 
             const images = await loadPlatformImages(platform);
-            // @TODO change to media watcher
             const videos = await loadPlatformVideos(platform);
+
             const platformCollection = GameParser.parse(
                 data,
                 platform,
@@ -131,40 +131,6 @@ async function loadPlatform(platform: string, platformsPath: string) {
     }
 
     return { games: [], addApps: [] } as IGameCollection;
-}
-
-async function loadPlatformImages(platform: string) {
-    const imagesRoot = path.join(
-        window.External.config.fullExodosPath,
-        window.External.config.data.imageFolderPath,
-        platform
-    );
-    return await findGameImageCollection(imagesRoot);
-}
-
-async function loadPlatformVideos(platform: string) {
-    const videosRoot = path.join(
-        window.External.config.fullExodosPath,
-        "Videos",
-        platform
-    );
-    return findVideosInPath(videosRoot);
-}
-
-function intializeGamesWatcher(platformCollection: IGameCollection) {
-    const firstValidGame = platformCollection.games.find((g) => !!g.rootFolder);
-    const gamesRelativePath = removeLowestDirectory(
-        firstValidGame?.rootFolder ?? "",
-        2
-    );
-
-    if (!!gamesRelativePath) {
-        const gamesAbsolutePath = path.join(
-            window.External.config.fullExodosPath,
-            gamesRelativePath
-        );
-        createGamesWatcher(gamesAbsolutePath);
-    }
 }
 
 export type ErrorCopy = {

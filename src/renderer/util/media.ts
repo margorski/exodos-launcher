@@ -8,13 +8,15 @@ import * as fs from "fs";
 import * as path from "path";
 import { getLaunchboxFilename } from "./LaunchBoxHelper";
 import { IFileInfo } from "@shared/platform/interfaces";
+import * as chokidar from "chokidar";
 
-export function findVideosInPath(videoPath: string): GameVideosCollection {
+export function loadPlatformVideos(platform: string): GameVideosCollection {
+    const videosPath = getPlatformVideosPath(platform);
     const videos: GameVideosCollection = {};
 
-    if (fs.existsSync(videoPath)) {
+    if (fs.existsSync(videosPath)) {
         const files = fs
-            .readdirSync(videoPath)
+            .readdirSync(videosPath)
             .filter((f) => f.endsWith(".mp4"));
         for (const s of files) {
             videos[s.split(".mp4")[0]] = s;
@@ -85,9 +87,14 @@ export function mapGamesMedia(
 }
 
 // Finds a list of all game images, returned in a map where the key is the type of image, and the value is an array of filenames
-export async function findGameImageCollection(
-    platformImagesPath: string
+export async function loadPlatformImages(
+    platform: string
 ): Promise<GameImagesCollection> {
+    const platformImagesPath = path.join(
+        window.External.config.fullExodosPath,
+        window.External.config.data.imageFolderPath,
+        platform
+    );
     const rootFolders = await fs.promises.readdir(platformImagesPath, {
         withFileTypes: true,
     });
@@ -131,4 +138,34 @@ export function* walkSync(dir: string): IterableIterator<IFileInfo> {
             };
         }
     }
+}
+
+export function createVideosWatcher(platform: string): chokidar.FSWatcher {
+    const videosPath = getPlatformVideosPath(platform);
+    console.log(
+        `Initializing videos watcher for ${platform} path ${videosPath}`
+    );
+
+    const watcher = chokidar.watch(videosPath, {
+        depth: 0,
+        persistent: true,
+        followSymlinks: false,
+        ignored: /DOWNLOAD$/,
+        ignoreInitial: true,
+    });
+
+    watcher
+        .on("addDir", (gameDataPath) => {
+            console.log(`Game ${gameDataPath} added.`);
+        })
+        .on("unlinkDir", (gameDataPath) => {
+            console.log(`Game ${gameDataPath} has been removed.`);
+        })
+        .on("error", (error) => console.log(`Watcher error: ${error}`));
+
+    return watcher;
+}
+
+function getPlatformVideosPath(platform: string) {
+    return path.join(window.External.config.fullExodosPath, "Videos", platform);
 }

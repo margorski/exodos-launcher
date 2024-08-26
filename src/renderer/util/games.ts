@@ -1,8 +1,27 @@
 import * as chokidar from "chokidar";
+import * as path from "path";
 import store from "@renderer/redux/store";
 import { setGameInstalled } from "@renderer/redux/gamesSlice";
+import { IGameCollection } from "@shared/game/interfaces";
+import { removeLowestDirectory } from "@shared/Util";
 
-export function createGamesWatcher(folder: string): chokidar.FSWatcher {
+export function createGamesWatcher(platformCollection: IGameCollection) {
+    const firstValidGame = platformCollection.games.find((g) => !!g.rootFolder);
+    const gamesRelativePath = removeLowestDirectory(
+        firstValidGame?.rootFolder ?? "",
+        2
+    );
+
+    if (!!gamesRelativePath) {
+        const gamesAbsolutePath = path.join(
+            window.External.config.fullExodosPath,
+            gamesRelativePath
+        );
+        createWatcher(gamesAbsolutePath);
+    }
+}
+
+function createWatcher(folder: string): chokidar.FSWatcher {
     console.log(`Initializing installed games watcher with ${folder} path...`);
 
     const watcher = chokidar.watch(folder, {
