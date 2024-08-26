@@ -78,6 +78,11 @@ export function main(init: Init): void {
     startup();
 
     function startup() {
+        if (process.env.APPIMAGE) {
+            app.commandLine.appendSwitch('no-sandbox');
+        }
+        app.disableHardwareAcceleration();
+
         // Add app event listener(s)
         app.once("ready", onAppReady);
         app.once("window-all-closed", onAppWindowAllClosed);
@@ -97,6 +102,7 @@ export function main(init: Init): void {
             .then((exists) => {
                 state._installed = exists;
                 state.mainFolderPath = Util.getMainFolderPath();
+                console.log('Main folder: ' + state.mainFolderPath);
             })
             // Load version number
             .then(
@@ -187,6 +193,7 @@ export function main(init: Init): void {
                             // On windows you have to wait for app to be ready before you call app.getLocale() (so it will be sent later)
                             localeCode: localeCode,
                             exePath: path.dirname(app.getPath("exe")),
+                            basePath: process.env.APPIMAGE ? path.dirname(app.getPath('appData')) : process.cwd(),
                             acceptRemote: !!init.args["host-remote"],
                         };
                         state.backProc.send(JSON.stringify(msg));

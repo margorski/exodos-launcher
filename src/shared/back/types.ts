@@ -83,6 +83,7 @@ export type BackInitArgs = {
     isDev: boolean;
     localeCode: string;
     exePath: string;
+    basePath: string;
     /** If the back should accept remote clients to connect (renderers from different machines). */
     acceptRemote: boolean;
 };
