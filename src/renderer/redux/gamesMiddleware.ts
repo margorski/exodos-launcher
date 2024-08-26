@@ -1,13 +1,6 @@
 import { isAnyOf } from "@reduxjs/toolkit";
 import { readPlatformsFile } from "@renderer/file/PlatformFile";
 import { formatPlatformFileData } from "@renderer/util/LaunchBoxHelper";
-import {
-    findGameImageCollection as findPlatformImages,
-    findVideo as findPlatformVideos,
-    initExodosInstalledGamesWatcher,
-    loadDynamicExtrasForGame,
-    mapGamesMedia,
-} from "@renderer/util/gamesHelper";
 import { removeLowestDirectory } from "@shared/Util";
 import { GameParser } from "@shared/game/GameParser";
 import * as fastXmlParser from "fast-xml-parser";
@@ -21,8 +14,15 @@ import {
 } from "./gamesSlice";
 import { startAppListening } from "./listenerMiddleware";
 import { initializeViews } from "./searchSlice";
-import { IGameCollection, IGameInfo } from "@shared/game/interfaces";
+import { IGameCollection } from "@shared/game/interfaces";
 import { GameCollection } from "@shared/game/GameCollection";
+import {
+    findGameImageCollection,
+    findVideosInPath,
+    mapGamesMedia,
+} from "@renderer/util/media";
+import { loadDynamicAddAppsForGame } from "@renderer/util/addApps";
+import { createGamesWatcher } from "@renderer/util/games";
 
 // @TODO - watchable platforms should be defined in seperate file to be easily adjustable, ideally in the json cfg file
 const watchablePlatforms = ["MS-DOS"];
@@ -58,7 +58,7 @@ export function addGamesMiddleware() {
                 }
                 collection.push(platformCollection);
                 if (watchablePlatforms.includes(platform))
-                    createGamesWatcher(platformCollection);
+                    intializeGamesWatcher(platformCollection);
             }
             console.debug(`Load time - ${Date.now() - startTime}ms`);
 
@@ -103,6 +103,7 @@ async function loadPlatform(platform: string, platformsPath: string) {
             }
 
             const images = await loadPlatformImages(platform);
+            // @TODO change to media watcher
             const videos = await loadPlatformVideos(platform);
             const platformCollection = GameParser.parse(
                 data,
@@ -113,7 +114,7 @@ async function loadPlatform(platform: string, platformsPath: string) {
             for (const game of platformCollection.games) {
                 mapGamesMedia(game, images, videos);
 
-                const dynamicExtras = loadDynamicExtrasForGame(game);
+                const dynamicExtras = loadDynamicAddAppsForGame(game);
                 if (dynamicExtras.length > 0)
                     console.debug(
                         `Found ${dynamicExtras.length} for ${game.title} game.`
@@ -138,7 +139,7 @@ async function loadPlatformImages(platform: string) {
         window.External.config.data.imageFolderPath,
         platform
     );
-    return await findPlatformImages(imagesRoot);
+    return await findGameImageCollection(imagesRoot);
 }
 
 async function loadPlatformVideos(platform: string) {
@@ -147,10 +148,10 @@ async function loadPlatformVideos(platform: string) {
         "Videos",
         platform
     );
-    return findPlatformVideos(videosRoot);
+    return findVideosInPath(videosRoot);
 }
 
-function createGamesWatcher(platformCollection: IGameCollection) {
+function intializeGamesWatcher(platformCollection: IGameCollection) {
     const firstValidGame = platformCollection.games.find((g) => !!g.rootFolder);
     const gamesRelativePath = removeLowestDirectory(
         firstValidGame?.rootFolder ?? "",
@@ -162,7 +163,7 @@ function createGamesWatcher(platformCollection: IGameCollection) {
             window.External.config.fullExodosPath,
             gamesRelativePath
         );
-        initExodosInstalledGamesWatcher(gamesAbsolutePath);
+        createGamesWatcher(gamesAbsolutePath);
     }
 }
 
