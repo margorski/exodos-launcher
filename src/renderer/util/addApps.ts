@@ -1,6 +1,6 @@
 import * as chokidar from "chokidar";
 import store from "@renderer/redux/store";
-import { setGameInstalled } from "@renderer/redux/gamesSlice";
+import { updateGame } from "@renderer/redux/gamesSlice";
 import { fixSlashes } from "@shared/Util";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import * as fs from "fs";
@@ -112,7 +112,7 @@ export function createAddAppsWatcher(): chokidar.FSWatcher {
 function getPlatformAddAppsPaths() {
     const basePath = path.join(
         window.External.config.fullExodosPath,
-        "eXo/eXoDOS/!dos/**/"
+        "eXo/eXoDOS/!dos/*/"
     );
     return [`${basePath}/Magazines`, `${basePath}/Extras`];
 }

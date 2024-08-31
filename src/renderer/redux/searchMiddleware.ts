@@ -18,12 +18,14 @@ import {
     ResultsView,
     SearchViewAction,
     forceSearch,
+    selectGame,
     selectPlaylist,
     setAdvancedFilter,
     setSearchText,
     setViewGames,
 } from "./searchSlice";
 import store, { RootState } from "./store";
+import { GameUpdatedAction, updateGame } from "./gamesSlice";
 
 export function addSearchMiddleware() {
     startAppListening({
@@ -43,6 +45,30 @@ export function addSearchMiddleware() {
             if (view) {
                 // Perform search
                 debounceSearch(state, action.payload.view, view);
+            }
+        },
+    });
+
+    // Refresh view when game is updated. Easiest way to have
+    // everything in shape.
+    startAppListening({
+        matcher: isAnyOf(updateGame),
+        effect: async (
+            action: PayloadAction<GameUpdatedAction>,
+            listenerApi
+        ) => {
+            const state = listenerApi.getState();
+            const viewName = action.payload.game.library;
+            const view = state.searchState.views[viewName];
+
+            if (view) {
+                store.dispatch(
+                    selectGame({
+                        view: viewName,
+                        game: action.payload.game,
+                    })
+                );
+                debounceSearch(state, viewName, view);
             }
         },
     });

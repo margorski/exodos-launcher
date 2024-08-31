@@ -1,9 +1,9 @@
 import * as chokidar from "chokidar";
 import * as path from "path";
 import store from "@renderer/redux/store";
-import { setGameInstalled } from "@renderer/redux/gamesSlice";
+import { updateGame } from "@renderer/redux/gamesSlice";
 import { IGameCollection } from "@shared/game/interfaces";
-import { removeLowestDirectory } from "@shared/Util";
+import { fixSlashes, removeLowestDirectory } from "@shared/Util";
 
 export function createGamesWatcher(platformCollection: IGameCollection) {
     const firstValidGame = platformCollection.games.find((g) => !!g.rootFolder);
@@ -21,6 +21,28 @@ export function createGamesWatcher(platformCollection: IGameCollection) {
     }
 }
 
+export function getGameByTitle(title: string) {
+    const state = store.getState().gamesState;
+    console.log("GET GAME BY TITLE", title);
+    const game = state.games.find((g) => {
+        const gameTitle = path
+            .basename(fixSlashes(g.applicationPath))
+            .split(".")[0];
+        return gameTitle === title;
+    });
+    return game;
+}
+
+export function getGameByPath(gamePath: string) {
+    const state = store.getState().gamesState;
+    const dirname = path.basename(gamePath);
+
+    // Find matching game, if exists
+    return state.games.find((game) => {
+        return fixSlashes(game.rootFolder).endsWith(`/${dirname}`);
+    });
+}
+
 function createWatcher(folder: string): chokidar.FSWatcher {
     console.log(`Initializing installed games watcher with ${folder} path...`);
 
@@ -35,22 +57,31 @@ function createWatcher(folder: string): chokidar.FSWatcher {
     watcher
         .on("addDir", (gameDataPath) => {
             console.log(`Game ${gameDataPath} added.`);
-
-            store.dispatch(
-                setGameInstalled({
-                    gameDataPath,
-                    value: true,
-                })
-            );
+            const game = getGameByPath(gameDataPath);
+            if (game) {
+                store.dispatch(
+                    updateGame({
+                        game: {
+                            ...game,
+                            installed: true,
+                        },
+                    })
+                );
+            }
         })
         .on("unlinkDir", (gameDataPath) => {
             console.log(`Game ${gameDataPath} has been removed.`);
-            store.dispatch(
-                setGameInstalled({
-                    gameDataPath,
-                    value: false,
-                })
-            );
+            const game = getGameByPath(gameDataPath);
+            if (game) {
+                store.dispatch(
+                    updateGame({
+                        game: {
+                            ...game,
+                            installed: false,
+                        },
+                    })
+                );
+            }
         })
         .on("error", (error) => console.log(`Watcher error: ${error}`));
 

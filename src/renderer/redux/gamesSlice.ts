@@ -1,11 +1,9 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { fixSlashes } from "@shared/Util";
 import {
     IAdditionalApplicationInfo,
     IGameCollection,
     IGameInfo,
 } from "@shared/game/interfaces";
-import * as path from "path";
 
 export enum GamesInitState {
     WAITING = 0,
@@ -19,9 +17,8 @@ export type GamesState = {
     libraries: string[];
 } & IGameCollection;
 
-export type GameInstalledAction = {
-    gameDataPath: string;
-    value: boolean;
+export type GameUpdatedAction = {
+    game: IGameInfo;
 };
 
 export type AddExtrasAction = {
@@ -39,13 +36,6 @@ const initialState: GamesState = {
     totalGames: 0,
     libraries: [],
 };
-
-export function getGameTitleForVideo(game: IGameInfo) {
-    const gameTitle = path
-        .basename(fixSlashes(game.applicationPath))
-        .split(".")[0];
-    return gameTitle;
-}
 
 const gamesSlice = createSlice({
     name: "games",
@@ -73,20 +63,14 @@ const gamesSlice = createSlice({
             state.libraries = payload;
         },
         /** Set whether a game is installed or not */
-        setGameInstalled: (
+        updateGame: (
             state: GamesState,
-            { payload }: PayloadAction<GameInstalledAction>
+            { payload }: PayloadAction<GameUpdatedAction>
         ) => {
-            const { gameDataPath, value } = payload;
-            const dirname = path.basename(gameDataPath);
-
-            // Find matching game, if exists
-            const idx = state.games.findIndex((game) => {
-                return fixSlashes(game.rootFolder).endsWith(`/${dirname}`);
-            });
-            if (idx > -1) {
-                state.games[idx].installed = value;
-            }
+            const gameIdx = state.games.findIndex(
+                (g) => g.id === payload.game.id
+            );
+            if (gameIdx >= 0) state.games[gameIdx] = payload.game;
         },
         addExtras: (
             state: GamesState,
@@ -94,30 +78,9 @@ const gamesSlice = createSlice({
         ) => {
             state.addApps = [...state.addApps, ...payload.addApps];
         },
-        addVideo: (
-            state: GamesState,
-            { payload }: PayloadAction<AddVideoAction>
-        ) => {
-            const title = payload.videoPath.split("/").pop()?.split(".mp4")[0];
-            if (title) {
-                const game = state.games.find((g) => {
-                    return getGameTitleForVideo(g) === title;
-                });
-                if (game) {
-                    console.debug(`Found the game for the new video: ${game}`);
-                    game.media.video = payload.videoPath;
-                }
-            }
-        },
     },
 });
 
-export const {
-    initialize,
-    setLibraries,
-    setGames,
-    setGameInstalled,
-    addExtras,
-    addVideo,
-} = gamesSlice.actions;
+export const { initialize, setLibraries, setGames, updateGame, addExtras } =
+    gamesSlice.actions;
 export default gamesSlice.reducer;

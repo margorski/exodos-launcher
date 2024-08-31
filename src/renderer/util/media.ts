@@ -1,4 +1,4 @@
-import { fixSlashes } from "@shared/Util";
+import { deepCopy, fixSlashes } from "@shared/Util";
 import {
     GameImagesCollection,
     GameVideosCollection,
@@ -9,7 +9,8 @@ import * as path from "path";
 import { getLaunchboxFilename } from "./LaunchBoxHelper";
 import { IFileInfo } from "@shared/platform/interfaces";
 import * as chokidar from "chokidar";
-import { addVideo, getGameTitleForVideo } from "@renderer/redux/gamesSlice";
+import { updateGame } from "@renderer/redux/gamesSlice";
+import { getGameByTitle } from "./games";
 import store from "@renderer/redux/store";
 
 export function loadPlatformVideos(platform: string): GameVideosCollection {
@@ -50,6 +51,13 @@ const thumbnailPreference = [
 // and after is installed, but for that we need to ensure that on installation video is extracted first and then game
 
 /// Search for the medias for the game in the images and videos collection and fill this info to the game metadata object
+function getGameTitleForVideo(game: IGameInfo) {
+    const gameTitle = path
+        .basename(fixSlashes(game.applicationPath))
+        .split(".")[0];
+    return gameTitle;
+}
+
 export function mapGamesMedia(
     game: IGameInfo,
     images: GameImagesCollection,
@@ -159,11 +167,22 @@ export function createVideosWatcher(platform: string): chokidar.FSWatcher {
                 window.External.config.fullExodosPath,
                 ""
             );
-            store.dispatch(
-                addVideo({
-                    videoPath: relativePath,
-                })
-            );
+            const title = relativePath.split("/").pop()?.split(".mp4")[0];
+            if (title) {
+                const game = getGameByTitle(title);
+                if (game) {
+                    console.debug(
+                        `Found the game for the new video. Updating game ${title}`
+                    );
+                    const updatedGame = deepCopy(game);
+                    updatedGame.media.video = relativePath;
+                    store.dispatch(
+                        updateGame({
+                            game: updatedGame,
+                        })
+                    );
+                }
+            }
         })
         .on("error", (error) => console.log(`Watcher error: ${error}`));
 
