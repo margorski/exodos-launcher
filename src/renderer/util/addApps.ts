@@ -6,43 +6,6 @@ import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import * as fs from "fs";
 import * as path from "path";
 
-export function createAddAppsWatcher(folder: string): chokidar.FSWatcher {
-    console.log(
-        `Initializing installed AddApps watcher with ${folder} path...`
-    );
-
-    const watcher = chokidar.watch(folder, {
-        depth: 0,
-        persistent: true,
-        followSymlinks: false,
-        ignoreInitial: true,
-    });
-
-    watcher
-        .on("addDir", (gameDataPath) => {
-            console.log(`Game ${gameDataPath} added.`);
-
-            store.dispatch(
-                setGameInstalled({
-                    gameDataPath,
-                    value: true,
-                })
-            );
-        })
-        .on("unlinkDir", (gameDataPath) => {
-            console.log(`Game ${gameDataPath} has been removed.`);
-            store.dispatch(
-                setGameInstalled({
-                    gameDataPath,
-                    value: false,
-                })
-            );
-        })
-        .on("error", (error) => console.log(`Watcher error: ${error}`));
-
-    return watcher;
-}
-
 export function loadDynamicAddAppsForGame(
     game: IGameInfo
 ): IAdditionalApplicationInfo[] {
@@ -123,4 +86,33 @@ function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
 
 function getExtrasId(gameId: string, filename: string): string {
     return `${gameId}-${filename}`;
+}
+
+// @TODO add manual directory
+export function createAddAppsWatcher(): chokidar.FSWatcher {
+    const addAppsPaths = getPlatformAddAppsPaths();
+    console.log(`Initializing addApps watcher for paths ${addAppsPaths}`);
+
+    const watcher = chokidar.watch(addAppsPaths, {
+        depth: 0,
+        persistent: true,
+        followSymlinks: false,
+        ignoreInitial: true,
+    });
+
+    watcher
+        .on("add", (path) => {
+            console.log(`AddApps ${path} added.`);
+        })
+        .on("error", (error) => console.log(`Watcher error: ${error}`));
+
+    return watcher;
+}
+
+function getPlatformAddAppsPaths() {
+    const basePath = path.join(
+        window.External.config.fullExodosPath,
+        "eXo/eXoDOS/!dos/**/"
+    );
+    return [`${basePath}/Magazines`, `${basePath}/Extras`];
 }

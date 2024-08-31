@@ -17,11 +17,15 @@ import { initializeViews } from "./searchSlice";
 import { IGameCollection } from "@shared/game/interfaces";
 import { GameCollection } from "@shared/game/GameCollection";
 import {
+    createVideosWatcher,
     loadPlatformImages,
     loadPlatformVideos,
     mapGamesMedia,
 } from "@renderer/util/media";
-import { loadDynamicAddAppsForGame } from "@renderer/util/addApps";
+import {
+    createAddAppsWatcher,
+    loadDynamicAddAppsForGame,
+} from "@renderer/util/addApps";
 import { createGamesWatcher } from "@renderer/util/games";
 
 // @TODO - watchable platforms should be defined in seperate file to be easily adjustable, ideally in the json cfg file
@@ -57,15 +61,19 @@ export function addGamesMiddleware() {
                     libraries.push(platform);
                 }
                 collection.push(platformCollection);
-                if (watchablePlatforms.includes(platform))
+                if (watchablePlatforms.includes(platform)) {
                     createGamesWatcher(platformCollection);
+                    createVideosWatcher(platform);
+                    // @TODO variable argument
+                    createAddAppsWatcher();
+                }
             }
             console.debug(`Load time - ${Date.now() - startTime}ms`);
 
             libraries.sort();
             listenerApi.dispatch(setLibraries(libraries));
             listenerApi.dispatch(initializeViews(libraries));
-            listenerApi.dispatch(setGames(collection));
+            listenerApi.dispatch(setGames(collection.forRedux()));
         },
     });
 }
@@ -114,12 +122,12 @@ async function loadPlatform(platform: string, platformsPath: string) {
             for (const game of platformCollection.games) {
                 mapGamesMedia(game, images, videos);
 
-                const dynamicExtras = loadDynamicAddAppsForGame(game);
-                if (dynamicExtras.length > 0)
+                const dynamicAddApps = loadDynamicAddAppsForGame(game);
+                if (dynamicAddApps.length > 0)
                     console.debug(
-                        `Found ${dynamicExtras.length} for ${game.title} game.`
+                        `Found ${dynamicAddApps.length} for ${game.title} game.`
                     );
-                platformCollection.addApps.push(...dynamicExtras);
+                platformCollection.addApps.push(...dynamicAddApps);
             }
 
             return platformCollection;

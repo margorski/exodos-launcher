@@ -89,4 +89,11 @@ export class GameCollection implements IGameCollection {
         }
         return addApps;
     }
+
+    public forRedux(): IGameCollection {
+        return {
+            games: this.games,
+            addApps: this.addApps,
+        };
+    }
 }

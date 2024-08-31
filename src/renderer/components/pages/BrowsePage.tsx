@@ -1,10 +1,5 @@
 import * as React from "react";
-import {
-    BackIn,
-    GetGameData,
-    GetGameResponseData,
-    LaunchGameData,
-} from "@shared/back/types";
+import { BackIn, LaunchGameData } from "@shared/back/types";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
 import { IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
@@ -120,7 +115,7 @@ class BrowsePage extends React.Component<
         });
     }
 
-    componentDidUpdate(prevProps: BrowsePageProps, prevState: BrowsePageState) {
+    componentDidUpdate(prevProps: BrowsePageProps) {
         if (prevProps.gameLibrary !== this.props.gameLibrary) {
             const view = this.props.searchState.views[this.props.gameLibrary];
             if (view && view.games.length === 0) {

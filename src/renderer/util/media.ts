@@ -9,6 +9,8 @@ import * as path from "path";
 import { getLaunchboxFilename } from "./LaunchBoxHelper";
 import { IFileInfo } from "@shared/platform/interfaces";
 import * as chokidar from "chokidar";
+import { addVideo, getGameTitleForVideo } from "@renderer/redux/gamesSlice";
+import store from "@renderer/redux/store";
 
 export function loadPlatformVideos(platform: string): GameVideosCollection {
     const videosPath = getPlatformVideosPath(platform);
@@ -53,6 +55,16 @@ export function mapGamesMedia(
     images: GameImagesCollection,
     videos: GameVideosCollection
 ) {
+    // Load videos
+    const gameName = getGameTitleForVideo(game);
+    try {
+        if (videos[gameName]) {
+            game.media.video = `Videos/${game.platform}/${videos[gameName]}`;
+        }
+    } catch {
+        // Ignore, files don't exist if path isn't forming
+    }
+
     const formattedGameTitle = getLaunchboxFilename(game.title);
 
     // Load all images
@@ -60,19 +72,6 @@ export function mapGamesMedia(
         if (images[category][formattedGameTitle]) {
             game.media.images[category] = images[category][formattedGameTitle];
         }
-    }
-
-    // Load videos
-    try {
-        const formattedGamePath = path
-            .basename(fixSlashes(game.applicationPath))
-            .split(".bat")[0];
-
-        if (videos[formattedGamePath]) {
-            game.media.video = `Videos/${game.platform}/${videos[formattedGamePath]}`;
-        }
-    } catch {
-        // Ignore, files don't exist if path isn't forming
     }
 
     // Load thumbnail path
@@ -150,16 +149,21 @@ export function createVideosWatcher(platform: string): chokidar.FSWatcher {
         depth: 0,
         persistent: true,
         followSymlinks: false,
-        ignored: /DOWNLOAD$/,
         ignoreInitial: true,
     });
 
     watcher
-        .on("addDir", (gameDataPath) => {
-            console.log(`Game ${gameDataPath} added.`);
-        })
-        .on("unlinkDir", (gameDataPath) => {
-            console.log(`Game ${gameDataPath} has been removed.`);
+        .on("add", (videoPath) => {
+            console.log(`Game ${videoPath} added.`);
+            const relativePath = videoPath.replace(
+                window.External.config.fullExodosPath,
+                ""
+            );
+            store.dispatch(
+                addVideo({
+                    videoPath: relativePath,
+                })
+            );
         })
         .on("error", (error) => console.log(`Watcher error: ${error}`));
 

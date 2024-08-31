@@ -1,6 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { fixSlashes } from "@shared/Util";
-import { GameCollection } from "@shared/game/GameCollection";
 import {
     IAdditionalApplicationInfo,
     IGameCollection,
@@ -29,6 +28,10 @@ export type AddExtrasAction = {
     addApps: IAdditionalApplicationInfo[];
 };
 
+export type AddVideoAction = {
+    videoPath: string;
+};
+
 const initialState: GamesState = {
     games: [],
     addApps: [],
@@ -36,6 +39,13 @@ const initialState: GamesState = {
     totalGames: 0,
     libraries: [],
 };
+
+export function getGameTitleForVideo(game: IGameInfo) {
+    const gameTitle = path
+        .basename(fixSlashes(game.applicationPath))
+        .split(".")[0];
+    return gameTitle;
+}
 
 const gamesSlice = createSlice({
     name: "games",
@@ -84,6 +94,21 @@ const gamesSlice = createSlice({
         ) => {
             state.addApps = [...state.addApps, ...payload.addApps];
         },
+        addVideo: (
+            state: GamesState,
+            { payload }: PayloadAction<AddVideoAction>
+        ) => {
+            const title = payload.videoPath.split("/").pop()?.split(".mp4")[0];
+            if (title) {
+                const game = state.games.find((g) => {
+                    return getGameTitleForVideo(g) === title;
+                });
+                if (game) {
+                    console.debug(`Found the game for the new video: ${game}`);
+                    game.media.video = payload.videoPath;
+                }
+            }
+        },
     },
 });
 
@@ -93,5 +118,6 @@ export const {
     setGames,
     setGameInstalled,
     addExtras,
+    addVideo,
 } = gamesSlice.actions;
 export default gamesSlice.reducer;

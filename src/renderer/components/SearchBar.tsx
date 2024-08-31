@@ -24,9 +24,7 @@ export type SearchBarProps = {
 };
 
 export function SearchBar(props: SearchBarProps) {
-    const { searchState, gamesState } = useSelector(
-        (state: RootState) => state
-    );
+    const { searchState } = useSelector((state: RootState) => state);
     const dispatch = useDispatch();
     const [expanded, setExpanded] = React.useState(true);
     const view = searchState.views[props.view];

@@ -1,15 +1,10 @@
 import { englishTranslation } from "@renderer/lang/en";
-import { setSearchText } from "@renderer/redux/searchSlice";
-import { RootState } from "@renderer/redux/store";
 import { getLibraryItemTitle } from "@shared/library/util";
 import * as React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { Paths } from "../Paths";
 import { joinLibraryRoute } from "../Util";
 import { WithPreferencesProps } from "../containers/withPreferences";
-import { GameOrder, GameOrderChangeEvent } from "./GameOrder";
-import { OpenIcon } from "./OpenIcon";
 
 type OwnProps = {
     /** Array of library routes */
