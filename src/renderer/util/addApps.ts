@@ -58,35 +58,28 @@ function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
             window.External.config.fullExodosPath,
             relativePathForAddApps
         );
-        console.debug(
-            `Searching for extras in the ${absolutePathForAddApps} for game ${game.title}`
-        );
+        // console.debug(
+        //     `Searching for extras in the ${absolutePathForAddApps} for game ${game.title}`
+        // );
 
-        if (
-            !fs.existsSync(absolutePathForAddApps) ||
-            !fs.statSync(absolutePathForAddApps).isDirectory()
-        ) {
-            return [];
-        }
+        const files = fs.readdirSync(absolutePathForAddApps, { withFileTypes: true });
 
-        const dir = fs.readdirSync(absolutePathForAddApps);
-        const files = dir.filter((f) =>
-            fs.statSync(path.join(absolutePathForAddApps, f)).isFile()
-        );
-
-        for (const file of files.filter((f) =>
-            ALLOWED_EXTENSIONS.includes(f.split(".")?.[1] ?? "")
+        // @TODO Change blacklist for the whitelist
+        for (const file of files.filter(
+            (f) => f.isFile() && ALLOWED_EXTENSIONS.includes(f.name.split(".")?.[1] ?? "")
         )) {
-            const filepath = path.join(relativePathForAddApps, file);
+            const filepath = path.join(relativePathForAddApps, file.name);
             const addApp = createAddApp(game, filepath);
-            console.debug(`Found ${addApp.applicationPath} extras`);
+            // console.debug(`Found ${addApp.applicationPath} extras`);
             addApps.push(addApp);
         }
         return addApps;
-    } catch (e) {
-        console.error(
-            `Error while reading extras directory for game: ${game.title} Error: ${e}`
-        );
+    } catch (e: any) {
+        if (e.code !== 'ENOENT') {
+            console.error(
+                `Error while reading extras directory for game: ${game.title} Error: ${e}`
+            );
+        }
         return [];
     }
 }

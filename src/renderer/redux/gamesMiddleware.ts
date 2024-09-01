@@ -110,8 +110,11 @@ async function loadPlatform(platform: string, platformsPath: string) {
                 throw new Error(`Failed to parse XML file: ${platformFile}`);
             }
 
+            const startTime = Date.now();
             const images = await loadPlatformImages(platform);
-            const videos = await loadPlatformVideos(platform);
+            console.log(`Images - ${Date.now() - startTime}`);
+            const videos = loadPlatformVideos(platform);
+            console.log(`Videos - ${Date.now() - startTime}`);
 
             const platformCollection = GameParser.parse(
                 data,
@@ -119,16 +122,20 @@ async function loadPlatform(platform: string, platformsPath: string) {
                 window.External.config.fullExodosPath
             );
 
+            console.log(`Parsing - ${Date.now() - startTime}`);
+
             for (const game of platformCollection.games) {
                 mapGamesMedia(game, images, videos);
 
                 const dynamicAddApps = loadDynamicAddAppsForGame(game);
-                if (dynamicAddApps.length > 0)
-                    console.debug(
-                        `Found ${dynamicAddApps.length} for ${game.title} game.`
-                    );
+                // if (dynamicAddApps.length > 0)
+                //     console.debug(
+                //         `Found ${dynamicAddApps.length} for ${game.title} game.`
+                //     );
                 platformCollection.addApps.push(...dynamicAddApps);
             }
+
+            console.log(`Add apps - ${Date.now() - startTime}`);
 
             return platformCollection;
         } else {
