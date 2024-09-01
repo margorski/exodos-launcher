@@ -162,7 +162,7 @@ export function createVideosWatcher(platform: string): chokidar.FSWatcher {
 
     watcher
         .on("add", (videoPath) => {
-            console.log(`Game ${videoPath} added.`);
+            console.debug(`Video ${videoPath} added.`);
             const relativePath = videoPath.replace(
                 window.External.config.fullExodosPath,
                 ""

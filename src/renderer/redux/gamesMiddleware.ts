@@ -24,6 +24,7 @@ import {
 } from "@renderer/util/media";
 import {
     createAddAppsWatcher,
+    createManualsWatcher,
     loadDynamicAddAppsForGame,
 } from "@renderer/util/addApps";
 import { createGamesWatcher } from "@renderer/util/games";
@@ -65,6 +66,7 @@ export function addGamesMiddleware() {
                     createGamesWatcher(platformCollection);
                     createVideosWatcher(platform);
                     createAddAppsWatcher(platformCollection);
+                    createManualsWatcher(platform);
                 }
             }
             console.debug(`Load time - ${Date.now() - startTime}ms`);

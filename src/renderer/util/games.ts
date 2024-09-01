@@ -32,7 +32,7 @@ export function getGameByTitle(title: string) {
     return game;
 }
 
-export function getGameByPath(gamePath: string) {
+export function getGameByDirectory(gamePath: string) {
     const state = store.getState().gamesState;
     const dirname = path.basename(gamePath);
 
@@ -56,7 +56,7 @@ function createWatcher(folder: string): chokidar.FSWatcher {
     watcher
         .on("addDir", (gameDataPath) => {
             console.debug(`Game ${gameDataPath} added.`);
-            const game = getGameByPath(gameDataPath);
+            const game = getGameByDirectory(gameDataPath);
             if (game) {
                 store.dispatch(
                     updateGame({
@@ -70,7 +70,7 @@ function createWatcher(folder: string): chokidar.FSWatcher {
         })
         .on("unlinkDir", (gameDataPath) => {
             console.debug(`Game ${gameDataPath} has been removed.`);
-            const game = getGameByPath(gameDataPath);
+            const game = getGameByDirectory(gameDataPath);
             if (game) {
                 store.dispatch(
                     updateGame({

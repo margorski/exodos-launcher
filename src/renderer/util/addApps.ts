@@ -1,7 +1,10 @@
 import * as chokidar from "chokidar";
 import store from "@renderer/redux/store";
-import { addAddAppsForGame as addAddApp } from "@renderer/redux/gamesSlice";
-import { fixSlashes } from "@shared/Util";
+import {
+    addAddAppsForGame as addAddApp,
+    updateGame,
+} from "@renderer/redux/gamesSlice";
+import { deepCopy, fixSlashes } from "@shared/Util";
 import {
     IAdditionalApplicationInfo,
     IGameCollection,
@@ -9,7 +12,7 @@ import {
 } from "@shared/game/interfaces";
 import * as fs from "fs";
 import * as path from "path";
-import { getGameByPath as getGameByDirectory } from "./games";
+import { getGameByDirectory, getGameByTitle } from "./games";
 
 // @TODO Move it to seperate module to make it easier to extend (it would be best to have it in json)
 const ADD_APPS_DIRECTORIES = ["Extras", "Magazines"];
@@ -179,4 +182,52 @@ function getPlatformAddAppsPaths(platformCollection: IGameCollection) {
         platformRoot
     );
     return ADD_APPS_DIRECTORIES.map((d) => `${basePath}/${d}/*`);
+}
+
+export function createManualsWatcher(platform: string): chokidar.FSWatcher {
+    const path = getPlatformManualsPath(platform);
+    console.log(`Initializing manuals watcher for ${platform} path ${path}`);
+
+    const watcher = chokidar.watch(path, {
+        depth: 0,
+        persistent: true,
+        followSymlinks: false,
+        ignoreInitial: true,
+    });
+
+    watcher
+        .on("add", (path) => {
+            console.debug(`Manual ${path} added.`);
+            const relativePath = path.replace(
+                window.External.config.fullExodosPath,
+                ""
+            );
+            const title = relativePath.split("/").pop()?.split(".")[0];
+            if (title) {
+                const game = getGameByTitle(title);
+                if (game) {
+                    console.debug(
+                        `Found the game for the new manual. Updating game ${title}`
+                    );
+                    const updatedGame = deepCopy(game);
+                    updatedGame.manualPath = relativePath;
+                    store.dispatch(
+                        updateGame({
+                            game: updatedGame,
+                        })
+                    );
+                }
+            }
+        })
+        .on("error", (error) => console.log(`Watcher error: ${error}`));
+
+    return watcher;
+}
+
+function getPlatformManualsPath(platform: string) {
+    return path.join(
+        window.External.config.fullExodosPath,
+        "Manuals",
+        platform
+    );
 }
