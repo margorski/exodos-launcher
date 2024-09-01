@@ -1,7 +1,7 @@
 import { BrowserWindow, shell } from "@electron/remote";
 import { openContextMenu } from "@main/Util";
 import { englishTranslation } from "@renderer/lang/en";
-import { getFileServerURL } from "@shared/Util";
+import { fixSlashes, getFileServerURL } from "@shared/Util";
 import { LOGOS, SCREENSHOTS } from "@shared/constants";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylistEntry } from "@shared/interfaces";
@@ -14,6 +14,8 @@ import { FormattedGameMedia, GameImageCarousel } from "./GameImageCarousel";
 import { MediaPreview } from "./ImagePreview";
 import { InputField } from "./InputField";
 import { RightBrowseSidebarAddApp } from "./RightBrowseSidebarAddApp";
+import { promises as fs } from "fs";
+import * as path from "path";
 
 type OwnProps = {
     /** Currently selected game (if any) */
@@ -39,6 +41,7 @@ export type RightBrowseSidebarProps = OwnProps & WithPreferencesProps;
 type RightBrowseSidebarState = {
     /** If a preview of the current game's selected media. */
     previewMedia?: FormattedGameMedia;
+    existingAddApps?: IAdditionalApplicationInfo[];
 };
 
 export interface RightBrowseSidebar {}
@@ -55,17 +58,49 @@ export class RightBrowseSidebar extends React.Component<
         this.state = {};
     }
 
+    checkAddAppsExistence = async () => {
+        const existingAddApps: IAdditionalApplicationInfo[] = [];
+        if (this.props.currentAddApps) {
+            for (const addApp of this.props.currentAddApps) {
+                try {
+                    const absolutePath = path.join(
+                        window.External.config.fullExodosPath,
+                        fixSlashes(addApp.applicationPath)
+                    );
+                    await fs.access(absolutePath);
+                    existingAddApps.push(addApp);
+                } catch {
+                    // Do nothing
+                }
+            }
+        }
+
+        this.setState({
+            ...this.state,
+            existingAddApps: existingAddApps,
+        });
+    };
+
+    componentDidMount(): void {
+        this.checkAddAppsExistence();
+    }
+
+    componentDidUpdate(
+        prevProps: Readonly<RightBrowseSidebarProps>,
+        prevState: Readonly<RightBrowseSidebarState>,
+        snapshot?: any
+    ): void {
+        if (prevProps.currentAddApps != this.props.currentAddApps)
+            this.checkAddAppsExistence();
+    }
+
     render() {
         const strings = englishTranslation.browse;
         const game: IGameInfo | undefined = this.props.currentGame;
         // HACK: This is a hacky solution to determine if the selected item is a game or a magazine
         if (game) {
-            const {
-                currentGame,
-                currentAddApps,
-                gamePlaylistEntry,
-                currentPlaylistNotes,
-            } = this.props;
+            const { currentGame, gamePlaylistEntry, currentPlaylistNotes } =
+                this.props;
 
             const isGame = !!game?.configurationPath;
             const playButtonLabel = isGame
@@ -250,23 +285,24 @@ export class RightBrowseSidebar extends React.Component<
                         </div>
                     ) : undefined}
                     {/* -- Additional Applications -- */}
-                    {currentAddApps && currentAddApps.length > 0 && (
-                        <div className="browse-right-sidebar__section">
-                            <div className="browse-right-sidebar__row browse-right-sidebar__row--additional-applications-header">
-                                <p>{strings.addApps}:</p>
+                    {this.state.existingAddApps &&
+                        this.state.existingAddApps.length > 0 && (
+                            <div className="browse-right-sidebar__section">
+                                <div className="browse-right-sidebar__row browse-right-sidebar__row--additional-applications-header">
+                                    <p>{strings.addApps}:</p>
+                                </div>
+                                {this.state.existingAddApps &&
+                                    this.state.existingAddApps.map((addApp) => (
+                                        <RightBrowseSidebarAddApp
+                                            key={addApp.id}
+                                            addApp={addApp}
+                                            onLaunch={this.onAddAppLaunch.bind(
+                                                this
+                                            )}
+                                        />
+                                    ))}
                             </div>
-                            {currentAddApps &&
-                                currentAddApps.map((addApp) => (
-                                    <RightBrowseSidebarAddApp
-                                        key={addApp.id}
-                                        addApp={addApp}
-                                        onLaunch={this.onAddAppLaunch.bind(
-                                            this
-                                        )}
-                                    />
-                                ))}
-                        </div>
-                    )}
+                        )}
 
                     {/* -- Media Preview -- */}
                     {this.state.previewMedia ? (
