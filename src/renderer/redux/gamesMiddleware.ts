@@ -64,12 +64,10 @@ export function addGamesMiddleware() {
                 if (watchablePlatforms.includes(platform)) {
                     createGamesWatcher(platformCollection);
                     createVideosWatcher(platform);
-                    // @TODO variable argument
-                    createAddAppsWatcher();
+                    createAddAppsWatcher(platformCollection);
                 }
             }
             console.debug(`Load time - ${Date.now() - startTime}ms`);
-
             libraries.sort();
             listenerApi.dispatch(setLibraries(libraries));
             listenerApi.dispatch(initializeViews(libraries));

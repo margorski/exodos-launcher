@@ -23,7 +23,6 @@ export function createGamesWatcher(platformCollection: IGameCollection) {
 
 export function getGameByTitle(title: string) {
     const state = store.getState().gamesState;
-    console.log("GET GAME BY TITLE", title);
     const game = state.games.find((g) => {
         const gameTitle = path
             .basename(fixSlashes(g.applicationPath))
@@ -56,7 +55,7 @@ function createWatcher(folder: string): chokidar.FSWatcher {
 
     watcher
         .on("addDir", (gameDataPath) => {
-            console.log(`Game ${gameDataPath} added.`);
+            console.debug(`Game ${gameDataPath} added.`);
             const game = getGameByPath(gameDataPath);
             if (game) {
                 store.dispatch(
@@ -70,7 +69,7 @@ function createWatcher(folder: string): chokidar.FSWatcher {
             }
         })
         .on("unlinkDir", (gameDataPath) => {
-            console.log(`Game ${gameDataPath} has been removed.`);
+            console.debug(`Game ${gameDataPath} has been removed.`);
             const game = getGameByPath(gameDataPath);
             if (game) {
                 store.dispatch(

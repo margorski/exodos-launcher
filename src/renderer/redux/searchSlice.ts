@@ -222,26 +222,6 @@ const searchSlice = createSlice({
             }
         },
     },
-    // extraReducers: (builder) => {
-    //     builder.addCase(setGameInstalled, (state, { payload }) => {
-    //         const { gameDataPath, value } = payload;
-    //         const dirname = path.basename(gameDataPath);
-
-    //         console.log(state.views);
-    //         for (const viewName of Object.keys(state.views)) {
-    //             const view = state.views[viewName];
-    //             if (view.selectedGame) {
-    //                 if (
-    //                     fixSlashes(view.selectedGame.rootFolder).endsWith(
-    //                         `/${dirname}`
-    //                     )
-    //                 ) {
-    //                     view.selectedGame.installed = value;
-    //                 }
-    //             }
-    //         }
-    //     });
-    // },
 });
 
 function createFilter(view: ResultsView): GameFilter {

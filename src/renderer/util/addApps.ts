@@ -1,10 +1,28 @@
 import * as chokidar from "chokidar";
 import store from "@renderer/redux/store";
-import { updateGame } from "@renderer/redux/gamesSlice";
+import { addAddAppsForGame as addAddApp } from "@renderer/redux/gamesSlice";
 import { fixSlashes } from "@shared/Util";
-import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
+import {
+    IAdditionalApplicationInfo,
+    IGameCollection,
+    IGameInfo,
+} from "@shared/game/interfaces";
 import * as fs from "fs";
 import * as path from "path";
+import { getGameByPath as getGameByDirectory } from "./games";
+
+// @TODO Move it to seperate module to make it easier to extend (it would be best to have it in json)
+const ADD_APPS_DIRECTORIES = ["Extras", "Magazines"];
+const ALLOWED_EXTENSIONS = [
+    "pdf",
+    "jpg",
+    "xlsx",
+    "doc",
+    "txt",
+    "html",
+    "command",
+    "mp4",
+];
 
 export function loadDynamicAddAppsForGame(
     game: IGameInfo
@@ -14,9 +32,6 @@ export function loadDynamicAddAppsForGame(
         console.debug("Game root folder path empty.");
         return [];
     }
-
-    // @TODO Move it to seperate module to make it easier to extend (it would be best to have it in json)
-    const ADD_APPS_DIRECTORIES = ["Extras", "Magazines"];
 
     return ADD_APPS_DIRECTORIES.reduce<IAdditionalApplicationInfo[]>(
         (addApps, addAppsDir) => {
@@ -30,7 +45,7 @@ export function loadDynamicAddAppsForGame(
 function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
     try {
         const addApps: IAdditionalApplicationInfo[] = [];
-        const { rootFolder, id: gameId } = game;
+        const { rootFolder } = game;
 
         const relativePathForAddApps = path.join(
             fixSlashes(rootFolder),
@@ -56,22 +71,11 @@ function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
             fs.statSync(path.join(absolutePathForAddApps, f)).isFile()
         );
 
-        // @TODO Change blacklist for the whitelist
-        const ignoredExtensions = ["bat", "bsh", "msh", ""];
-        for (const file of files.filter(
-            (f) => !ignoredExtensions.includes(f.split(".")?.[1] ?? "")
+        for (const file of files.filter((f) =>
+            ALLOWED_EXTENSIONS.includes(f.split(".")?.[1] ?? "")
         )) {
-            const name = file.split(".")[0];
-            const id = getExtrasId(gameId, file);
-            const addApp = {
-                id,
-                applicationPath: path.join(relativePathForAddApps, file),
-                autoRunBefore: false,
-                gameId,
-                launchCommand: ``,
-                name,
-                waitForExit: false,
-            };
+            const filepath = path.join(relativePathForAddApps, file);
+            const addApp = createAddApp(game, filepath);
             console.debug(`Found ${addApp.applicationPath} extras`);
             addApps.push(addApp);
         }
@@ -88,13 +92,42 @@ function getExtrasId(gameId: string, filename: string): string {
     return `${gameId}-${filename}`;
 }
 
-// @TODO add manual directory
-export function createAddAppsWatcher(): chokidar.FSWatcher {
-    const addAppsPaths = getPlatformAddAppsPaths();
+function createAddApp(
+    game: IGameInfo,
+    filepath: string
+): IAdditionalApplicationInfo {
+    const relativePath = filepath.replace(
+        window.External.config.fullExodosPath,
+        ""
+    );
+    const filename = filepath.split("/").pop() ?? "Unknown";
+    const name = filename.split(".")[0];
+    const id = getExtrasId(game.id, filepath);
+    return {
+        id,
+        applicationPath: relativePath,
+        autoRunBefore: false,
+        gameId: game.id,
+        launchCommand: ``,
+        name,
+        waitForExit: false,
+    };
+}
+
+export function createAddAppsWatcher(
+    platformCollection: IGameCollection
+): chokidar.FSWatcher | undefined {
+    const addAppsPaths = getPlatformAddAppsPaths(platformCollection);
+    if (!addAppsPaths) {
+        console.log(
+            "AddApps watcher: no games on list, watcher do not initialized."
+        );
+        return;
+    }
+
     console.log(`Initializing addApps watcher for paths ${addAppsPaths}`);
 
     const watcher = chokidar.watch(addAppsPaths, {
-        depth: 0,
         persistent: true,
         followSymlinks: false,
         ignoreInitial: true,
@@ -102,17 +135,48 @@ export function createAddAppsWatcher(): chokidar.FSWatcher {
 
     watcher
         .on("add", (path) => {
-            console.log(`AddApps ${path} added.`);
+            const extension = path.split(".").pop()?.toLocaleLowerCase();
+            if (extension && ALLOWED_EXTENSIONS.includes(extension)) {
+                const pathElements = path.split("/");
+
+                // the third element from the end is the directory which is game identifier
+                const gameDir = pathElements[pathElements.length - 3];
+                const game = getGameByDirectory(gameDir);
+                if (game) {
+                    console.debug(
+                        "Found the game for the addApp. Refreshing game addApps."
+                    );
+                    const addApp = createAddApp(game, path);
+                    store.dispatch(
+                        addAddApp({
+                            addApp,
+                        })
+                    );
+                }
+                console.debug(
+                    `AddApps ${path} added. Refreshing addApps for the game`
+                );
+            } else {
+                console.debug(
+                    `AddApps watcher: do not allowed extension ${path}`
+                );
+            }
         })
         .on("error", (error) => console.log(`Watcher error: ${error}`));
 
     return watcher;
 }
 
-function getPlatformAddAppsPaths() {
+function getPlatformAddAppsPaths(platformCollection: IGameCollection) {
+    if (platformCollection.games.length === 0) return;
+
+    const platformRoot = fixSlashes(platformCollection.games[0].rootFolder)
+        .split("/")
+        .slice(0, -1)
+        .join("/");
     const basePath = path.join(
         window.External.config.fullExodosPath,
-        "eXo/eXoDOS/!dos/*/"
+        platformRoot
     );
-    return [`${basePath}/Magazines`, `${basePath}/Extras`];
+    return ADD_APPS_DIRECTORIES.map((d) => `${basePath}/${d}/*`);
 }

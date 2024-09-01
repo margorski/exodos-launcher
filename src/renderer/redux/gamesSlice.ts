@@ -21,8 +21,8 @@ export type GameUpdatedAction = {
     game: IGameInfo;
 };
 
-export type AddExtrasAction = {
-    addApps: IAdditionalApplicationInfo[];
+export type AddAddAppAction = {
+    addApp: IAdditionalApplicationInfo;
 };
 
 export type AddVideoAction = {
@@ -72,15 +72,20 @@ const gamesSlice = createSlice({
             );
             if (gameIdx >= 0) state.games[gameIdx] = payload.game;
         },
-        addExtras: (
+        addAddAppsForGame: (
             state: GamesState,
-            { payload }: PayloadAction<AddExtrasAction>
+            { payload }: PayloadAction<AddAddAppAction>
         ) => {
-            state.addApps = [...state.addApps, ...payload.addApps];
+            state.addApps = [...state.addApps, payload.addApp];
         },
     },
 });
 
-export const { initialize, setLibraries, setGames, updateGame, addExtras } =
-    gamesSlice.actions;
+export const {
+    initialize,
+    setLibraries,
+    setGames,
+    updateGame,
+    addAddAppsForGame,
+} = gamesSlice.actions;
 export default gamesSlice.reducer;

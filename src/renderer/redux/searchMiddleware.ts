@@ -60,14 +60,16 @@ export function addSearchMiddleware() {
             const state = listenerApi.getState();
             const viewName = action.payload.game.library;
             const view = state.searchState.views[viewName];
+            const game = action.payload.game;
 
             if (view) {
-                store.dispatch(
-                    selectGame({
-                        view: viewName,
-                        game: action.payload.game,
-                    })
-                );
+                if (view.selectedGame?.id === game.id)
+                    store.dispatch(
+                        selectGame({
+                            view: viewName,
+                            game,
+                        })
+                    );
                 debounceSearch(state, viewName, view);
             }
         },
