@@ -22,7 +22,7 @@ export function loadPlatformVideos(platform: string): GameVideosCollection {
             .readdirSync(videosPath)
             .filter((f) => f.endsWith(".mp4"));
         for (const s of files) {
-            videos[s.split(".mp4")[0]] = s;
+            videos[s.split(".mp4")[0]] = encodeURIComponent(s);
         }
     }
 
@@ -113,16 +113,17 @@ export async function loadPlatformImages(
             const folderPath = path.join(platformImagesPath, dir.name);
 
             for (const s of walkSync(folderPath)) {
+                console.log(s.path);
                 const lastIdx = s.filename.lastIndexOf("-0");
                 if (lastIdx > -1) {
                     const title = s.filename.slice(0, lastIdx);
                     if (!collection[dir.name][title]) {
                         collection[dir.name][title] = [
-                            path.relative(platformImagesPath, s.path),
+                            path.relative(platformImagesPath, path.join(path.dirname(s.path), encodeURIComponent(s.filename))),
                         ];
                     } else {
                         collection[dir.name][title].push(
-                            path.relative(platformImagesPath, s.path)
+                            path.relative(platformImagesPath, path.join(path.dirname(s.path), encodeURIComponent(s.filename))),
                         );
                     }
                 }
