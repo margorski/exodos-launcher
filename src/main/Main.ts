@@ -13,7 +13,7 @@ import { IAppConfigData } from "@shared/config/interfaces";
 import { APP_TITLE } from "@shared/constants";
 import { WindowIPC } from "@shared/interfaces";
 import { InitRendererChannel, InitRendererData } from "@shared/IPC";
-import { IAppPreferencesData } from "@shared/preferences/interfaces";
+import { IAppPreferencesData, IAppPreferencesDataMainWindow } from "@shared/preferences/interfaces";
 import { createErrorProxy } from "@shared/Util";
 import { ChildProcess, fork } from "child_process";
 import { randomBytes } from "crypto";
@@ -385,6 +385,44 @@ export function main(init: Init): void {
         });
     }
 
+    function getInitialWindowSize(): IAppPreferencesDataMainWindow {
+        if (!state.preferences) {
+            throw new Error(
+                "Preferences must be set before you can open a window."
+            );
+        }
+        if (!state.config) {
+            throw new Error(
+                "Configs must be set before you can open a window."
+            );
+        }
+        if (process.env.SteamDeck && process.env.XDG_CURRENT_DESKTOP === "gamescope") {
+            console.log('Running via deck, forcing 1280x800 resolution');
+            return {
+                width: 1280,
+                height: 800,
+                x: 0,
+                y: 0,
+                maximized: false,
+            }
+        } else {
+            const mw = state.preferences.mainWindow;
+            let width: number = mw.width ? mw.width : 1000;
+            let height: number = mw.height ? mw.height : 650;
+            if (mw.width && mw.height && !state.config.useCustomTitlebar) {
+                width += 8; // Add the width of the window-grab-things,
+                height += 8; // they are 4 pixels wide each (at least for me @TBubba)
+            }
+            return {
+                width,
+                height,
+                x: state.preferences.mainWindow.x,
+                y: state.preferences.mainWindow.y,
+                maximized: state.preferences.mainWindow.maximized,
+            }
+        }
+    }
+
     function createMainWindow(): BrowserWindow {
         if (!state.preferences) {
             throw new Error(
@@ -396,21 +434,16 @@ export function main(init: Init): void {
                 "Configs must be set before you can open a window."
             );
         }
-        const mw = state.preferences.mainWindow;
         // Create the browser window.
-        let width: number = mw.width ? mw.width : 1000;
-        let height: number = mw.height ? mw.height : 650;
-        if (mw.width && mw.height && !state.config.useCustomTitlebar) {
-            width += 8; // Add the width of the window-grab-things,
-            height += 8; // they are 4 pixels wide each (at least for me @TBubba)
-        }
+        const mw = getInitialWindowSize();
+
         remoteMain.initialize();
         const window = new BrowserWindow({
             title: APP_TITLE,
             x: mw.x,
             y: mw.y,
-            width: width,
-            height: height,
+            width: mw.width,
+            height: mw.height,
             frame: !state.config.useCustomTitlebar,
             icon: path.join(__dirname, "../window/images/icon.png"),
             webPreferences: {
