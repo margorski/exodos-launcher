@@ -62,7 +62,7 @@ export function main(init: Init): void {
         _installed: undefined,
         backHost: init.args["connect-remote"]
             ? new URL("ws://" + init.args["connect-remote"])
-            : new URL("ws://localhost"),
+            : new URL("ws://127.0.0.1"),
         _secret: "",
         /** Version of the launcher (timestamp of when it was built). Negative value if not found or not yet loaded. */
         _version: -2,

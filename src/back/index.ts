@@ -195,7 +195,7 @@ const startMainServer = async (acceptRemote: boolean): Promise<number> =>
 
             if (port++ < maxPort) {
                 server = new WebSocket.Server({
-                    host: acceptRemote ? undefined : "localhost",
+                    host: acceptRemote ? undefined : "127.0.0.1",
                     port: port,
                 });
                 server.on("error", onError);

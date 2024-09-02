@@ -30,7 +30,7 @@ export function startFileServer(opts: IFileServerOpts): Promise<number> {
         }
         function tryListen() {
             if (port++ < maxPort) {
-                server.listen(port, "localhost");
+                server.listen(port, "127.0.0.1");
             } else {
                 done(
                     new Error(
