@@ -1,6 +1,7 @@
 import * as React from "react";
 import { BackIn, LaunchGameData } from "@shared/back/types";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
+import { throttle } from '@shared/utils/throttle';
 import { IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
 import { memoizeOne } from "@shared/memoize";
@@ -350,7 +351,7 @@ class BrowsePage extends React.Component<
         }
     };
 
-    onGameLaunch = (gameId: string): void => {
+    onGameLaunch = throttle((gameId: string): void => {
         const game = this.props.games.find((g) => g.id === gameId);
         const addApps = this.props.addApps.filter((a) => a.gameId === gameId);
         if (game) {
@@ -359,9 +360,9 @@ class BrowsePage extends React.Component<
                 addApps,
             });
         }
-    };
+    }, 500);
 
-    onGameLaunchSetup = (gameId: string): void => {
+    onGameLaunchSetup = throttle((gameId: string): void => {
         const game = this.props.games.find((g) => g.id === gameId);
         const addApps = this.props.addApps.filter((a) => a.gameId === gameId);
         if (game) {
@@ -373,9 +374,9 @@ class BrowsePage extends React.Component<
                 }
             );
         }
-    };
+    }, 500);
 
-    onAddAppLaunch = (addAppId: string): void => {
+    onAddAppLaunch = throttle((addAppId: string): void => {
         const addApp = this.props.addApps.find((a) => a.id === addAppId);
         if (addApp) {
             const game = this.props.games.find((g) => g.id === addApp.gameId);
@@ -389,7 +390,7 @@ class BrowsePage extends React.Component<
                 );
             }
         }
-    };
+    }, 500);
 
     onCenterKeyDown = (event: React.KeyboardEvent): void => {
         const key: string = event.key.toLowerCase();
