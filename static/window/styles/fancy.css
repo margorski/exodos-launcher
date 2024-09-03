@@ -924,3 +924,7 @@ body {
 .searchable-select-dropdown-item:hover {
   background-color: var(--layout__header-menu-item-hover-background);
 }
+
+.search-bar-simple-box:hover {
+  background-color: #363638;
+}
