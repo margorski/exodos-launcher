@@ -2,7 +2,7 @@ import * as React from "react";
 import { BackIn, LaunchGameData } from "@shared/back/types";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
 import { throttle } from '@shared/utils/throttle';
-import { IGameInfo } from "@shared/game/interfaces";
+import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
 import { memoizeOne } from "@shared/memoize";
 import { updatePreferencesData } from "@shared/preferences/util";
@@ -376,19 +376,13 @@ class BrowsePage extends React.Component<
         }
     }, 500);
 
-    onAddAppLaunch = throttle((addAppId: string): void => {
-        const addApp = this.props.addApps.find((a) => a.id === addAppId);
-        if (addApp) {
-            const game = this.props.games.find((g) => g.id === addApp.gameId);
-            if (game) {
-                window.External.back.send<LaunchGameData>(
-                    BackIn.LAUNCH_ADDAPP,
-                    {
-                        game,
-                        addApp,
-                    }
-                );
-            }
+    onAddAppLaunch = throttle((addApp: IAdditionalApplicationInfo): void => {
+        const game = this.props.games.find((g) => g.id === addApp.gameId);
+        if (game) {
+            window.External.back.send<LaunchGameData>(BackIn.LAUNCH_ADDAPP, {
+                game,
+                addApp,
+            });
         }
     }, 500);
 

@@ -16,6 +16,7 @@ import { InputField } from "./InputField";
 import { RightBrowseSidebarAddApp } from "./RightBrowseSidebarAddApp";
 import { promises as fs } from "fs";
 import * as path from "path";
+import { loadDynamicAddAppsForGame } from "@renderer/util/addApps";
 
 type OwnProps = {
     /** Currently selected game (if any) */
@@ -33,7 +34,7 @@ type OwnProps = {
     /** Launch game setup */
     onGameLaunchSetup: (gameId: string) => void;
     /** Launch add app */
-    onAddAppLaunch: (addAppId: string) => void;
+    onAddAppLaunch: (addApp: IAdditionalApplicationInfo) => void;
 };
 
 export type RightBrowseSidebarProps = OwnProps & WithPreferencesProps;
@@ -42,6 +43,7 @@ type RightBrowseSidebarState = {
     /** If a preview of the current game's selected media. */
     previewMedia?: FormattedGameMedia;
     existingAddApps?: IAdditionalApplicationInfo[];
+    dynamicAddApps?: IAdditionalApplicationInfo[];
 };
 
 export interface RightBrowseSidebar {}
@@ -81,22 +83,43 @@ export class RightBrowseSidebar extends React.Component<
         });
     };
 
+    getDynamicAddApps = async () => {
+        if (!this.props.currentGame) return;
+
+        const dynamicAddApps = loadDynamicAddAppsForGame(
+            this.props.currentGame
+        );
+
+        console.debug(
+            `Found ${dynamicAddApps.length} for ${this.props.currentGame.title} game.`
+        );
+
+        this.setState({
+            ...this.state,
+            dynamicAddApps,
+        });
+    };
+
     componentDidMount(): void {
         this.checkAddAppsExistence();
+        this.getDynamicAddApps();
     }
 
-    componentDidUpdate(
-        prevProps: Readonly<RightBrowseSidebarProps>,
-        prevState: Readonly<RightBrowseSidebarState>,
-        snapshot?: any
-    ): void {
+    componentDidUpdate(prevProps: Readonly<RightBrowseSidebarProps>): void {
         if (prevProps.currentAddApps != this.props.currentAddApps)
             this.checkAddAppsExistence();
+        if (prevProps.currentGame != this.props.currentGame) {
+            this.getDynamicAddApps();
+        }
     }
 
     render() {
         const strings = englishTranslation.browse;
         const game: IGameInfo | undefined = this.props.currentGame;
+        const addApps = [
+            ...(this.state.existingAddApps ?? []),
+            ...(this.state.dynamicAddApps ?? []),
+        ];
         // HACK: This is a hacky solution to determine if the selected item is a game or a magazine
         if (game) {
             const { currentGame, gamePlaylistEntry, currentPlaylistNotes } =
@@ -285,25 +308,20 @@ export class RightBrowseSidebar extends React.Component<
                         </div>
                     ) : undefined}
                     {/* -- Additional Applications -- */}
-                    {this.state.existingAddApps &&
-                        this.state.existingAddApps.length > 0 && (
-                            <div className="browse-right-sidebar__section">
-                                <div className="browse-right-sidebar__row browse-right-sidebar__row--additional-applications-header">
-                                    <p>{strings.addApps}:</p>
-                                </div>
-                                {this.state.existingAddApps &&
-                                    this.state.existingAddApps.map((addApp) => (
-                                        <RightBrowseSidebarAddApp
-                                            key={addApp.id}
-                                            addApp={addApp}
-                                            onLaunch={this.onAddAppLaunch.bind(
-                                                this
-                                            )}
-                                        />
-                                    ))}
+                    {addApps.length > 0 && (
+                        <div className="browse-right-sidebar__section">
+                            <div className="browse-right-sidebar__row browse-right-sidebar__row--additional-applications-header">
+                                <p>{strings.addApps}:</p>
                             </div>
-                        )}
-
+                            {addApps.map((addApp) => (
+                                <RightBrowseSidebarAddApp
+                                    key={addApp.id}
+                                    addApp={addApp}
+                                    onLaunch={this.onAddAppLaunch.bind(this)}
+                                />
+                            ))}
+                        </div>
+                    )}
                     {/* -- Media Preview -- */}
                     {this.state.previewMedia ? (
                         <MediaPreview
@@ -384,7 +402,7 @@ export class RightBrowseSidebar extends React.Component<
                 win.focus();
             });
         } else {
-            this.props.onAddAppLaunch(addApp.id);
+            this.props.onAddAppLaunch(addApp);
         }
     }
 

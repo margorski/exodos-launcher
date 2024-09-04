@@ -23,7 +23,6 @@ import {
     mapGamesMedia,
 } from "@renderer/util/media";
 import {
-    createAddAppsWatcher,
     createManualsWatcher,
     loadDynamicAddAppsForGame,
 } from "@renderer/util/addApps";
@@ -65,7 +64,6 @@ export function addGamesMiddleware() {
                 if (watchablePlatforms.includes(platform)) {
                     createGamesWatcher(platformCollection);
                     createVideosWatcher(platform);
-                    createAddAppsWatcher(platformCollection);
                     createManualsWatcher(platform);
                 }
             }
@@ -126,13 +124,6 @@ async function loadPlatform(platform: string, platformsPath: string) {
 
             for (const game of platformCollection.games) {
                 mapGamesMedia(game, images, videos);
-
-                const dynamicAddApps = loadDynamicAddAppsForGame(game);
-                // if (dynamicAddApps.length > 0)
-                //     console.debug(
-                //         `Found ${dynamicAddApps.length} for ${game.title} game.`
-                //     );
-                platformCollection.addApps.push(...dynamicAddApps);
             }
 
             console.log(`Add apps - ${Date.now() - startTime}`);
