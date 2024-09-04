@@ -6,11 +6,11 @@ import {
     getFilename,
     padStart,
     stringifyArray,
-    escapeShell,
 } from "@shared/Util";
 import { ChildProcess, exec } from "child_process";
 import { EventEmitter } from "events";
 import * as path from "path";
+import { createCommand } from "./command";
 
 export type LaunchAddAppOpts = LaunchBaseOpts & {
     addApp: IAdditionalApplicationInfo;
@@ -31,6 +31,8 @@ type LaunchBaseOpts = {
     openExternal: OpenExternalFunc;
 };
 
+//@TODO we probably doesn't need seperate launch functions for add apps, setup, etc.
+// Only one function to launch file with mapper for different file types
 export namespace GameLauncher {
     const logSource = "Game Launcher";
 
@@ -251,39 +253,6 @@ export namespace GameLauncher {
         return filePath;
     }
 
-    const FOOBAR_EXECUTABLE = "foobar2000.exe";
-    function createCommand(filename: string, args: string): string {
-        let escFilename: string = escapeShell(filename);
-        let escArgs: string = escapeLinuxArgs(args);
-
-        const commandWithArguments = `${escFilename} ${escArgs}`;
-        switch (getCommandType(filename)) {
-            case "CommandFile":
-                return commandWithArguments;
-            case "Soundtrack":
-                const foobarDirectory = escFilename.slice(
-                    0,
-                    -FOOBAR_EXECUTABLE.length
-                );
-                return `cd ${foobarDirectory} && flatpak run com.retro_exo.wine-9-0 ${FOOBAR_EXECUTABLE} ${args}`;
-            case "General":
-                return `xdg-open ${commandWithArguments}`;
-        }
-    }
-
-    type CommandType = "CommandFile" | "Soundtrack" | "General";
-    function getCommandType(filename: string): CommandType {
-        const isCommandFile = filename.toLocaleLowerCase().endsWith(".command");
-        if (isCommandFile) return "CommandFile";
-
-        const isSoundtrack = filename
-            .toLocaleLowerCase()
-            .endsWith(FOOBAR_EXECUTABLE);
-        if (isSoundtrack) return "Soundtrack";
-
-        return "General";
-    }
-
     function logProcessOutput(proc: ChildProcess, log: LogFunc): void {
         // Log for debugging purposes
         // (might be a bad idea to fill the console with junk?)
@@ -375,14 +344,6 @@ function splitQuotes(str: string): string[] {
         splits.push(str.substring(start, str.length));
     }
     return splits;
-}
-
-/**
- * Escape arguments that will be used in a Linux shell (command line)
- * ( According to this: https://stackoverflow.com/questions/15783701/which-characters-need-to-be-escaped-when-using-bash )
- */
-function escapeLinuxArgs(str: string): string {
-    return str.replace(/((?![a-zA-Z0-9,._+:@%-]).)/g, "\\$&"); // $& means the whole matched string
 }
 
 type UnityOutputResponse = {

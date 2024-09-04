@@ -1,31 +1,15 @@
 import * as chokidar from "chokidar";
 import store from "@renderer/redux/store";
-import {
-    addAddAppsForGame as addAddApp,
-    updateGame,
-} from "@renderer/redux/gamesSlice";
+import { updateGame } from "@renderer/redux/gamesSlice";
 import { deepCopy, fixSlashes } from "@shared/Util";
-import {
-    IAdditionalApplicationInfo,
-    IGameCollection,
-    IGameInfo,
-} from "@shared/game/interfaces";
+import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import * as fs from "fs";
 import * as path from "path";
-import { getGameByDirectory, getGameByTitle } from "./games";
+import { getGameByTitle } from "./games";
+import { ALLOWED_EXTENSIONS } from "@back/game/CommandTransformer";
 
 // @TODO Move it to seperate module to make it easier to extend (it would be best to have it in json)
 const ADD_APPS_DIRECTORIES = ["Extras", "Magazines"];
-const ALLOWED_EXTENSIONS = [
-    "pdf",
-    "jpg",
-    "xlsx",
-    "doc",
-    "txt",
-    "html",
-    "command",
-    "mp4",
-];
 
 export function loadDynamicAddAppsForGame(
     game: IGameInfo
@@ -62,11 +46,15 @@ function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
         //     `Searching for extras in the ${absolutePathForAddApps} for game ${game.title}`
         // );
 
-        const files = fs.readdirSync(absolutePathForAddApps, { withFileTypes: true });
+        const files = fs.readdirSync(absolutePathForAddApps, {
+            withFileTypes: true,
+        });
 
         // @TODO Change blacklist for the whitelist
         for (const file of files.filter(
-            (f) => f.isFile() && ALLOWED_EXTENSIONS.includes(f.name.split(".")?.[1] ?? "")
+            (f) =>
+                f.isFile() &&
+                ALLOWED_EXTENSIONS.includes(f.name.split(".")?.[1] ?? "")
         )) {
             const filepath = path.join(relativePathForAddApps, file.name);
             const addApp = createAddApp(game, filepath);
@@ -75,7 +63,7 @@ function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
         }
         return addApps;
     } catch (e: any) {
-        if (e.code !== 'ENOENT') {
+        if (e.code !== "ENOENT") {
             console.error(
                 `Error while reading extras directory for game: ${game.title} Error: ${e}`
             );
