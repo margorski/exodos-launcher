@@ -1,9 +1,7 @@
 import { isAnyOf } from "@reduxjs/toolkit";
 import { readPlatformsFile } from "@renderer/file/PlatformFile";
 import { formatPlatformFileData } from "@renderer/util/LaunchBoxHelper";
-import { removeLowestDirectory } from "@shared/Util";
 import { GameParser } from "@shared/game/GameParser";
-import * as fastXmlParser from "fast-xml-parser";
 import * as fs from "fs";
 import * as path from "path";
 import {
@@ -22,11 +20,9 @@ import {
     loadPlatformVideos,
     mapGamesMedia,
 } from "@renderer/util/media";
-import {
-    createManualsWatcher,
-    loadDynamicAddAppsForGame,
-} from "@renderer/util/addApps";
+import { createManualsWatcher } from "@renderer/util/addApps";
 import { createGamesWatcher } from "@renderer/util/games";
+import { XMLParser } from "fast-xml-parser";
 
 // @TODO - watchable platforms should be defined in seperate file to be easily adjustable, ideally in the json cfg file
 const watchablePlatforms = ["MS-DOS"];
@@ -92,17 +88,8 @@ async function loadPlatform(platform: string, platformsPath: string) {
                 encoding: "utf-8",
             });
 
-            const data: any | undefined = fastXmlParser.parse(
-                content.toString(),
-                {
-                    ignoreAttributes: true,
-                    ignoreNameSpace: true,
-                    parseNodeValue: true,
-                    parseAttributeValue: false,
-                    parseTrueNumberOnly: true,
-                    // @TODO Look into which settings are most appropriate
-                }
-            );
+            const parser = new XMLParser();
+            const data: any | undefined = parser.parse(content.toString());
 
             if (!formatPlatformFileData(data)) {
                 throw new Error(`Failed to parse XML file: ${platformFile}`);

@@ -2,8 +2,8 @@ import * as fs from "fs";
 import { GamePlaylistContent, GamePlaylistEntry } from "@shared/interfaces";
 import { Coerce } from "@shared/utils/Coerce";
 import { IObjectParserProp, ObjectParser } from "@shared/utils/ObjectParser";
-import * as fastXmlParser from "fast-xml-parser";
 import { getDefaultGameFilter } from "@renderer/util/search";
+import { XMLParser } from "fast-xml-parser";
 
 const { str } = Coerce;
 
@@ -24,15 +24,8 @@ export namespace PlaylistFile {
                 } else {
                     let parsed: any;
                     try {
-                        //  parsed = JSON.parse(data.toString());
-                        parsed = fastXmlParser.parse(data.toString(), {
-                            ignoreAttributes: true,
-                            ignoreNameSpace: true,
-                            parseNodeValue: true,
-                            parseAttributeValue: false,
-                            parseTrueNumberOnly: true,
-                            // @TODO Look into which settings are most appropriate
-                        });
+                        const parser = new XMLParser();
+                        parsed = parser.parse(data.toString());
                     } catch {
                         parsed = {};
                     }
@@ -82,9 +75,9 @@ export namespace PlaylistFile {
                 return {
                     key: filter.FieldKey,
                     value: filter.Value,
-                    comparisonKey: filter.ComparisonTypeKey
-                }
-            })
+                    comparisonKey: filter.ComparisonTypeKey,
+                };
+            }),
         };
 
         const parser = new ObjectParser({
@@ -109,11 +102,11 @@ export namespace PlaylistFile {
             }
 
             switch (filter.key.toLowerCase()) {
-                case 'series': {
+                case "series": {
                     playlist.filter.whitelist.series.push(filter.value);
                     break;
                 }
-                case 'platform': {
+                case "platform": {
                     playlist.filter.exactWhitelist.platform.push(filter.value);
                     break;
                 }

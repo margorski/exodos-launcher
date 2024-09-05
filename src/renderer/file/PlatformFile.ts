@@ -1,5 +1,5 @@
+import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
-import * as fastXmlParser from "fast-xml-parser";
 
 export interface MediaFolder {
     type: string;
@@ -25,13 +25,8 @@ export function readPlatformsFile(filePath: string): Promise<PlatformsFile> {
             } else {
                 let parsed: any;
                 try {
-                    parsed = fastXmlParser.parse(data.toString(), {
-                        ignoreAttributes: true,
-                        ignoreNameSpace: true,
-                        parseNodeValue: true,
-                        parseAttributeValue: false,
-                        parseTrueNumberOnly: true,
-                    });
+                    const parser = new XMLParser();
+                    parsed = parser.parse(data.toString());
                 } catch {
                     parsed = {};
                 }
