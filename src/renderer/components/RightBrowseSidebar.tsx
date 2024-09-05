@@ -317,7 +317,9 @@ export class RightBrowseSidebar extends React.Component<
                                 <RightBrowseSidebarAddApp
                                     key={addApp.id}
                                     addApp={addApp}
-                                    onLaunch={this.onAddAppLaunch.bind(this)}
+                                    onLaunch={this.props.onAddAppLaunch.bind(
+                                        this
+                                    )}
                                 />
                             ))}
                         </div>
@@ -375,36 +377,6 @@ export class RightBrowseSidebar extends React.Component<
             openContextMenu(template);
         }
     };
-
-    onAddAppLaunch(addApp: IAdditionalApplicationInfo): void {
-        const isHtml =
-            addApp.applicationPath.toLocaleLowerCase().endsWith(".html") ||
-            addApp.applicationPath.toLocaleLowerCase().endsWith(".htm");
-        if (isHtml) {
-            let url = `${getFileServerURL()}/${addApp.applicationPath.replace(
-                "\\",
-                "/"
-            )}`;
-            console.log(
-                `Got HTML additional application, running in new browser window. ${url}`
-            );
-            let win = new BrowserWindow({
-                show: false,
-                title: addApp.name,
-                resizable: false,
-                width: 1100,
-                height: 962,
-            });
-            win.setMenuBarVisibility(false);
-            win.loadURL(url);
-            win.once("ready-to-show", () => {
-                win.show();
-                win.focus();
-            });
-        } else {
-            this.props.onAddAppLaunch(addApp);
-        }
-    }
 
     onPreviewMedia = (media: FormattedGameMedia): void => {
         this.setState({ previewMedia: media });
