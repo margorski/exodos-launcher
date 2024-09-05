@@ -119,11 +119,23 @@ export async function loadPlatformImages(
                     const title = s.filename.slice(0, lastIdx);
                     if (!collection[dir.name][title]) {
                         collection[dir.name][title] = [
-                            path.relative(platformImagesPath, path.join(path.dirname(s.path), encodeURIComponent(s.filename))),
+                            path.relative(
+                                platformImagesPath,
+                                path.join(
+                                    path.dirname(s.path),
+                                    encodeURIComponent(s.filename)
+                                )
+                            ),
                         ];
                     } else {
                         collection[dir.name][title].push(
-                            path.relative(platformImagesPath, path.join(path.dirname(s.path), encodeURIComponent(s.filename))),
+                            path.relative(
+                                platformImagesPath,
+                                path.join(
+                                    path.dirname(s.path),
+                                    encodeURIComponent(s.filename)
+                                )
+                            )
                         );
                     }
                 }
@@ -177,10 +189,15 @@ export function createVideosWatcher(platform: string): chokidar.FSWatcher {
                     );
                     const updatedGame = deepCopy(game);
                     updatedGame.media.video = relativePath;
-                    store.dispatch(
-                        updateGame({
-                            game: updatedGame,
-                        })
+                    // HACK: Sometimes extraction of the video is not finished but the view was refreshed and the video doesn't start. Added delay.
+                    setTimeout(
+                        () =>
+                            store.dispatch(
+                                updateGame({
+                                    game: updatedGame,
+                                })
+                            ),
+                        2000
                     );
                 }
             }
