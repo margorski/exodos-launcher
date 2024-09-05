@@ -1,0 +1,58 @@
+{
+    "defaultMapping": {
+        "extensions": [],
+        "command": "xdg-open",
+        "includeFilename": true,
+        "includeArgs": true
+    },
+    "commandsMapping": [
+        {
+            "extensions": ["avi", "flac", "mp3", "mp4", "wav"],
+            "command": "flatpak run com.retro_exo.mpv --force-window",
+            "includeFilename": true,
+            "includeArgs": false
+        },
+        {
+            "extensions": ["bmp", "gif", "jfif", "jpeg", "jpg", "pdf", "png"],
+            "command": "flatpak run com.retro_exo.okular",
+            "includeFilename": true,
+            "includeArgs": false
+        },
+        {
+            "extensions": ["cbr"],
+            "command": "flatpak run com.retro_exo.mcomix",
+            "includeFilename": true,
+            "includeArgs": false
+        },
+        {
+            "extensions": ["doc", "docx", "rtf", "txt"],
+            "command": "flatpak run com.retro_exo.abiword",
+            "includeFilename": true,
+            "includeArgs": false
+        },
+        {
+            "extensions": ["exe"],
+            "command": "flatpak run com.retro_exo.wine",
+            "includeFilename": true,
+            "includeArgs": true
+        },
+        {
+            "extensions": ["command"],
+            "command": "",
+            "includeFilename": true,
+            "includeArgs": true
+        },
+        {
+            "extensions": ["htm", "html"],
+            "command": "flatpak run com.retro_exo.falkon -i",
+            "includeFilename": true,
+            "includeArgs": false
+        },
+        {
+            "extensions": ["xls", "xlsx", "ods"],
+            "command": "flatpak run com.retro_exo.gnumeric",
+            "includeFilename": true,
+            "includeArgs": false
+        }
+    ]
+}

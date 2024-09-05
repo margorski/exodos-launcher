@@ -69,6 +69,8 @@ import { IMainWindowExternal } from "@shared/interfaces";
 
     config: createErrorProxy("config"),
 
+    commandMappings: createErrorProxy("commandMappings"),
+
     log: {
         entries: [],
         offset: 0,
@@ -138,6 +140,8 @@ const onInit = (async () => {
                                     response.data.config.jsonFolderPath
                                 ),
                             };
+                            window.External.commandMappings =
+                                response.data.commandMappings;
                             window.External.fileServerPort =
                                 response.data.fileServerPort;
                             window.External.log.entries = response.data.log;

@@ -176,6 +176,7 @@ function getCopyFiles() {
         "./lang",
         "./licenses",
         "./.installed",
+        "./mappings.json",
         {
             from: "./LICENSE",
             to: "./licenses/LICENSE",

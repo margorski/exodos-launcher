@@ -6,7 +6,7 @@ import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import * as fs from "fs";
 import * as path from "path";
 import { getGameByTitle } from "./games";
-import { ALLOWED_EXTENSIONS } from "@back/game/CommandTransformer";
+import { getAllowedExtensionsForMappings } from "@shared/mappings/CommandMapping";
 
 // @TODO Move it to seperate module to make it easier to extend (it would be best to have it in json)
 const ADD_APPS_DIRECTORIES = ["Extras", "Magazines"];
@@ -31,6 +31,9 @@ export function loadDynamicAddAppsForGame(
 
 function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
     try {
+        const allowedExtensions = getAllowedExtensionsForMappings(
+            window.External.commandMappings
+        );
         const addApps: IAdditionalApplicationInfo[] = [];
         const { rootFolder } = game;
 
@@ -42,23 +45,17 @@ function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
             window.External.config.fullExodosPath,
             relativePathForAddApps
         );
-        // console.debug(
-        //     `Searching for extras in the ${absolutePathForAddApps} for game ${game.title}`
-        // );
 
         const files = fs.readdirSync(absolutePathForAddApps, {
             withFileTypes: true,
         });
 
-        // @TODO Change blacklist for the whitelist
-        for (const file of files.filter(
-            (f) =>
-                f.isFile() &&
-                ALLOWED_EXTENSIONS.includes(f.name.split(".")?.[1] ?? "")
-        )) {
+        for (const file of files.filter((f) => {
+            const extension = f.name.split(".")?.[1]?.toLowerCase() ?? "";
+            return extension && f.isFile() && allowedExtensions.has(extension);
+        })) {
             const filepath = path.join(relativePathForAddApps, file.name);
             const addApp = createAddApp(game, filepath);
-            // console.debug(`Found ${addApp.applicationPath} extras`);
             addApps.push(addApp);
         }
         return addApps;

@@ -5,6 +5,7 @@ import { GamePlaylist, ExecMapping } from "../interfaces";
 import { ILogEntry, ILogPreEntry } from "../Log/interface";
 import { IAppPreferencesData } from "../preferences/interfaces";
 import { Theme } from "../ThemeFile";
+import { IAppCommandsMappingData } from "@shared/mappings/interfaces";
 
 export enum BackIn {
     GENERIC_RESPONSE,
@@ -107,6 +108,7 @@ export type GetMainInitDataResponse = {
 export type GetRendererInitDataResponse = {
     config: IAppConfigData;
     preferences: IAppPreferencesData;
+    commandMappings: IAppCommandsMappingData;
     fileServerPort: number;
     log: ILogEntry[];
     themes: Theme[];

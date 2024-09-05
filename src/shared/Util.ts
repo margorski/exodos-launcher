@@ -499,7 +499,7 @@ export function canReadWrite(folder: string): Promise<boolean> {
 }
 
 export function escapeShell(cmd: string) {
-    return cmd.replace(/(["\s'$!()`\\])/g, "\\$1");
+    return cmd.replace(/(["\s'$!()&`\\])/g, "\\$1");
 }
 
 export function removeLowestDirectory(filePath: string, popCount = 1): string {

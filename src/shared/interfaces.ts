@@ -3,6 +3,7 @@ import { SharedSocket } from "./back/SharedSocket";
 import { IAppConfigData } from "./config/interfaces";
 import { ILogEntry } from "./Log/interface";
 import { IAppPreferencesData } from "./preferences/interfaces";
+import { IAppCommandsMappingData } from "./mappings/interfaces";
 import { Theme } from "./ThemeFile";
 
 /** Recursively set all properties as optional. */
@@ -56,6 +57,8 @@ export interface IMainWindowExternal {
         /** Full path of the JSON folder. */
         fullJsonFolderPath: string;
     };
+
+    commandMappings: IAppCommandsMappingData;
 
     /** Log entries fetched from the back process. */
     log: {
@@ -197,17 +200,17 @@ export type ExodosBackendInfo = {
 };
 
 export interface FieldFilter {
-    generic: Array<string>,
-    id: Array<string>
-    title: Array<string>,
-    series: Array<string>,
-    developer: Array<string>,
-    publisher: Array<string>,
-    platform: Array<string>,
-    genre: Array<string>,
-    playMode: Array<string>,
-    region: Array<string>,
-    rating: Array<string>,
+    generic: Array<string>;
+    id: Array<string>;
+    title: Array<string>;
+    series: Array<string>;
+    developer: Array<string>;
+    publisher: Array<string>;
+    platform: Array<string>;
+    genre: Array<string>;
+    playMode: Array<string>;
+    region: Array<string>;
+    rating: Array<string>;
 }
 
 export interface CompareFilter {
@@ -221,29 +224,30 @@ export interface BooleanFilter {
 }
 
 export type GameFilter = {
-    subfilters: Array<GameFilter>,
-    whitelist: FieldFilter,
-    blacklist: FieldFilter,
-    exactWhitelist: FieldFilter,
-    exactBlacklist: FieldFilter,
-    lessThan: CompareFilter,
-    equalTo: CompareFilter,
-    greaterThan: CompareFilter,
-    booleans: BooleanFilter,
-    matchAny: boolean,
-}
+    subfilters: Array<GameFilter>;
+    whitelist: FieldFilter;
+    blacklist: FieldFilter;
+    exactWhitelist: FieldFilter;
+    exactBlacklist: FieldFilter;
+    lessThan: CompareFilter;
+    equalTo: CompareFilter;
+    greaterThan: CompareFilter;
+    booleans: BooleanFilter;
+    matchAny: boolean;
+};
 
 export type GameSearch = {
-    filter: GameFilter,
-    order: GameSearchOrder,
-}
+    filter: GameFilter;
+    order: GameSearchOrder;
+};
 
 export enum GameSearchDirection {
     ASC,
     DESC,
 }
 
-export type GameSearchSortable = "title"
+export type GameSearchSortable =
+    | "title"
     | "dateAdded"
     | "genre"
     | "platform"
@@ -253,6 +257,6 @@ export type GameSearchSortable = "title"
     | "releaseYear";
 
 export type GameSearchOrder = {
-    column: GameSearchSortable,
-    direction: GameSearchDirection,
-}
+    column: GameSearchSortable;
+    direction: GameSearchDirection;
+};

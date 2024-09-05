@@ -113,7 +113,6 @@ export async function loadPlatformImages(
             const folderPath = path.join(platformImagesPath, dir.name);
 
             for (const s of walkSync(folderPath)) {
-                console.log(s.path);
                 const lastIdx = s.filename.lastIndexOf("-0");
                 if (lastIdx > -1) {
                     const title = s.filename.slice(0, lastIdx);

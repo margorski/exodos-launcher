@@ -4,15 +4,7 @@ import {
     BackInit,
     BackInitArgs,
     BackOut,
-    BrowseViewIndexData,
-    BrowseViewIndexResponseData,
-    BrowseViewPageData,
-    BrowseViewPageResponseData,
-    GetAllGamesResponseData,
     GetExecData,
-    GetGameData,
-    GetGameResponseData,
-    GetGamesTotalResponseData,
     GetMainInitDataResponse,
     GetPlaylistResponse,
     GetRendererInitDataResponse,
@@ -24,10 +16,6 @@ import {
     OpenDialogResponseData,
     OpenExternalData,
     OpenExternalResponseData,
-    QuickSearchData,
-    QuickSearchResponseData,
-    RandomGamesData,
-    RandomGamesResponseData,
     SetLocaleData,
     UpdateConfigData,
     WrappedRequest,
@@ -39,8 +27,6 @@ import { overwriteConfigData } from "@shared/config/util";
 import { IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylist } from "@shared/interfaces";
 import { ILogEntry, ILogPreEntry } from "@shared/Log/interface";
-import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
-import { IImageInfo } from "@shared/platform/interfaces";
 import { PreferencesFile } from "@shared/preferences/PreferencesFile";
 import {
     defaultPreferencesData,
@@ -51,9 +37,9 @@ import {
     deepCopy,
     isErrorProxy,
     fixSlashes,
+    readJsonFile,
 } from "@shared/Util";
 import { Coerce } from "@shared/utils/Coerce";
-import { createHash } from "crypto";
 import { MessageBoxOptions, OpenExternalOptions } from "electron";
 import * as http from "http";
 import * as path from "path";
@@ -63,11 +49,11 @@ import { EventEmitter } from "events";
 import { ConfigFile } from "./config/ConfigFile";
 import { loadExecMappingsFile } from "./Execs";
 import { GameLauncher } from "./game/GameLauncher";
-import { BackQuery, BackState } from "./types";
+import { BackState } from "./types";
 import { difObjects } from "./util/misc";
 import { FileServer } from "./backend/fileServer";
 import { PlaylistManager } from "./playlist/PlaylistManager";
-import app from "@renderer/app";
+import { DefaultCommandMapping } from "@shared/mappings/interfaces";
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
 const send: Required<typeof process.send> = process.send
@@ -101,10 +87,15 @@ const state: BackState = {
     themeFiles: [],
     execMappings: [],
     queries: {},
+    commandMappings: {
+        defaultMapping: DefaultCommandMapping,
+        commandsMapping: [],
+    },
 };
 
 const preferencesFilename = "preferences.json";
 const configFilename = "config.json";
+const commandMappingsFilename = "mappings.json";
 
 process.on("message", initialize);
 process.on("disconnect", () => {
@@ -130,8 +121,24 @@ async function initialize(message: any, _: any): Promise<void> {
     state.config = await ConfigFile.readOrCreateFile(
         path.join(state.configFolder, configFilename)
     );
+    try {
+        state.commandMappings = await readJsonFile(
+            path.join(state.configFolder, commandMappingsFilename)
+        );
+    } catch (e) {
+        console.error(
+            `Cannot load mappings file. ${e}. Check if file exists and have valid values. Without that file most of the entries won't work.`
+        );
+    }
+
+    await ConfigFile.readOrCreateFile(
+        path.join(state.configFolder, configFilename)
+    );
     if (!path.isAbsolute(state.config.exodosPath)) {
-        state.config.exodosPath = path.join(state.basePath, state.config.exodosPath);
+        state.config.exodosPath = path.join(
+            state.basePath,
+            state.config.exodosPath
+        );
     }
     console.log("Exodos path: " + state.config.exodosPath);
 
@@ -355,6 +362,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     data: {
                         preferences: state.preferences,
                         config: state.config,
+                        commandMappings: state.commandMappings,
                         fileServerPort: state.fileServer?.port ?? -1,
                         log: state.logs,
                         themes: state.themeFiles.map((theme) => ({
@@ -435,6 +443,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                                     (p) => p === game.platform
                                 )) ||
                             false,
+                        mappings: state.commandMappings,
                         execMappings: state.execMappings,
                         log: log,
                         openDialog: openDialog(event.target),
@@ -460,7 +469,12 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                         reqData.path
                     )
                 );
-                GameLauncher.launchCommand(appPath, "", log);
+                GameLauncher.launchCommand(
+                    appPath,
+                    "",
+                    state.commandMappings,
+                    log
+                );
                 respond(event.target, {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
@@ -483,6 +497,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                             (p) => p === game.platform
                         ),
                         execMappings: state.execMappings,
+                        mappings: state.commandMappings,
                         log,
                         openDialog: openDialog(event.target),
                         openExternal: openExternal(event.target),
@@ -510,6 +525,7 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                         native: state.config.nativePlatforms.some(
                             (p) => p === game.platform
                         ),
+                        mappings: state.commandMappings,
                         execMappings: state.execMappings,
                         log,
                         openDialog: openDialog(event.target),
@@ -638,7 +654,7 @@ export function onGameUpdated(game: IGameInfo): void {
         const res: WrappedResponse<IGameInfo> = {
             id: "",
             type: BackOut.GAME_CHANGE,
-            data: game
+            data: game,
         };
         const message = JSON.stringify(res);
         state.server.clients.forEach((socket) => {

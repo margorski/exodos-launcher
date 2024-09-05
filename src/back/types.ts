@@ -11,6 +11,7 @@ import { IAppPreferencesData } from "@shared/preferences/interfaces";
 import { Theme } from "@shared/ThemeFile";
 import { FileServer } from "./backend/fileServer";
 import { PlaylistManager } from "./playlist/PlaylistManager";
+import { IAppCommandsMappingData } from "@shared/mappings/interfaces";
 
 export type BackState = {
     isInitialized: boolean;
@@ -34,6 +35,7 @@ export type BackState = {
     logs: ILogEntry[];
     themeFiles: ThemeListItem[];
     execMappings: ExecMapping[];
+    commandMappings: IAppCommandsMappingData;
 };
 
 export type BackQueryCache = {

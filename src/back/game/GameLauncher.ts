@@ -1,6 +1,8 @@
 import { LogFunc, OpenDialogFunc, OpenExternalFunc } from "@back/types";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { ExecMapping } from "@shared/interfaces";
+import { createCommand } from "@shared/mappings/CommandMapping";
+import { IAppCommandsMappingData } from "@shared/mappings/interfaces";
 import {
     fixSlashes,
     getFilename,
@@ -10,7 +12,6 @@ import {
 import { ChildProcess, exec } from "child_process";
 import { EventEmitter } from "events";
 import * as path from "path";
-import { createCommand } from "./command";
 
 export type LaunchAddAppOpts = LaunchBaseOpts & {
     addApp: IAdditionalApplicationInfo;
@@ -26,6 +27,7 @@ export type LaunchGameOpts = LaunchBaseOpts & {
 type LaunchBaseOpts = {
     fpPath: string;
     execMappings: ExecMapping[];
+    mappings: IAppCommandsMappingData;
     log: LogFunc;
     openDialog: OpenDialogFunc;
     openExternal: OpenExternalFunc;
@@ -39,9 +41,10 @@ export namespace GameLauncher {
     export function launchCommand(
         appPath: string,
         appArgs: string,
+        mappings: IAppCommandsMappingData,
         log: LogFunc
     ): Promise<void> {
-        const command = createCommand(appPath, appArgs);
+        const command = createCommand(appPath, appArgs, mappings);
         const proc = exec(command);
         logProcessOutput(proc, log);
         log({
@@ -111,7 +114,7 @@ export namespace GameLauncher {
                     )
                 );
                 const appArgs: string = opts.addApp.launchCommand;
-                return launchCommand(appPath, appArgs, opts.log);
+                return launchCommand(appPath, appArgs, opts.mappings, opts.log);
         }
     }
 
@@ -130,6 +133,7 @@ export namespace GameLauncher {
                 fpPath: opts.fpPath,
                 native: opts.native,
                 execMappings: opts.execMappings,
+                mappings: opts.mappings,
                 log: opts.log,
                 openDialog: opts.openDialog,
                 openExternal: opts.openExternal,
@@ -162,7 +166,7 @@ export namespace GameLauncher {
 
         let command: string;
         try {
-            command = createCommand(gamePath, gameArgs);
+            command = createCommand(gamePath, gameArgs, opts.mappings);
         } catch (e) {
             opts.log({
                 source: logSource,
@@ -202,7 +206,11 @@ export namespace GameLauncher {
         );
 
         const gameArgs: string = opts.game.launchCommand;
-        const command: string = createCommand(gamePath, gameArgs);
+        const command: string = createCommand(
+            gamePath,
+            gameArgs,
+            opts.mappings
+        );
 
         proc = exec(command);
         logProcessOutput(proc, opts.log);
