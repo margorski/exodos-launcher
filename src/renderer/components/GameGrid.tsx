@@ -33,8 +33,6 @@ export type GameGridProps = {
     onGameLaunch: (gameId: string) => void;
     /** All games that will be shown in the grid (filter it before passing it here). */
     games?: IGameInfo[];
-    /** Array of installed games */
-    installedGameIds: Array<string>;
     /** Total number of games there are. */
     gamesTotal: number;
     /** Currently selected game (if any). */
@@ -213,7 +211,7 @@ export class GameGrid extends React.Component<GameGridProps> {
                 isDraggable={true}
                 isSelected={game.id === selectedGame?.id}
                 isDragged={game.id === draggedGameId}
-                isInstalled={this.props.installedGameIds.includes(game.id)}
+                isInstalled={game.installed}
             />
         ) : (
             <div key={props.key} style={props.style} />
@@ -264,7 +262,7 @@ export class GameGrid extends React.Component<GameGridProps> {
         gameId: string | undefined
     ): void => {
         if (this.props.games) {
-            const game = this.props.games.find(g => g.id === gameId);
+            const game = this.props.games.find((g) => g.id === gameId);
             if (game) {
                 this.props.onGameSelect(game);
             }

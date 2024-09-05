@@ -1473,11 +1473,8 @@ body {
   border: 1px solid;
 }
 
-.game-grid-item__thumb__image--installed {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  border-color: #56565c !important;
+.game-grid-item__thumb--installed {
+  outline: 1px solid #888;
 }
 
 .game-grid-item__thumb__icons {
@@ -1512,6 +1509,10 @@ body {
   /* Pimp */
   font-weight: bold;
   user-select: none;
+}
+
+.game-grid-item__title__text--installed {
+  color: #EEE !important;
 }
 /* GameGrid NoGames */
 .game-grid__no-games {

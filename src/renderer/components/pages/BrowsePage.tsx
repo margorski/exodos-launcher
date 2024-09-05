@@ -1,7 +1,7 @@
 import * as React from "react";
 import { BackIn, LaunchGameData } from "@shared/back/types";
 import { BrowsePageLayout } from "@shared/BrowsePageLayout";
-import { throttle } from '@shared/utils/throttle';
+import { throttle } from "@shared/utils/throttle";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylist, GamePlaylistEntry } from "@shared/interfaces";
 import { memoizeOne } from "@shared/memoize";
@@ -184,10 +184,6 @@ class BrowsePage extends React.Component<
                 >
                     <SearchBar view={this.props.gameLibrary} />
                     {(() => {
-                        const installedGameIds =
-                            this.props.playlists.length > 0
-                                ? this.props.playlists[0].games.map((g) => g.id)
-                                : [];
                         if (this.props.gameLayout === BrowsePageLayout.grid) {
                             // (These are kind of "magic numbers" and the CSS styles are designed to fit with them)
                             const height: number = calcScale(
@@ -198,7 +194,6 @@ class BrowsePage extends React.Component<
                             return (
                                 <GameGrid
                                     games={view?.games}
-                                    installedGameIds={installedGameIds}
                                     gamesTotal={view?.games.length}
                                     selectedGame={view?.selectedGame}
                                     draggedGameId={draggedGameId}
@@ -220,7 +215,6 @@ class BrowsePage extends React.Component<
                             return (
                                 <GameList
                                     games={view?.games}
-                                    installedGameIds={installedGameIds}
                                     gamesTotal={view?.games.length}
                                     selectedGame={view?.selectedGame}
                                     draggedGameId={draggedGameId}

@@ -5,7 +5,6 @@ import {
     List,
     ListRowProps,
     ScrollIndices,
-    ScrollParams,
 } from "react-virtualized";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { GAMES } from "../interfaces";
@@ -23,8 +22,6 @@ const BACK_OVERSCAN = 100;
 export type GameListProps = {
     /** All games that will be shown in the list. */
     games?: IGameInfo[];
-    /** Array of installed games */
-    installedGameIds: Array<string>;
     /** Total number of games there are. */
     gamesTotal: number;
     /** Currently selected game (if any). */
@@ -95,7 +92,7 @@ export class GameList extends React.Component<GameListProps> {
                             if (this.props.selectedGame) {
                                 scrollToIndex = findGameIndex(
                                     games,
-                                    this.props.selectedGame.id,
+                                    this.props.selectedGame.id
                                 );
                             }
                             return (
@@ -107,10 +104,7 @@ export class GameList extends React.Component<GameListProps> {
                                     rowCount={this.props.gamesTotal}
                                     scrollToRow={scrollToIndex}
                                 >
-                                    {({
-                                        onSectionRendered,
-                                        scrollToRow,
-                                    }) => (
+                                    {({ onSectionRendered, scrollToRow }) => (
                                         <List
                                             className="game-list simple-scroll"
                                             width={width}
@@ -150,7 +144,7 @@ export class GameList extends React.Component<GameListProps> {
         const { draggedGameId, games, selectedGame } = this.props;
         if (!games) {
             throw new Error(
-                "Trying to render a row in game list, but no games are found?",
+                "Trying to render a row in game list, but no games are found?"
             );
         }
         const game = games[props.index];
@@ -165,12 +159,12 @@ export class GameList extends React.Component<GameListProps> {
                 developer={game.developer}
                 publisher={game.publisher}
                 releaseYear={this.getPrintableYearFromDateString(
-                    game.releaseYear,
+                    game.releaseYear
                 )}
                 isDraggable={true}
                 isSelected={game.id === selectedGame?.id}
                 isDragged={game.id === draggedGameId}
-                isInstalled={this.props.installedGameIds.includes(game.id)}
+                isInstalled={game.installed}
             />
         ) : (
             <div key={props.key} style={props.style} />
@@ -192,12 +186,9 @@ export class GameList extends React.Component<GameListProps> {
     };
 
     /** When a row is clicked. */
-    onGameSelect = (
-        _: React.MouseEvent,
-        gameId: string | undefined,
-    ): void => {
+    onGameSelect = (_: React.MouseEvent, gameId: string | undefined): void => {
         if (this.props.games) {
-            const game = this.props.games.find(g => g.id === gameId);
+            const game = this.props.games.find((g) => g.id === gameId);
             if (game) {
                 this.props.onGameSelect(game);
             }
@@ -212,7 +203,7 @@ export class GameList extends React.Component<GameListProps> {
     /** When a row is right clicked. */
     onGameContextMenu = (
         _: React.MouseEvent<HTMLDivElement>,
-        gameId: string,
+        gameId: string
     ): void => {
         if (this.props.onContextMenu) this.props.onContextMenu(gameId);
     };
@@ -247,7 +238,7 @@ export class GameList extends React.Component<GameListProps> {
         const game = findElementAncestor(
             element as Element,
             (target) => GameListItem.isElement(target),
-            true,
+            true
         );
         if (game) {
             return GameListItem.getId(game);
@@ -266,7 +257,7 @@ export class GameList extends React.Component<GameListProps> {
 
 function findGameIndex(
     games: GAMES | undefined,
-    gameId: string | undefined,
+    gameId: string | undefined
 ): number {
     if (gameId !== undefined && games) {
         for (let index in games) {

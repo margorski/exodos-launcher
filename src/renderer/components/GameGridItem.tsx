@@ -1,4 +1,3 @@
-import { isInstalled } from "@main/Util";
 import { getFileServerURL } from "@shared/Util";
 import * as React from "react";
 import { GridCellProps } from "react-virtualized";
@@ -36,7 +35,7 @@ export function GameGridItem(props: GameGridItemProps) {
     // Get the platform icon path
     const platformIcon = React.useMemo(
         () => getPlatformIconURL(platform),
-        [platform],
+        [platform]
     );
     // Pick class names
     const className = React.useMemo(() => {
@@ -47,8 +46,10 @@ export function GameGridItem(props: GameGridItemProps) {
         if (isDragged) {
             className += " game-grid-item--dragged";
         }
+
         return className;
     }, [isSelected, isDragged]);
+
     // Memoize render
     return React.useMemo(() => {
         // Set element attributes
@@ -65,9 +66,6 @@ export function GameGridItem(props: GameGridItemProps) {
             thumbnailStyle.WebkitFilter = "grayscale(100%)";
             thumbnailStyle.opacity = "0.1";
         }
-        if (isInstalled) {
-            thumbnailStyle.borderColor = "#56565c !important";
-        }
 
         return (
             <li
@@ -78,7 +76,11 @@ export function GameGridItem(props: GameGridItemProps) {
             >
                 <div className="game-grid-item__thumb">
                     <div
-                        className="game-grid-item__thumb__image"
+                        className={`game-grid-item__thumb__image ${
+                            isInstalled
+                                ? `game-grid-item__thumb--installed`
+                                : ""
+                        }`}
                         style={thumbnailStyle}
                     >
                         <div className="game-grid-item__thumb__icons">
@@ -94,7 +96,15 @@ export function GameGridItem(props: GameGridItemProps) {
                     </div>
                 </div>
                 <div className="game-grid-item__title" title={title}>
-                    <p className="game-grid-item__title__text">{title}</p>
+                    <p
+                        className={`game-grid-item__title__text ${
+                            isInstalled
+                                ? "game-grid-item__title__text--installed"
+                                : ""
+                        }`}
+                    >
+                        {title}
+                    </p>
                 </div>
             </li>
         );
@@ -114,7 +124,7 @@ export namespace GameGridItem {
         const value = element.getAttribute(GameGridItem.idAttribute);
         if (typeof value !== "string") {
             throw new Error(
-                "Failed to get ID from GameGridItem element. Attribute not found.",
+                "Failed to get ID from GameGridItem element. Attribute not found."
             );
         }
         return value;
