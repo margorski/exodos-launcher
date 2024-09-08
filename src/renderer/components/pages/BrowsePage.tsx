@@ -9,11 +9,14 @@ import { updatePreferencesData } from "@shared/preferences/util";
 import { formatString } from "@shared/utils/StringFormatter";
 import { ConnectedLeftBrowseSidebar } from "../../containers/ConnectedLeftBrowseSidebar";
 import { ConnectedRightBrowseSidebar } from "../../containers/ConnectedRightBrowseSidebar";
+import * as path from 'path';
+import * as fs from 'fs';
+import * as remote from '@electron/remote';
 import {
     WithPreferencesProps,
     withPreferences,
 } from "../../containers/withPreferences";
-import { gameScaleSpan } from "../../Util";
+import { gameScaleSpan, openContextMenu } from "../../Util";
 import { GameGrid } from "../GameGrid";
 import { GameList } from "../GameList";
 import { GameOrderChangeEvent } from "../GameOrder";
@@ -28,6 +31,8 @@ import {
     selectPlaylist,
 } from "@renderer/redux/searchSlice";
 import { SearchBar } from "../SearchBar";
+import { MenuItemConstructorOptions } from "electron";
+import { fixSlashes } from "@shared/Util";
 
 export type BrowsePageProps = {
     playlists: GamePlaylist[];
@@ -134,6 +139,29 @@ class BrowsePage extends React.Component<
         }
     }
 
+    createGameContextMenu(game: IGameInfo) {
+        const contextButtons: MenuItemConstructorOptions[] = [
+            {
+                label: 'Open Config Folder',
+                enabled: true,
+                click: () => {
+                    const gameConfigPath = path.dirname(path.join(window.External.config.fullExodosPath, fixSlashes(game.applicationPath)));
+                    const configPathExists = fs.existsSync(gameConfigPath);
+
+                    if (!configPathExists) {
+                        alert("Failed to find game config folder on disk?");
+                        return;
+                    }
+
+                    console.log(gameConfigPath);
+                    remote.shell.openPath(gameConfigPath);
+                }
+            }
+        ];
+
+        openContextMenu(contextButtons);
+    }
+
     render() {
         const { searchState, gameLibrary } = this.props;
         const { draggedGameId } = this.state;
@@ -200,6 +228,7 @@ class BrowsePage extends React.Component<
                                     noRowsRenderer={this.noRowsRendererMemo()}
                                     onGameSelect={this.onGameSelect}
                                     onGameLaunch={this.onGameLaunch}
+                                    onContextMenu={this.createGameContextMenu}
                                     orderBy={order.orderBy}
                                     orderReverse={order.orderReverse}
                                     cellWidth={width}
@@ -221,6 +250,7 @@ class BrowsePage extends React.Component<
                                     noRowsRenderer={this.noRowsRendererMemo()}
                                     onGameSelect={this.onGameSelect}
                                     onGameLaunch={this.onGameLaunch}
+                                    onContextMenu={this.createGameContextMenu}
                                     orderBy={order.orderBy}
                                     orderReverse={order.orderReverse}
                                     rowHeight={height}

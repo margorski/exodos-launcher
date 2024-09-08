@@ -1,5 +1,4 @@
 import { BrowserWindow, shell } from "@electron/remote";
-import { openContextMenu } from "@main/Util";
 import { englishTranslation } from "@renderer/lang/en";
 import { fixSlashes, getFileServerURL } from "@shared/Util";
 import { LOGOS, SCREENSHOTS } from "@shared/constants";
@@ -7,7 +6,7 @@ import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylistEntry } from "@shared/interfaces";
 import { MenuItemConstructorOptions } from "electron";
 import * as React from "react";
-import { getGameImagePath } from "../Util";
+import { getGameImagePath, openContextMenu } from "../Util";
 import { WithPreferencesProps } from "../containers/withPreferences";
 import { DropdownInputField } from "./DropdownInputField";
 import { FormattedGameMedia, GameImageCarousel } from "./GameImageCarousel";

@@ -6,6 +6,8 @@ import { htdocsPath } from "@shared/constants";
 import { IGameInfo } from "@shared/game/interfaces";
 import { getFileServerURL } from "@shared/Util";
 import { Paths } from "./Paths";
+import * as remote from '@electron/remote';
+import { Menu, MenuItemConstructorOptions } from "electron";
 
 export const gameIdDataType: string = "text/game-id";
 
@@ -350,4 +352,16 @@ export function isExodosValidCheck(exodosPath: string): Promise<boolean> {
             resolve(!error)
         )
     );
+}
+
+
+/** Open a context menu, built from the specified template. */
+export function openContextMenu(template: MenuItemConstructorOptions[]): Menu {
+    const menu = remote.Menu.buildFromTemplate(template);
+    const window = remote.BrowserWindow.getFocusedWindow();
+    if (!window) {
+        throw Error("Browser window not initialized.");
+    }
+    menu.popup({ window: window });
+    return menu;
 }

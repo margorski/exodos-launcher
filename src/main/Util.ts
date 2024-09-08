@@ -44,14 +44,3 @@ export function getMainFolderPath(): string {
         app.getPath('appData') :
         process.cwd();
 }
-
-/** Open a context menu, built from the specified template. */
-export function openContextMenu(template: MenuItemConstructorOptions[]): Menu {
-    const menu = Menu.buildFromTemplate(template);
-    const window = BrowserWindow.getFocusedWindow();
-    if (!window) {
-        throw Error("Browser window not initialized.");
-    }
-    menu.popup({ window: window });
-    return menu;
-}

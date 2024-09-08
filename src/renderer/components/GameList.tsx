@@ -37,7 +37,7 @@ export type GameListProps = {
     /** Called when the user attempts to launch a game. */
     onGameLaunch: (gameId: string) => void;
     /** Called when the user attempts to open a context menu (at a game). */
-    onContextMenu?: (gameId: string) => void;
+    onContextMenu?: (game: IGameInfo) => void;
     /** Called when the user starts to drag a game. */
     onGameDragStart?: (event: React.DragEvent, gameId: string) => void;
     /** Called when the user stops dragging a game (when they release it). */
@@ -205,7 +205,12 @@ export class GameList extends React.Component<GameListProps> {
         _: React.MouseEvent<HTMLDivElement>,
         gameId: string
     ): void => {
-        if (this.props.onContextMenu) this.props.onContextMenu(gameId);
+        if (this.props.onContextMenu && this.props.games) {
+            const game = this.props.games.find((g) => g.id === gameId);
+            if (game) {
+                this.props.onContextMenu(game);
+            }
+        };
     };
 
     /** When a row is starting to be dragged. */

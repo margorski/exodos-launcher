@@ -48,7 +48,7 @@ export type GameGridProps = {
     /** Called when the user attempts to select a game. */
     onGameSelect: (game?: IGameInfo) => void;
     /** Called when the user attempts to open a context menu (at a game). */
-    onContextMenu?: (gameId: string) => void;
+    onContextMenu?: (game: IGameInfo) => void;
     /** Called when the user starts to drag a game. */
     onGameDragStart?: (event: React.DragEvent, gameId: string) => void;
     /** Called when the user stops dragging a game (when they release it). */
@@ -279,9 +279,10 @@ export class GameGrid extends React.Component<GameGridProps> {
         event: React.MouseEvent<HTMLDivElement>,
         gameId: string | undefined
     ): void => {
-        if (this.props.onContextMenu) {
-            if (gameId) {
-                this.props.onContextMenu(gameId);
+        if (this.props.onContextMenu && this.props.games) {
+            const game = this.props.games.find((g) => g.id === gameId);
+            if (game) {
+                this.props.onContextMenu(game);
             }
         }
     };
