@@ -1,7 +1,10 @@
 import { getFileServerURL } from "@shared/Util";
 import * as React from "react";
 import { BareFloatingContainer } from "./FloatingContainer";
-import { FormattedGameMedia, FormattedGameMediaType } from "./GameImageCarousel";
+import {
+    FormattedGameMedia,
+    FormattedGameMediaType,
+} from "./GameImageCarousel";
 
 export type MediaPreviewProps = {
     /** Media to display. */
@@ -18,7 +21,7 @@ export function MediaPreview(props: MediaPreviewProps) {
         event.preventDefault();
         event.stopPropagation();
         return false;
-    }
+    };
 
     const renderedMedia = () => {
         switch (props.media.type) {
@@ -32,7 +35,8 @@ export function MediaPreview(props: MediaPreviewProps) {
                                 : " image-preview__image--fit")
                         }
                         src={`${getFileServerURL()}/${props.media.path}`}
-                        onClick={onClickImage} />
+                        onClick={onClickImage}
+                    />
                 );
             }
             case FormattedGameMediaType.VIDEO: {
@@ -46,11 +50,12 @@ export function MediaPreview(props: MediaPreviewProps) {
                                 ? " image-preview__image--fill"
                                 : " image-preview__image--fit")
                         }
-                        src={`${getFileServerURL()}/${props.media.path}`}/>
+                        src={`${getFileServerURL()}/${props.media.path}`}
+                    />
                 );
             }
         }
-    }
+    };
 
     const onClickBackground = (event: React.MouseEvent<HTMLDivElement>) => {
         if (props.onCancel) {
@@ -60,22 +65,27 @@ export function MediaPreview(props: MediaPreviewProps) {
 
     return (
         <BareFloatingContainer>
-            <div className="image-preview-container" style={{overflowY: scaleUp ? 'auto' : 'unset'}} onClick={onClickBackground}>
-                <div style={{height: scaleUp ? "auto" : "97%"}}>
-                    <div className={
+            <div
+                className="image-preview-container"
+                style={{ overflowY: scaleUp ? "auto" : "unset" }}
+                onClick={onClickBackground}
+            >
+                <div style={{ height: scaleUp ? "auto" : "97%" }}>
+                    <div
+                        className={
                             "image-preview" +
                             (scaleUp
                                 ? " image-preview--fill"
                                 : " image-preview--fit")
-                        }>
+                        }
+                    >
                         {renderedMedia()}
                     </div>
                 </div>
                 <div className="image-preview-label">
-                    {props.media.name}
+                    {props.media.category}
                 </div>
             </div>
         </BareFloatingContainer>
-
-    )
+    );
 }
