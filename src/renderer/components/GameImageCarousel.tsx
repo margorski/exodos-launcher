@@ -1,6 +1,6 @@
 import { fixSlashes, getFileServerURL } from "@shared/Util";
-import { GameImages, GameMedia, IGameInfo } from "@shared/game/interfaces";
-import { useMemo, useState, useCallback } from "react";
+import { GameMedia } from "@shared/game/interfaces";
+import { useMemo, useState } from "react";
 import React = require("react");
 import { OpenIcon } from "./OpenIcon";
 
@@ -159,32 +159,37 @@ export function GameImageCarousel(props: GameImageCarouselProps) {
             <div className="game-image-carousel-selected">
                 {renderSelected()}
             </div>
-            <div className="game-image-carousel-wheel">
-                {wheelPosition > 0 && (
-                    <div
-                        className="game-image-carousel-wheel-arrow"
-                        onClick={wheelMoveLeft}
-                    >
-                        <OpenIcon icon="arrow-left" />
+            {sortedMedia.length > 1 && (
+                <>
+                    <div className="game-image-carousel-wheel">
+                        {wheelPosition > 0 && (
+                            <div
+                                className="game-image-carousel-wheel-arrow"
+                                onClick={wheelMoveLeft}
+                            >
+                                <OpenIcon icon="arrow-left" />
+                            </div>
+                        )}
+                        <div className="game-image-carousel-wheel-previews">
+                            {imagePreviews}
+                        </div>
+                        {wheelPosition < sortedMedia.length - IMAGE_COUNT && (
+                            <div
+                                className="game-image-carousel-wheel-arrow"
+                                onClick={wheelMoveRight}
+                            >
+                                <OpenIcon icon="arrow-right" />
+                            </div>
+                        )}
                     </div>
-                )}
-                <div className="game-image-carousel-wheel-previews">
-                    {imagePreviews}
-                </div>
-                {wheelPosition < sortedMedia.length - IMAGE_COUNT && (
-                    <div
-                        className="game-image-carousel-wheel-arrow"
-                        onClick={wheelMoveRight}
-                    >
-                        <OpenIcon icon="arrow-right" />
+                    <div className="game-image-carousel-label">
+                        {hoveredIndex === null
+                            ? selectedMedia.category
+                            : sortedMedia[wheelPosition + hoveredIndex]
+                                  .category}
                     </div>
-                )}
-            </div>
-            <div className="game-image-carousel-label">
-                {hoveredIndex === null
-                    ? selectedMedia.category
-                    : sortedMedia[wheelPosition + hoveredIndex].category}
-            </div>
+                </>
+            )}
         </div>
     );
 }
