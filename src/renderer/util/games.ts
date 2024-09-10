@@ -4,6 +4,7 @@ import store from "@renderer/redux/store";
 import { updateGame } from "@renderer/redux/gamesSlice";
 import { IGameCollection } from "@shared/game/interfaces";
 import { fixSlashes, removeLowestDirectory } from "@shared/Util";
+import { updateInstalledField } from "@renderer/file/PlatformFile";
 
 export function createGamesWatcher(platformCollection: IGameCollection) {
     const firstValidGame = platformCollection.games.find((g) => !!g.rootFolder);
@@ -66,6 +67,12 @@ function createWatcher(folder: string): chokidar.FSWatcher {
                         },
                     })
                 );
+                const platformFilePath = path.join(
+                    window.External.config.fullExodosPath,
+                    window.External.config.data.platformFolderPath,
+                    `${game.library}.xml`
+                );
+                updateInstalledField(platformFilePath, game.id, true);
             }
         })
         .on("unlinkDir", (gameDataPath) => {
@@ -80,6 +87,12 @@ function createWatcher(folder: string): chokidar.FSWatcher {
                         },
                     })
                 );
+                const platformFilePath = path.join(
+                    window.External.config.fullExodosPath,
+                    window.External.config.data.platformFolderPath,
+                    `${game.library}.xml`
+                );
+                updateInstalledField(platformFilePath, game.id, false);
             }
         })
         .on("error", (error) => console.log(`Watcher error: ${error}`));
