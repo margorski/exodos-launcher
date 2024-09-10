@@ -1,8 +1,10 @@
 import * as chokidar from "chokidar";
 import * as path from "path";
+import * as remote from "@electron/remote";
+import * as fs from "fs";
 import store from "@renderer/redux/store";
 import { updateGame } from "@renderer/redux/gamesSlice";
-import { IGameCollection } from "@shared/game/interfaces";
+import { IGameCollection, IGameInfo } from "@shared/game/interfaces";
 import { fixSlashes, removeLowestDirectory } from "@shared/Util";
 import { updateInstalledField } from "@renderer/file/PlatformFile";
 
@@ -98,4 +100,20 @@ function createWatcher(folder: string): chokidar.FSWatcher {
         .on("error", (error) => console.log(`Watcher error: ${error}`));
 
     return watcher;
+}
+
+export function openGameConfigDirectory(game: IGameInfo) {
+    const gameConfigPath = path.dirname(
+        path.join(
+            window.External.config.fullExodosPath,
+            fixSlashes(game.applicationPath)
+        )
+    );
+    const configPathExists = fs.existsSync(gameConfigPath);
+
+    if (!configPathExists) {
+        alert("Failed to find game config folder on disk?");
+        return;
+    }
+    remote.shell.openPath(gameConfigPath);
 }

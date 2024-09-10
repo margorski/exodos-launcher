@@ -1,6 +1,6 @@
-import { BrowserWindow, shell } from "@electron/remote";
+import { shell } from "@electron/remote";
 import { englishTranslation } from "@renderer/lang/en";
-import { fixSlashes, getFileServerURL } from "@shared/Util";
+import { fixSlashes } from "@shared/Util";
 import { LOGOS, SCREENSHOTS } from "@shared/constants";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { GamePlaylistEntry } from "@shared/interfaces";
@@ -16,6 +16,9 @@ import { RightBrowseSidebarAddApp } from "./RightBrowseSidebarAddApp";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { loadDynamicAddAppsForGame } from "@renderer/util/addApps";
+import { openGameConfigDirectory } from "@renderer/util/games";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFolder } from "@fortawesome/free-solid-svg-icons";
 
 type OwnProps = {
     /** Currently selected game (if any) */
@@ -156,17 +159,31 @@ export class RightBrowseSidebar extends React.Component<
                                         }
                                     />
                                     {isGame ? (
-                                        <input
-                                            type="button"
-                                            className="simple-button"
-                                            disabled={!currentGame?.installed}
-                                            value={strings.setup}
-                                            onClick={() =>
-                                                this.props.onGameLaunchSetup(
-                                                    game.id
-                                                )
-                                            }
-                                        />
+                                        <>
+                                            <input
+                                                type="button"
+                                                className="simple-button"
+                                                disabled={
+                                                    !currentGame?.installed
+                                                }
+                                                value={strings.setup}
+                                                onClick={() =>
+                                                    this.props.onGameLaunchSetup(
+                                                        game.id
+                                                    )
+                                                }
+                                            />
+                                            <i className="simple-button">
+                                                <FontAwesomeIcon
+                                                    icon={faFolder}
+                                                    onClick={() =>
+                                                        openGameConfigDirectory(
+                                                            game
+                                                        )
+                                                    }
+                                                />
+                                            </i>
+                                        </>
                                     ) : null}
                                 </div>
                             </div>
