@@ -41,7 +41,7 @@ export const createCommand = (
 
 const createSoundtrackCommand = (escFilename: string, args: string) => {
     const foobarDirectory = escFilename.slice(0, -FOOBAR_EXECUTABLE.length);
-    return `cd ${foobarDirectory} && flatpak run com.retro_exo.wine-9-0 ${FOOBAR_EXECUTABLE} ${args}`;
+    return `cd ${foobarDirectory} && flatpak run com.retro_exo.wine ${FOOBAR_EXECUTABLE} ${args}`;
 };
 
 const getCommandMapping = (
