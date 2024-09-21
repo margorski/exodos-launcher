@@ -8,7 +8,6 @@ import {
     BackIn,
     BackInit,
     BackOut,
-    GetGamesTotalResponseData,
     GetPlaylistResponse,
     InitEventData,
     LaunchGameData,

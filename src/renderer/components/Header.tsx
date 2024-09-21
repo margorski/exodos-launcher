@@ -1,10 +1,14 @@
 import { englishTranslation } from "@renderer/lang/en";
 import { getLibraryItemTitle } from "@shared/library/util";
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link, Routes, useNavigate } from "react-router-dom";
 import { Paths } from "../Paths";
-import { joinLibraryRoute } from "../Util";
+import { joinLibraryRoute, openContextMenu } from "../Util";
 import { WithPreferencesProps } from "../containers/withPreferences";
+import { MenuItemConstructorOptions } from "electron";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars } from "@fortawesome/free-solid-svg-icons";
+import { WithRouterProps } from "@renderer/containers/withRouter";
 
 type OwnProps = {
     /** Array of library routes */
@@ -21,11 +25,51 @@ export function Header(props: HeaderProps) {
     const strings = englishTranslation.app;
     const { libraries } = props;
 
+    const navigate = useNavigate();
+
+    const librariesScriptsMenu: MenuItemConstructorOptions[] = libraries.map(
+        (l) => {
+            return {
+                label: `${l} Scripts`,
+                type: "submenu",
+                submenu: [
+                    {
+                        label: "Setup",
+                    },
+                    {
+                        label: "Install dependencies",
+                    },
+                ],
+            };
+        }
+    );
+    const menuButtons: MenuItemConstructorOptions[] = [
+        ...librariesScriptsMenu,
+        {
+            type: "separator",
+        },
+        {
+            label: "About",
+            click() {
+                console.log("NAVIGATE");
+                navigate(Paths.ABOUT);
+            },
+        },
+    ];
+
     return (
         <div className="header">
             {/* Header Menu */}
             <div className="header__wrap">
                 <ul className="header__menu">
+                    <li className="header__menu__item">
+                        <a
+                            className="header__menu__item__link"
+                            onClick={() => openContextMenu(menuButtons)}
+                        >
+                            <FontAwesomeIcon icon={faBars} />
+                        </a>
+                    </li>
                     {libraries.map((library) => (
                         <MenuItem
                             key={library}

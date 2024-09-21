@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 import { useNavigate } from "react-router";
 import { Header, HeaderProps } from "../components/Header";
 import { withPreferences, WithPreferencesProps } from "./withPreferences";
+import { withRouter } from "./withRouter";
 
 type HeaderContainerProps = HeaderProps & WithPreferencesProps;
 
@@ -12,11 +13,7 @@ const HeaderContainer: React.FunctionComponent<HeaderContainerProps> = (
     const { ...rest } = props;
     const navigate = useNavigate();
 
-    return (
-        <Header
-            {...rest}
-        />
-    );
+    return <Header {...rest} />;
 };
 
 export default withPreferences(connect(undefined, undefined)(HeaderContainer));

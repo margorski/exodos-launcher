@@ -17,6 +17,8 @@ import {
     ConnectedHomePageProps,
 } from "./containers/ConnectedHomePage";
 import { ConnectedLogsPage } from "./containers/ConnectedLogsPage";
+import { HomePage } from "./components/pages/HomePage";
+import { AboutPage, AboutPageProps } from "./components/pages/About";
 
 export type AppRouterProps = {
     gamesTotal: number;
@@ -40,6 +42,10 @@ export type AppRouterProps = {
 
 export class AppRouter extends React.Component<AppRouterProps> {
     render() {
+        const aboutProps: AboutPageProps = {
+            exodosBackendInfo: this.props.exodosBackendInfo,
+            updateInfo: this.props.updateInfo,
+        };
         const browseProps: BrowsePageProps = {
             playlists: this.props.playlists,
             playlistIconCache: this.props.playlistIconCache,
@@ -68,6 +74,10 @@ export class AppRouter extends React.Component<AppRouterProps> {
                 <Route
                     path={Paths.CONFIG}
                     element={<ConnectedConfigPage {...configProps} />}
+                />
+                <Route
+                    path={Paths.ABOUT}
+                    element={<AboutPage {...aboutProps} />}
                 />
                 <Route Component={NotFoundPage} />
             </Routes>
