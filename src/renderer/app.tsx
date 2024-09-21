@@ -44,26 +44,9 @@ import { GamesInitState, initialize } from "./redux/gamesSlice";
 import { initializeViews } from "./redux/searchSlice";
 import { RootState } from "./redux/store";
 import { AppRouter, AppRouterProps } from "./router";
+import { ExodosResources, loadExoResources } from "./util/exoResources";
 // Auto updater works only with .appImage distribution. We are using .tar.gz
 // so it will just fail silently. Code is left for future.
-
-const VIEW_PAGE_SIZE = 250;
-
-type Views = Record<string, View | undefined>; // views[id] = view
-type View = {
-    games: Array<IGameInfo>;
-    total: number;
-    selectedPlaylistId?: string;
-    selectedGameId?: string;
-    /** If the cache is dirty and should be discarded. */
-    dirtyCache: boolean;
-    /** The most recent query used for this view. */
-    query: {
-        search: string;
-        orderBy: GameOrderBy;
-        orderReverse: GameOrderReverse;
-    };
-};
 
 const mapState = (state: RootState) => ({
     searchState: state.searchState,
@@ -94,6 +77,7 @@ export type AppState = {
     themeList: Theme[];
     gamesTotal: number;
     localeCode: string;
+    exodosResources: ExodosResources;
 
     /** Stop rendering to force component unmounts */
     stopRender: boolean;
@@ -143,13 +127,17 @@ class App extends React.Component<AppProps, AppState> {
             order,
             exodosBackendInfo: undefined,
             currentGameRefreshKey: 0,
+            exodosResources: {
+                Documents: [],
+                Scripts: [],
+            },
         };
 
         // Initialize app
         this.init();
     }
 
-    async initializeExodosBackendInfo() {
+    async initializeAsync() {
         const changelogRequest = await fetch(
             `${getFileServerURL()}/eXo/Update/changelog.txt`
         );
@@ -160,8 +148,11 @@ class App extends React.Component<AppProps, AppState> {
         );
         const version = await versionRequest.text();
 
+        const exodosResources = await loadExoResources();
+
         this.setState({
             ...this.state,
+            exodosResources,
             exodosBackendInfo: {
                 changelog: changelog,
                 version: version.split(" ")[1],
@@ -200,7 +191,7 @@ class App extends React.Component<AppProps, AppState> {
             };
         })();
 
-        this.initializeExodosBackendInfo();
+        this.initializeAsync();
 
         // Listen for the window to move or resize (and update the preferences when it does)
         ipcRenderer.on(
@@ -369,7 +360,7 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     componentDidUpdate(prevProps: AppProps, prevState: AppState) {
-        const { navigate, location, preferencesData } = this.props;
+        const { location, preferencesData } = this.props;
 
         // Check if theme changed
         if (
@@ -387,37 +378,6 @@ class App extends React.Component<AppProps, AppState> {
         ) {
             updatePreferencesData({ lastSelectedLibrary: gameLibrary });
         }
-
-        // // Create a new game
-        // if (this.state.wasNewGameClicked) {
-        //     let route = "";
-        //     if (preferencesData.lastSelectedLibrary) {
-        //         route = preferencesData.lastSelectedLibrary;
-        //     } else {
-        //         const defaultLibrary = preferencesData.defaultLibrary;
-        //         if (defaultLibrary) {
-        //             route = defaultLibrary;
-        //         } else {
-        //             route = UNKNOWN_LIBRARY;
-        //         }
-        //     }
-
-        //     if (location.pathname.startsWith(Paths.BROWSE)) {
-        //         this.setState({ wasNewGameClicked: false });
-        //         // Deselect the current game
-        //         const view = this.state.views[route];
-        //         if (view && view.selectedGameId !== undefined) {
-        //             const views = { ...this.state.views };
-        //             views[route] = {
-        //                 ...view,
-        //                 selectedGameId: undefined,
-        //             };
-        //             this.setState({ views });
-        //         }
-        //     } else {
-        //         navigate(joinLibraryRoute(route));
-        //     }
-        // }
     }
 
     render() {
@@ -479,6 +439,7 @@ class App extends React.Component<AppProps, AppState> {
                             <>
                                 {/* Header */}
                                 <HeaderContainer
+                                    exodosResources={this.state.exodosResources}
                                     libraries={this.props.libraries}
                                     onToggleLeftSidebarClick={
                                         this.onToggleLeftSidebarClick

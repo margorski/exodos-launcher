@@ -8,9 +8,12 @@ import { WithPreferencesProps } from "../containers/withPreferences";
 import { MenuItemConstructorOptions } from "electron";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
-import { WithRouterProps } from "@renderer/containers/withRouter";
+import { ExodosResources } from "@renderer/util/exoResources";
+import { throttle } from "@shared/utils/throttle";
+import { BackIn, LaunchExodosContentData } from "@shared/back/types";
 
 type OwnProps = {
+    exodosResources: ExodosResources;
     /** Array of library routes */
     libraries: string[];
     /** Called when the left sidebar toggle button is clicked. */
@@ -23,26 +26,25 @@ export type HeaderProps = OwnProps & WithPreferencesProps;
 
 export function Header(props: HeaderProps) {
     const strings = englishTranslation.app;
-    const { libraries } = props;
+    const { exodosResources, libraries } = props;
 
     const navigate = useNavigate();
 
-    const librariesScriptsMenu: MenuItemConstructorOptions[] = libraries.map(
-        (l) => {
-            return {
-                label: `${l} Scripts`,
-                type: "submenu",
-                submenu: [
-                    {
-                        label: "Setup",
-                    },
-                    {
-                        label: "Install dependencies",
-                    },
-                ],
-            };
-        }
-    );
+    const librariesScriptsMenu: MenuItemConstructorOptions[] = Object.entries(
+        exodosResources
+    ).map((er) => {
+        const [label, files] = er;
+        return {
+            label,
+            type: "submenu",
+            submenu: files.map((f) => ({
+                label: f.split(".")[0],
+                click() {
+                    onLaunchCommand(f);
+                },
+            })),
+        };
+    });
     const menuButtons: MenuItemConstructorOptions[] = [
         ...librariesScriptsMenu,
         {
@@ -51,7 +53,6 @@ export function Header(props: HeaderProps) {
         {
             label: "About",
             click() {
-                console.log("NAVIGATE");
                 navigate(Paths.ABOUT);
             },
         },
@@ -94,3 +95,9 @@ function MenuItem({ title, link }: { title: string; link: string }) {
         </li>
     );
 }
+
+export const onLaunchCommand = throttle((path: string): void => {
+    window.External.back.send<LaunchExodosContentData>(BackIn.LAUNCH_COMMAND, {
+        path,
+    });
+}, 500);

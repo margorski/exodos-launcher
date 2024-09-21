@@ -11,7 +11,6 @@ const HeaderContainer: React.FunctionComponent<HeaderContainerProps> = (
     props: HeaderContainerProps
 ) => {
     const { ...rest } = props;
-    const navigate = useNavigate();
 
     return <Header {...rest} />;
 };

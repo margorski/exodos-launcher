@@ -7,6 +7,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { getGameByTitle } from "./games";
 import { getAllowedExtensionsForMappings } from "@shared/mappings/CommandMapping";
+import { throttle } from "@shared/utils/throttle";
+import { BackIn, LaunchGameData } from "@shared/back/types";
 
 // @TODO Move it to seperate module to make it easier to extend (it would be best to have it in json)
 const ADD_APPS_DIRECTORIES = ["Extras", "Magazines"];
