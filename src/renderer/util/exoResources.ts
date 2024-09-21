@@ -15,13 +15,11 @@ export type ExodosResources = {
 
 export const loadExoResources = async () => {
     const result = {} as ExodosResources;
+    const rootResourcesPath = window.External.config.fullExodosPath;
 
     try {
-        const rootFiles = (
-            await fs.readdir(window.External.config.fullExodosPath)
-        ).filter((f) => !excludedFiles.includes(f.toLowerCase()));
-        const updateFiles = await fs.readdir(
-            path.join(window.External.config.fullExodosPath, "Update")
+        const rootFiles = (await fs.readdir(rootResourcesPath)).filter(
+            (f) => !excludedFiles.includes(f.toLowerCase())
         );
 
         Object.entries(ExodosResourcesTypeExtensions).forEach((te) => {
@@ -29,15 +27,27 @@ export const loadExoResources = async () => {
             result[type] = rootFiles.filter(withExtensonsFilter(extensions));
         });
 
-        const updateScripts = updateFiles.filter(
-            withExtensonsFilter(ExodosResourcesTypeExtensions["Scripts"])
-        );
-        if (updateScripts.length > 0) {
-            result["Scripts"]?.push(null);
-            result["Scripts"]?.push(...updateScripts);
-        }
+        const updateScripts = await getUpdateScriptsWithSeparator();
+        result["Scripts"]?.push(...updateScripts);
     } catch (e) {
         console.error(`Error while loading eXo resources. Error: ${e}`);
+    }
+    return result;
+};
+
+const getUpdateScriptsWithSeparator = async () => {
+    const result = [];
+    const updateScriptsPath = path.join(
+        window.External.config.fullExodosPath,
+        "Update"
+    );
+    const updateFiles = await fs.readdir(updateScriptsPath);
+    const updateScripts = updateFiles.filter(
+        withExtensonsFilter(ExodosResourcesTypeExtensions["Scripts"])
+    );
+    if (updateScripts.length > 0) {
+        result.push(null);
+        result.push(...updateScripts);
     }
     return result;
 };
