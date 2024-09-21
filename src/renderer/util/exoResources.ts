@@ -1,4 +1,5 @@
-import { promises as fs } from "fs";
+import { promises as fsPromises } from "fs";
+import * as fs from "fs";
 import * as path from "path";
 
 // extensions need to have a dot and be lowercase
@@ -7,6 +8,11 @@ const ExodosResourcesTypeExtensions = {
     Scripts: [".command"],
 };
 const excludedFiles = [`exogui.command`];
+const updateScriptFiles = [
+    `update.command`,
+    `updateScummVm.command`,
+    `update3x.command`,
+].map((f) => `eXo/Update/${f}`);
 
 // HACK - null for separator
 export type ExodosResources = {
@@ -18,7 +24,7 @@ export const loadExoResources = async () => {
     const rootResourcesPath = window.External.config.fullExodosPath;
 
     try {
-        const rootFiles = (await fs.readdir(rootResourcesPath)).filter(
+        const rootFiles = (await fsPromises.readdir(rootResourcesPath)).filter(
             (f) => !excludedFiles.includes(f.toLowerCase())
         );
 
@@ -37,17 +43,13 @@ export const loadExoResources = async () => {
 
 const getUpdateScriptsWithSeparator = async () => {
     const result = [];
-    const updateScriptsPath = path.join(
-        window.External.config.fullExodosPath,
-        "Update"
-    );
-    const updateFiles = await fs.readdir(updateScriptsPath);
-    const updateScripts = updateFiles.filter(
-        withExtensonsFilter(ExodosResourcesTypeExtensions["Scripts"])
-    );
-    if (updateScripts.length > 0) {
+    const existingScripts = updateScriptFiles.filter((f) => {
+        const filepath = path.join(window.External.config.fullExodosPath, f);
+        return fs.existsSync(filepath);
+    });
+    if (existingScripts.length > 0) {
         result.push(null);
-        result.push(...updateScripts);
+        result.push(...existingScripts);
     }
     return result;
 };

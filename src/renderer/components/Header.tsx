@@ -43,7 +43,7 @@ export function Header(props: HeaderProps) {
                           type: "separator",
                       }
                     : {
-                          label: f.split(".")[0],
+                          label: f.split(".")[0].split("/").pop(),
                           click() {
                               onLaunchCommand(f);
                           },
