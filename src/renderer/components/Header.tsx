@@ -37,12 +37,18 @@ export function Header(props: HeaderProps) {
         return {
             label,
             type: "submenu",
-            submenu: files.map((f) => ({
-                label: f.split(".")[0],
-                click() {
-                    onLaunchCommand(f);
-                },
-            })),
+            submenu: files.map((f) =>
+                f === null
+                    ? {
+                          type: "separator",
+                      }
+                    : {
+                          label: f.split(".")[0],
+                          click() {
+                              onLaunchCommand(f);
+                          },
+                      }
+            ),
         };
     });
     const menuButtons: MenuItemConstructorOptions[] = [

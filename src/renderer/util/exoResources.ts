@@ -6,32 +6,43 @@ const ExodosResourcesTypeExtensions = {
     Documents: [".pdf", ".txt"],
     Scripts: [".command"],
 };
-const excludedFiles = [`exogui.command`, `exodreamm.command`];
+const excludedFiles = [`exogui.command`];
 
+// HACK - null for separator
 export type ExodosResources = {
-    [type in keyof typeof ExodosResourcesTypeExtensions]: string[];
+    [type: string]: (string | null)[];
 };
 
 export const loadExoResources = async () => {
-    const result = {
-        Documents: [],
-        Scripts: [],
-    } as ExodosResources;
+    const result = {} as ExodosResources;
 
     try {
-        const files = (
+        const rootFiles = (
             await fs.readdir(window.External.config.fullExodosPath)
         ).filter((f) => !excludedFiles.includes(f.toLowerCase()));
+        const updateFiles = await fs.readdir(
+            path.join(window.External.config.fullExodosPath, "Update")
+        );
+
         Object.entries(ExodosResourcesTypeExtensions).forEach((te) => {
             const [type, extensions] = te;
-            const test = files.filter((f) => {
-                const extension = path.extname(f).toLowerCase();
-                return extensions.includes(extension);
-            });
-            result[type as keyof typeof ExodosResourcesTypeExtensions] = test;
+            result[type] = rootFiles.filter(withExtensonsFilter(extensions));
         });
+
+        const updateScripts = updateFiles.filter(
+            withExtensonsFilter(ExodosResourcesTypeExtensions["Scripts"])
+        );
+        if (updateScripts.length > 0) {
+            result["Scripts"]?.push(null);
+            result["Scripts"]?.push(...updateScripts);
+        }
     } catch (e) {
         console.error(`Error while loading eXo resources. Error: ${e}`);
     }
     return result;
+};
+
+const withExtensonsFilter = (extensions: string[]) => (f: string) => {
+    const extension = path.extname(f).toLowerCase();
+    return extensions.includes(extension);
 };
