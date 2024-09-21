@@ -6,6 +6,7 @@ const ExodosResourcesTypeExtensions = {
     Documents: [".pdf", ".txt"],
     Scripts: [".command"],
 };
+const excludedFiles = [`exogui.command`, `exodreamm.command`];
 
 export type ExodosResources = {
     [type in keyof typeof ExodosResourcesTypeExtensions]: string[];
@@ -18,10 +19,9 @@ export const loadExoResources = async () => {
     } as ExodosResources;
 
     try {
-        const exoguiCommand = `exogui.command`;
         const files = (
             await fs.readdir(window.External.config.fullExodosPath)
-        ).filter((f) => f.toLowerCase() !== exoguiCommand);
+        ).filter((f) => !excludedFiles.includes(f.toLowerCase()));
         Object.entries(ExodosResourcesTypeExtensions).forEach((te) => {
             const [type, extensions] = te;
             const test = files.filter((f) => {
