@@ -13,7 +13,10 @@ import { IAppConfigData } from "@shared/config/interfaces";
 import { APP_TITLE } from "@shared/constants";
 import { WindowIPC } from "@shared/interfaces";
 import { InitRendererChannel, InitRendererData } from "@shared/IPC";
-import { IAppPreferencesData, IAppPreferencesDataMainWindow } from "@shared/preferences/interfaces";
+import {
+    IAppPreferencesData,
+    IAppPreferencesDataMainWindow,
+} from "@shared/preferences/interfaces";
 import { createErrorProxy } from "@shared/Util";
 import { ChildProcess, fork } from "child_process";
 import { randomBytes } from "crypto";
@@ -25,6 +28,7 @@ import {
     IpcMainEvent,
     session,
     shell,
+    screen,
 } from "electron";
 import * as fs from "fs";
 import * as path from "path";
@@ -79,7 +83,7 @@ export function main(init: Init): void {
 
     function startup() {
         if (process.env.APPIMAGE) {
-            app.commandLine.appendSwitch('no-sandbox');
+            app.commandLine.appendSwitch("no-sandbox");
         }
         app.disableHardwareAcceleration();
 
@@ -102,7 +106,7 @@ export function main(init: Init): void {
             .then((exists) => {
                 state._installed = exists;
                 state.mainFolderPath = Util.getMainFolderPath();
-                console.log('Main folder: ' + state.mainFolderPath);
+                console.log("Main folder: " + state.mainFolderPath);
             })
             // Load version number
             .then(
@@ -193,7 +197,9 @@ export function main(init: Init): void {
                             // On windows you have to wait for app to be ready before you call app.getLocale() (so it will be sent later)
                             localeCode: localeCode,
                             exePath: path.dirname(app.getPath("exe")),
-                            basePath: process.env.APPIMAGE ? path.dirname(app.getPath('appData')) : process.cwd(),
+                            basePath: process.env.APPIMAGE
+                                ? path.dirname(app.getPath("appData"))
+                                : process.cwd(),
                             acceptRemote: !!init.args["host-remote"],
                         };
                         state.backProc.send(JSON.stringify(msg));
@@ -307,8 +313,8 @@ export function main(init: Init): void {
             }
         }
         // Reject all permission requests since we don't need any permissions.
-        session.defaultSession.setPermissionRequestHandler(
-            (_, __, callback) => callback(false)
+        session.defaultSession.setPermissionRequestHandler((_, __, callback) =>
+            callback(false)
         );
         // Ignore proxy settings with chromium APIs (makes WebSockets not close when the Redirector changes proxy settings)
         session.defaultSession.setProxy({
@@ -396,19 +402,28 @@ export function main(init: Init): void {
                 "Configs must be set before you can open a window."
             );
         }
-        if (process.env.SteamDeck && process.env.XDG_CURRENT_DESKTOP === "gamescope") {
-            console.log('Running via deck, forcing 1280x800 resolution');
+        if (
+            process.env.SteamDeck &&
+            process.env.XDG_CURRENT_DESKTOP === "gamescope"
+        ) {
+            console.log("Running via deck, forcing 1280x800 resolution");
             return {
                 width: 1280,
                 height: 800,
                 x: 0,
                 y: 0,
                 maximized: false,
-            }
+            };
         } else {
+            const mainScreen = screen.getPrimaryDisplay();
+            const { workAreaSize } = mainScreen;
+            const defaultSize = {
+                width: Math.min(workAreaSize.width, 1280),
+                height: Math.min(workAreaSize.height, 800),
+            };
             const mw = state.preferences.mainWindow;
-            let width: number = mw.width ? mw.width : 1000;
-            let height: number = mw.height ? mw.height : 650;
+            let width: number = mw.width ? mw.width : defaultSize.width;
+            let height: number = mw.height ? mw.height : defaultSize.height;
             if (mw.width && mw.height && !state.config.useCustomTitlebar) {
                 width += 8; // Add the width of the window-grab-things,
                 height += 8; // they are 4 pixels wide each (at least for me @TBubba)
@@ -419,7 +434,7 @@ export function main(init: Init): void {
                 x: state.preferences.mainWindow.x,
                 y: state.preferences.mainWindow.y,
                 maximized: state.preferences.mainWindow.maximized,
-            }
+            };
         }
     }
 

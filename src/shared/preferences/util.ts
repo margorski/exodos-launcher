@@ -53,7 +53,7 @@ export const defaultPreferencesData: Readonly<IAppPreferencesData> =
             y: undefined,
             width: undefined,
             height: undefined,
-            maximized: true,
+            maximized: false,
         }),
         saveImportedCurations: true,
         showLogSource: Object.freeze({
