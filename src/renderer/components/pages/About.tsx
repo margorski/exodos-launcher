@@ -12,76 +12,47 @@ type OwnProps = {
 
 export type AboutPageProps = OwnProps;
 
+const discordlink = "https://discord.gg/37FYaUZ";
+const exoguiRepoLink = "https://github.com/margorski/exodos-launcher";
+const links = [
+    "https://www.retro-exo.com",
+    "https://github.com/exoscoriae",
+    discordlink,
+];
+
+const link = (title: string, url: string): JSX.Element => {
+    return (
+        <a href={url} title={url} target="_blank">
+            {title}
+        </a>
+    );
+};
+
 export function AboutPage(props: AboutPageProps) {
-    const renderedGreetings = React.useMemo(
-        () => (
-            <div className="home-page__box">
-                <div className="home-page__box-head">Welcome to eXoDOS!</div>
-                <div className="home-page__box-body">
-                    <p>
-                        This pack includes 7,200 DOS games. The games have
-                        already been configured to run in DOSBox. Games which
-                        are supported by ScummVM will give you the option at
-                        launch as to which emulator you would like to use.
-                    </p>
-                    <br />
-                    <p>
-                        If you have not already done so, run the utilities in
-                        the Setup box to install the collection on your
-                        computer. Then, click on the MS-DOS tab to browse
-                        through and play the games, or the DOS Magazines tab to
-                        read magazines.
-                    </p>
-                </div>
-            </div>
-        ),
-        []
-    );
-
-    const renderedHeader = () => (
-        <div className="home-page__two_columns_container">
-            <div className="home-page__header">
-                <div className="">
-                    <div>
-                        <h1>eXoDOS v5</h1>
-                    </div>
-                    <div>
-                        <h4>{`backend: ${
-                            props.exodosBackendInfo
-                                ? props.exodosBackendInfo.version
-                                : ""
-                        }`}</h4>
-                    </div>
-                    <div>
-                        <h4>{`exogui: ${app.getVersion()}`}</h4>
-                    </div>
-                </div>
-                <div className="home-page__subheader">
-                    {link("Website", "https://www.retro-exo.com/exodos.html")}|
-                    {link("Discord", "https://discord.gg/SaMKayf")}
-                </div>
-            </div>
-            {/* Logo */}
-            <div className="home-page__logo">
-                <img src="images/logo.png" />
-            </div>
-        </div>
-    );
-
-    const link = (title: string, url: string): JSX.Element => {
-        return (
-            <a href={url} title={url}>
-                {title}
-            </a>
-        );
-    };
-
     // Render
     return (
-        <div className="home-page simple-scroll">
-            <div className="home-page__inner">
-                {renderedHeader()}
-                {renderedGreetings}
+        <div className="about-page simple-scroll">
+            <div className="about-page__content">
+                <p className="about-page__header">exogui</p>
+                <p> {`Version ${app.getVersion()}`}</p>
+                {link(exoguiRepoLink, exoguiRepoLink)}
+                <p>exogui is the official Linux frontend for eXo projects.</p>
+                <p>Currently maintained by Jelcynek and Colin.</p>
+                <br />
+                <p>eXo Project Links:</p>
+                <ul className="about-page__links-list">
+                    {links.map((l) => (
+                        <li key={l}>{link(l, l)}</li>
+                    ))}
+                </ul>
+                <br />
+                <p>Thanks to eXo and his team for developing the projects.</p>
+                <p>Linux backend maintainer: parric</p>
+                <br />
+                <p>
+                    Want to help? Volunteer in the{" "}
+                    {link("Discord", discordlink)}.
+                </p>
             </div>
         </div>
     );

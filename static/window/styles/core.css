@@ -603,6 +603,9 @@ body {
   width: 100%;
   height: 100%;
   overflow: auto;
+  display: flex;
+  justify-content: center;
+  text-align: center;
 }
 .home-page__inner {
   min-width: 40em;
@@ -713,6 +716,30 @@ body {
   display: flex;
 }
 
+/* --- About --- */
+.about-page {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  text-align: center;
+  display: block;
+}
+
+.about-page__content {
+  max-width: 40em;
+  margin: 1em auto;
+}
+
+.about-page__header {
+  font-size: 3em;
+  font-weight: bold;
+  margin-bottom: 0.2em;
+}
+
+.about-page__links-list {
+  list-style-type: none;
+}
+
 /* ------ Page-Not-Found (404) ------ */
 .page-not-found {
   width: 100%;
@@ -727,106 +754,6 @@ body {
   font-size: 2em;
   padding-bottom: 0.5em;
 }
-
-
-/* ------ About ------ */
-.about-page {
-  --columns: 2;
-  --column-width: 35em;
-  --column-gutter: 2em;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-}
-.about-page__inner {
-  display: flex;
-  flex-direction: column;
-  min-width: var(--column-width);
-  height: 100%;
-}
-.about-page__top {
-  flex: 1 0 auto;
-}
-.about-page__bottom {
-  flex: 0 0 auto;
-  padding: 0.5rem;
-  padding-bottom: 1rem;
-  text-align: center;
-}
-.about-page__bottom__inner {
-  display: inline-block;
-  text-align: left;
-  margin: auto;
-}
-.about-page__bottom__quote {
-  font-style: italic;
-}
-.about-page__title {
-  font-size: 2.5em;
-  margin-bottom: 0.5rem;
-  text-align: center;
-}
-.about-page__columns {
-  margin: auto;
-}
-.about-page__columns__left {
-  margin-top: 2rem;
-}
-.about-page__section {
-  margin-bottom: 2rem;
-}
-.about-page__section__title {
-  font-size: 1.4rem;
-  padding-left: 0.4rem;
-}
-.about-page__section__content {
-  padding-left: 0.4rem;
-}
-.about-page__section__content__description {
-  margin-bottom: 0.26rem;
-}
-.about-page__section__links * {
-  display: inline-block;
-  margin-top: 0.2rem;
-}
-.about-page__section__links :not(:last-child) {
-  margin-right: 1rem;
-}
-/* Credits */
-.about-page__credits__title {
-  font-size: 1.6rem;
-  margin-bottom: 0.25rem;
-}
-.about-page__credits__profile {
-  --size: 3rem;
-  width: var(--size);
-  height: var(--size);
-  margin: 0.25rem;
-  margin-top: 0;
-  clip-path: circle();
-  display: inline-block;
-  overflow: hidden;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-}
-.about-page__credits__tooltip {
-  max-width: 20rem;
-  padding: 0.5rem;
-  position: absolute;
-  pointer-events: none;
-  z-index: 1;
-  border: 1px solid;
-}
-.about-page__credits__tooltip__roles {
-  --indent: 0.5em;
-  margin-left: calc(0.5rem + var(--indent));
-  text-indent: calc(0px    - var(--indent));
-}
-.about-page__credits__tooltip__roles p {
-  display: inline;
-}
-
 
 /* ------ Curate ------ */
 .curate-page {
