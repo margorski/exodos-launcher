@@ -33,19 +33,19 @@ export function Header(props: HeaderProps) {
     const librariesScriptsMenu: MenuItemConstructorOptions[] = Object.entries(
         exodosResources
     ).map((er) => {
-        const [label, files] = er;
+        const [label, resources] = er;
         return {
             label,
             type: "submenu",
-            submenu: files.map((f) =>
-                f === null
+            submenu: resources.map((r) =>
+                r === null
                     ? {
                           type: "separator",
                       }
                     : {
-                          label: f.split(".")[0].split("/").pop(),
+                          label: r.label,
                           click() {
-                              onLaunchCommand(f);
+                              onLaunchCommand(r.filepath);
                           },
                       }
             ),

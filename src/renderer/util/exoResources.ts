@@ -8,15 +8,30 @@ const ExodosResourcesTypeExtensions = {
     Scripts: [".command"],
 };
 const excludedFiles = [`exogui.command`];
+
+// Update scripts
 const updateScriptFiles = [
     `update.command`,
     `updateScummVm.command`,
     `update3x.command`,
 ].map((f) => `eXo/Update/${f}`);
 
+// Label mapping
+const labelMapping = {
+    install_dependencies: "Install dependencies",
+    update: "Update eXoDOS",
+    updateScummVm: "Update eXoScummVM",
+    update3x: "Update eXoWin3x",
+};
+
+export type ExodosResource = {
+    label: string;
+    filepath: string;
+};
+
 // HACK - null for separator
 export type ExodosResources = {
-    [type: string]: (string | null)[];
+    [type: string]: (ExodosResource | null)[];
 };
 
 export const loadExoResources = async () => {
@@ -30,7 +45,9 @@ export const loadExoResources = async () => {
 
         Object.entries(ExodosResourcesTypeExtensions).forEach((te) => {
             const [type, extensions] = te;
-            result[type] = rootFiles.filter(withExtensonsFilter(extensions));
+            result[type] = rootFiles
+                .filter(withExtensonsFilter(extensions))
+                .map(mapToExoResource);
         });
 
         const updateScripts = await getUpdateScriptsWithSeparator();
@@ -43,10 +60,15 @@ export const loadExoResources = async () => {
 
 const getUpdateScriptsWithSeparator = async () => {
     const result = [];
-    const existingScripts = updateScriptFiles.filter((f) => {
-        const filepath = path.join(window.External.config.fullExodosPath, f);
-        return fs.existsSync(filepath);
-    });
+    const existingScripts = updateScriptFiles
+        .filter((f) => {
+            const filepath = path.join(
+                window.External.config.fullExodosPath,
+                f
+            );
+            return fs.existsSync(filepath);
+        })
+        .map(mapToExoResource);
     if (existingScripts.length > 0) {
         result.push(null);
         result.push(...existingScripts);
@@ -57,4 +79,19 @@ const getUpdateScriptsWithSeparator = async () => {
 const withExtensonsFilter = (extensions: string[]) => (f: string) => {
     const extension = path.extname(f).toLowerCase();
     return extensions.includes(extension);
+};
+const mapToExoResource = (filepath: string): ExodosResource => {
+    return {
+        filepath,
+        label: getLabel(filepath),
+    };
+};
+
+const getLabel = (filename: string) => {
+    const strippedFilename = filename.split(".")[0].split("/").pop();
+    return (
+        labelMapping[strippedFilename as keyof typeof labelMapping] ??
+        strippedFilename ??
+        "???"
+    );
 };
