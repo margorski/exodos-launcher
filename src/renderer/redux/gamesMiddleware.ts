@@ -49,18 +49,22 @@ export function addGamesMiddleware() {
             );
 
             for (const platform of platforms) {
-                const platformCollection = await loadPlatform(
-                    platform,
-                    platformsPath
-                );
-                if (platformCollection.games.length > 0) {
-                    libraries.push(platform);
-                }
-                collection.push(platformCollection);
-                if (watchablePlatforms.includes(platform)) {
-                    createGamesWatcher(platformCollection);
-                    createVideosWatcher(platform);
-                    createManualsWatcher(platform);
+                try {
+                    const platformCollection = await loadPlatform(
+                        platform,
+                        platformsPath
+                    );
+                    if (platformCollection.games.length > 0) {
+                        libraries.push(platform);
+                    }
+                    collection.push(platformCollection);
+                    if (watchablePlatforms.includes(platform)) {
+                        createGamesWatcher(platformCollection);
+                        createVideosWatcher(platform);
+                        createManualsWatcher(platform);
+                    }                   
+                } catch (err) {
+                    console.error(`Failed to load platform ${err}`);
                 }
             }
             console.debug(`Load time - ${Date.now() - startTime}ms`);
@@ -88,7 +92,12 @@ async function loadPlatform(platform: string, platformsPath: string) {
                 encoding: "utf-8",
             });
 
-            const parser = new XMLParser();
+            const parser = new XMLParser({
+                tagValueProcessor: (tagName, tagValue, _jPath, _hasAttributes, _isLeafNode) => {
+                    if (tagName === "CommandLine") { return null; }
+                    return tagValue;
+                }
+            });
             const data: any | undefined = parser.parse(content.toString());
 
             if (!formatPlatformFileData(data)) {
