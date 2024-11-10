@@ -102,12 +102,12 @@ export async function loadPlatformImages(
         window.External.config.data.imageFolderPath,
         platform
     );
-    const rootFolders = await fs.promises.readdir(platformImagesPath, {
-        withFileTypes: true,
-    });
     const collection: GameImagesCollection = {};
 
     if (fs.existsSync(platformImagesPath)) {
+        const rootFolders = await fs.promises.readdir(platformImagesPath, {
+            withFileTypes: true,
+        });
         for (const dir of rootFolders.filter((f) => f.isDirectory())) {
             collection[dir.name] = {}; // Initialize the image category
             const folderPath = path.join(platformImagesPath, dir.name);

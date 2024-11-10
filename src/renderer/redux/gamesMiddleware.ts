@@ -3,6 +3,7 @@ import { readPlatformsFile } from "@renderer/file/PlatformFile";
 import { formatPlatformFileData } from "@renderer/util/LaunchBoxHelper";
 import { GameParser } from "@shared/game/GameParser";
 import * as fs from "fs";
+import * as fsasync from "fs/promises";
 import * as path from "path";
 import {
     GamesInitState,
@@ -23,9 +24,10 @@ import {
 import { createManualsWatcher } from "@renderer/util/addApps";
 import { createGamesWatcher } from "@renderer/util/games";
 import { XMLParser } from "fast-xml-parser";
-
-// @TODO - watchable platforms should be defined in seperate file to be easily adjustable, ideally in the json cfg file
-const watchablePlatforms = ["MS-DOS"];
+import {
+    DefaultPlatformOptions,
+    platformOptions,
+} from "@renderer/util/PlatformOptions";
 
 export function addGamesMiddleware() {
     startAppListening({
@@ -58,11 +60,15 @@ export function addGamesMiddleware() {
                         libraries.push(platform);
                     }
                     collection.push(platformCollection);
-                    if (watchablePlatforms.includes(platform)) {
+
+                    const optionsForPlatform =
+                        platformOptions?.find((p) => p.name === platform) ??
+                        DefaultPlatformOptions;
+                    if (optionsForPlatform.watchable) {
                         createGamesWatcher(platformCollection);
                         createVideosWatcher(platform);
                         createManualsWatcher(platform);
-                    }                   
+                    }
                 } catch (err) {
                     console.error(`Failed to load platform ${err}`);
                 }
@@ -80,9 +86,14 @@ async function loadPlatform(platform: string, platformsPath: string) {
     console.log(`Loading platform ${platform} from ${platformsPath}`);
 
     try {
-        const platformFile = path.join(platformsPath, `${platform}.xml`);
-        console.debug(
-            `Checking existence of platform ${platformFile} xml file..`
+        const platformFileCaseInsensitive =
+            await findPlatformFileCaseInsensitive(
+                `${platform}.xml`,
+                platformsPath
+            );
+        const platformFile = path.join(
+            platformsPath,
+            platformFileCaseInsensitive
         );
 
         if ((await fs.promises.stat(platformFile)).isFile()) {
@@ -93,10 +104,18 @@ async function loadPlatform(platform: string, platformsPath: string) {
             });
 
             const parser = new XMLParser({
-                tagValueProcessor: (tagName, tagValue, _jPath, _hasAttributes, _isLeafNode) => {
-                    if (tagName === "CommandLine") { return null; }
+                tagValueProcessor: (
+                    tagName,
+                    tagValue,
+                    _jPath,
+                    _hasAttributes,
+                    _isLeafNode
+                ) => {
+                    if (tagName === "CommandLine") {
+                        return null;
+                    }
                     return tagValue;
-                }
+                },
             });
             const data: any | undefined = parser.parse(content.toString());
 
@@ -134,6 +153,27 @@ async function loadPlatform(platform: string, platformsPath: string) {
 
     return { games: [], addApps: [] } as IGameCollection;
 }
+
+// Of course there is a problem with casing in some platform files.
+// We need to list all of the files directory and search for the hits
+// manually.
+const findPlatformFileCaseInsensitive = async (
+    filename: string,
+    path: string
+): Promise<string> => {
+    console.debug(`Checking existence of platform ${filename} xml file..`);
+
+    const lowerCasedFilename = filename.toLowerCase();
+    const directoryContent = await fsasync.readdir(path);
+    const platformXmlFile = directoryContent.find(
+        (f) => f.toLowerCase() === lowerCasedFilename
+    );
+    if (!platformXmlFile)
+        throw new Error(
+            `Platform file ${filename} doesn't exist in ${path} directory.`
+        );
+    return platformXmlFile;
+};
 
 export type ErrorCopy = {
     columnNumber?: number;

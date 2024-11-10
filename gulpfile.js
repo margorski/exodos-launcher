@@ -175,8 +175,8 @@ function getCopyFiles() {
         },
         "./lang",
         "./licenses",
-        "./.installed",
         "./mappings.json",
+        "./platform_options.json",
         {
             from: "./LICENSE",
             to: "./licenses/LICENSE",

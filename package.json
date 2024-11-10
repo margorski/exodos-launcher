@@ -1,6 +1,6 @@
 {
     "name": "exogui",
-    "version": "1.1.7",
+    "version": "1.1.8",
     "description": "A desktop application used to browse, manage and play games from eXoDOS collection. Based on BlueMaxima's Flashpoint launcher.",
     "main": "build/main/index.js",
     "repository": {
