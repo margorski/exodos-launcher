@@ -4,7 +4,23 @@
         "watchable": true
     },
     {
+        "name": "Apple IIGS",
+        "watchable": true    
+    },
+    {
+        "name": "DREAMM",
+        "watchable": true    
+    },
+    {
         "name": "eXoDemoScene",
+        "watchable": true    
+    },
+    {
+        "name": "ScummVM",
+        "watchable": true    
+    },
+    {
+        "name": "ScummVM SVN",
         "watchable": true    
     }
 ]
