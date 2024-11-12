@@ -22,5 +22,9 @@
     {
         "name": "ScummVM SVN",
         "watchable": true    
+    },
+    {
+        "name": "Windows 3x",
+        "watchable": true    
     }
 ]
