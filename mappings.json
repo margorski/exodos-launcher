@@ -13,13 +13,13 @@
             "includeArgs": false
         },
         {
-            "extensions": ["bmp", "gif", "jfif", "jpeg", "jpg", "pdf", "png"],
+            "extensions": ["bmp", "gif", "jfif", "pdf", "png"],
             "command": "flatpak run com.retro_exo.okular",
             "includeFilename": true,
             "includeArgs": false
         },
         {
-            "extensions": ["cbr"],
+            "extensions": ["cbr", "jpeg", "jpg"],
             "command": "flatpak run com.retro_exo.mcomix",
             "includeFilename": true,
             "includeArgs": false
