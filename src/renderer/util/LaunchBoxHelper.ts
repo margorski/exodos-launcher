@@ -43,8 +43,3 @@ export function formatPlatformFileData(data: any): data is IRawPlatformFile {
         }
     }
 }
-
-// Change a string to work with the Launchbox images / filename structure
-export function getLaunchboxFilename(str: string): string {
-    return str.replace(/[';:?]/g, '_'); // Replace some characters with underscores
-}

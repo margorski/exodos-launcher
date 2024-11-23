@@ -6,7 +6,6 @@ import {
 } from "@shared/game/interfaces";
 import * as fs from "fs";
 import * as path from "path";
-import { getLaunchboxFilename } from "./LaunchBoxHelper";
 import { IFileInfo } from "@shared/platform/interfaces";
 import * as chokidar from "chokidar";
 import { updateGame } from "@renderer/redux/gamesSlice";
@@ -73,7 +72,7 @@ export function mapGamesMedia(
         // Ignore, files don't exist if path isn't forming
     }
 
-    const formattedGameTitle = getLaunchboxFilename(game.title);
+    const formattedGameTitle = convertToGameTitleIndex(game.title);
 
     // Load all images
     for (const category of Object.keys(images)) {
@@ -115,7 +114,9 @@ export async function loadPlatformImages(
             for (const s of walkSync(folderPath)) {
                 const lastIdx = s.filename.lastIndexOf("-0");
                 if (lastIdx > -1) {
-                    const title = s.filename.slice(0, lastIdx);
+                    const title = convertToGameTitleIndex(
+                        s.filename.slice(0, lastIdx)
+                    );
                     if (!collection[dir.name][title]) {
                         collection[dir.name][title] = [
                             path.relative(
@@ -143,6 +144,14 @@ export async function loadPlatformImages(
     }
 
     return collection;
+}
+
+function convertToGameTitleIndex(title: string) {
+    // Remove unnecessary characters and stuff and lowercase
+    return title
+        .replace(/[:;?'"/\\]/g, "_")
+        .trim()
+        .toLowerCase();
 }
 
 export function* walkSync(dir: string): IterableIterator<IFileInfo> {
