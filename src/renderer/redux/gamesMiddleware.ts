@@ -104,6 +104,11 @@ async function loadPlatform(platform: string, platformsPath: string) {
             });
 
             const parser = new XMLParser({
+                numberParseOptions: {
+                    leadingZeros: true,
+                    eNotation: true,
+                    hex: false,
+                },
                 tagValueProcessor: (
                     tagName,
                     tagValue,

@@ -76,20 +76,40 @@ export function mapGamesMedia(
 
     // Load all images
     for (const category of Object.keys(images)) {
-        if (images[category][formattedGameTitle]) {
-            game.media.images[category] = images[category][formattedGameTitle];
+        const imagesForGame = getImagesFromCollection(
+            images,
+            category,
+            formattedGameTitle
+        );
+        if (imagesForGame) {
+            game.media.images[category] = imagesForGame;
         }
     }
 
     // Load thumbnail path
     for (const preference of thumbnailPreference) {
-        if (images[preference] && images[preference][formattedGameTitle]) {
+        const imagesForGame = getImagesFromCollection(
+            images,
+            preference,
+            formattedGameTitle
+        );
+        if (imagesForGame?.[0]) {
             game.thumbnailPath = `Images/${game.platform}/${fixSlashes(
-                images[preference][formattedGameTitle][0]
+                imagesForGame[0]
             )}`;
             return;
         }
     }
+}
+
+function getImagesFromCollection(
+    images: GameImagesCollection,
+    category: string,
+    formattedGameTitle: string
+) {
+    const imagesForGame = images?.[category]?.[formattedGameTitle];
+    if (imagesForGame && Array.isArray(imagesForGame)) return imagesForGame;
+    return null;
 }
 
 // Finds a list of all game images, returned in a map where the key is the type of image, and the value is an array of filenames
@@ -109,41 +129,52 @@ export async function loadPlatformImages(
         });
         for (const dir of rootFolders.filter((f) => f.isDirectory())) {
             collection[dir.name] = {}; // Initialize the image category
+
             const folderPath = path.join(platformImagesPath, dir.name);
 
-            for (const s of walkSync(folderPath)) {
-                const lastIdx = s.filename.lastIndexOf("-0");
-                if (lastIdx > -1) {
-                    const title = convertToGameTitleIndex(
-                        s.filename.slice(0, lastIdx)
+            for (const fileInfo of walkSync(folderPath)) {
+                try {
+                    const rawTitleFromFilename = getGameTitleIndexFromFilename(
+                        fileInfo.filename
                     );
-                    if (!collection[dir.name][title]) {
-                        collection[dir.name][title] = [
-                            path.relative(
-                                platformImagesPath,
-                                path.join(
-                                    path.dirname(s.path),
-                                    encodeURIComponent(s.filename)
-                                )
-                            ),
-                        ];
-                    } else {
-                        collection[dir.name][title].push(
-                            path.relative(
-                                platformImagesPath,
-                                path.join(
-                                    path.dirname(s.path),
-                                    encodeURIComponent(s.filename)
-                                )
-                            )
-                        );
+
+                    if (!rawTitleFromFilename) continue;
+                    const titleIndex =
+                        convertToGameTitleIndex(rawTitleFromFilename);
+                    if (!Array.isArray(collection?.[dir.name]?.[titleIndex])) {
+                        collection[dir.name][titleIndex] = [];
                     }
+                    const imagePath = createImagePath(
+                        platformImagesPath,
+                        fileInfo
+                    );
+                    collection[dir.name][titleIndex].push(imagePath);
+                } catch (err) {
+                    console.error(
+                        `Error while processing ${fileInfo.filename} file. Skipping. Error: ${err}`
+                    );
                 }
             }
         }
     }
 
     return collection;
+}
+
+function createImagePath(platformImagePath: string, fileInfo: IFileInfo) {
+    return path.relative(
+        platformImagePath,
+        path.join(
+            path.dirname(fileInfo.path),
+            encodeURIComponent(fileInfo.filename)
+        )
+    );
+}
+
+function getGameTitleIndexFromFilename(filename: string) {
+    const lastIdx = filename.lastIndexOf("-0");
+    if (lastIdx > -1) return filename.slice(0, lastIdx);
+    return null;
 }
 
 function convertToGameTitleIndex(title: string) {
