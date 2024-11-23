@@ -72,14 +72,17 @@ export function mapGamesMedia(
         // Ignore, files don't exist if path isn't forming
     }
 
-    const formattedGameTitle = convertToGameTitleIndex(game.title);
+    const possibleTitles = [game.title, `${game.title}.${game.id}`];
+    const formattedGameTitles = possibleTitles.map((t) =>
+        convertToGameTitleIndex(t)
+    ) as [string, string];
 
     // Load all images
     for (const category of Object.keys(images)) {
         const imagesForGame = getImagesFromCollection(
             images,
             category,
-            formattedGameTitle
+            formattedGameTitles
         );
         if (imagesForGame) {
             game.media.images[category] = imagesForGame;
@@ -91,7 +94,7 @@ export function mapGamesMedia(
         const imagesForGame = getImagesFromCollection(
             images,
             preference,
-            formattedGameTitle
+            formattedGameTitles
         );
         if (imagesForGame?.[0]) {
             game.thumbnailPath = `Images/${game.platform}/${fixSlashes(
@@ -105,11 +108,13 @@ export function mapGamesMedia(
 function getImagesFromCollection(
     images: GameImagesCollection,
     category: string,
-    formattedGameTitle: string
+    formattedGameTitles: [string, string]
 ) {
-    const imagesForGame = images?.[category]?.[formattedGameTitle];
-    if (imagesForGame && Array.isArray(imagesForGame)) return imagesForGame;
-    return null;
+    const imagesForGame =
+        images?.[category]?.[formattedGameTitles[0]] ??
+        images?.[category]?.[formattedGameTitles[1]] ??
+        null;
+    return imagesForGame;
 }
 
 // Finds a list of all game images, returned in a map where the key is the type of image, and the value is an array of filenames
@@ -141,7 +146,7 @@ export async function loadPlatformImages(
                     if (!rawTitleFromFilename) continue;
                     const titleIndex =
                         convertToGameTitleIndex(rawTitleFromFilename);
-                    if (!Array.isArray(collection?.[dir.name]?.[titleIndex])) {
+                    if (!collection?.[dir.name]?.[titleIndex]) {
                         collection[dir.name][titleIndex] = [];
                     }
                     const imagePath = createImagePath(
@@ -182,7 +187,7 @@ function convertToGameTitleIndex(title: string) {
     return title
         .replace(/[:;?'"/\\]/g, "_")
         .trim()
-        .toLowerCase();
+        .toUpperCase();
 }
 
 export function* walkSync(dir: string): IterableIterator<IFileInfo> {
