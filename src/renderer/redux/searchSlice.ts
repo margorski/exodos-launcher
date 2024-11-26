@@ -35,6 +35,7 @@ export type AdvancedFilter = {
     genre: string[];
     playMode: string[];
     region: string[];
+    releaseYear: string[];
     rating: string[];
 };
 
@@ -113,6 +114,7 @@ const searchSlice = createSlice({
                             genre: [],
                             playMode: [],
                             region: [],
+                            releaseYear: [],
                             rating: [],
                         },
                         loaded: false,

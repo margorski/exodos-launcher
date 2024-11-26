@@ -36,6 +36,7 @@ export function getDefaultFieldFilter(): FieldFilter {
         playMode: [],
         region: [],
         rating: [],
+        releaseYear: [],
     };
 }
 
@@ -432,6 +433,7 @@ export function isFilterEmpty(filter: FieldFilter) {
         filter.genre.length > 0 ||
         filter.playMode.length > 0 ||
         filter.region.length > 0 ||
+        filter.releaseYear.length > 0 ||
         filter.rating.length > 0
     );
 }
@@ -526,6 +528,18 @@ export function parseAdvancedFilter(filter: AdvancedFilter): GameFilter {
             (s) => s === ""
         );
         newFilter.subfilters.push(ratingFilter);
+    }
+
+    if (filter.releaseYear.length > 0) {
+        const releaseYearFilter = getDefaultGameFilter();
+        releaseYearFilter.matchAny = true;
+        releaseYearFilter.whitelist.releaseYear = filter.releaseYear.filter(
+            (s) => s !== ""
+        );
+        releaseYearFilter.exactWhitelist.rating = filter.releaseYear.filter(
+            (s) => s === ""
+        );
+        newFilter.subfilters.push(releaseYearFilter);
     }
 
     return newFilter;

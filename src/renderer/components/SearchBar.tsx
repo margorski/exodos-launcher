@@ -211,6 +211,18 @@ export function SearchBar(props: SearchBarProps) {
     const onToggleRegion = onToggleFactory("region");
     const onClearRegion = onClearFactory("region");
 
+    // ReleaseYear
+    const releaseYearItems = React.useMemo(() => {
+        const set = new Set(
+            view.games.flatMap((g) => {
+                return g.releaseYear.split("-")?.[0] ?? null;
+            })
+        );
+        return Array.from(set).sort();
+    }, [view.games]);
+    const onToggleReleaseYear = onToggleFactory("releaseYear");
+    const onClearReleaseYear = onClearFactory("releaseYear");
+
     // Rating
     const ratingItems = React.useMemo(() => {
         const set = new Set(
@@ -309,6 +321,13 @@ export function SearchBar(props: SearchBarProps) {
                         onClear={onClearRating}
                         selected={view.advancedFilter.rating}
                         items={ratingItems}
+                    />
+                    <SearchableSelect
+                        title="Release Year"
+                        onToggle={onToggleReleaseYear}
+                        onClear={onClearReleaseYear}
+                        selected={view.advancedFilter.releaseYear}
+                        items={releaseYearItems}
                     />
                 </div>
             )}

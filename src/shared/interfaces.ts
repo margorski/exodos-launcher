@@ -211,6 +211,7 @@ export interface FieldFilter {
     playMode: Array<string>;
     region: Array<string>;
     rating: Array<string>;
+    releaseYear: Array<string>;
 }
 
 export interface CompareFilter {

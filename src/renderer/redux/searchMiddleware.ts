@@ -230,6 +230,7 @@ function lowerCaseFilter(filter: FieldFilter): FieldFilter {
         playMode: filter.playMode.map((s) => s.toLowerCase()),
         region: filter.region.map((s) => s.toLowerCase()),
         rating: filter.rating.map((s) => s.toLowerCase()),
+        releaseYear: filter.releaseYear,
     };
 }
 
@@ -250,6 +251,7 @@ const fieldFilterKeys: Array<keyof FieldFilter> = [
     "playMode",
     "region",
     "rating",
+    "releaseYear",
 ];
 
 const booleanFilterKeys: Array<keyof BooleanFilter> = [
