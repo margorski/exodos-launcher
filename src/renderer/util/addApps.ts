@@ -54,8 +54,10 @@ function loadAddAppsDirectory(game: IGameInfo, addAppsDir: string) {
 
         for (const file of files.filter((f) => {
             const extension = f.name.split(".")?.[1]?.toLowerCase() ?? "";
-            return extension && f.isFile() && allowedExtensions.has(extension);
+            return extension && f.isFile() && (process.platform === 'win32' || allowedExtensions.has(extension));
         })) {
+            console.log(relativePathForAddApps);
+            console.log(file.name);
             const filepath = path.join(relativePathForAddApps, file.name);
             const addApp = createAddApp(game, filepath);
             addApps.push(addApp);
@@ -83,7 +85,7 @@ function createAddApp(
         window.External.config.fullExodosPath,
         ""
     );
-    const filename = filepath.split("/").pop() ?? "Unknown";
+    const filename = filepath.split(process.platform === 'win32' ? "\\" : "/").pop() ?? "Unknown";
     const name = filename.split(".")[0];
     const id = getExtrasId(game.id, filepath);
     return {

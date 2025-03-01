@@ -1,7 +1,7 @@
 import { LogFunc, OpenDialogFunc, OpenExternalFunc } from "@back/types";
 import { IAdditionalApplicationInfo, IGameInfo } from "@shared/game/interfaces";
 import { ExecMapping } from "@shared/interfaces";
-import { createCommand } from "@shared/mappings/CommandMapping";
+import { Command, createCommand } from "@shared/mappings/CommandMapping";
 import { IAppCommandsMappingData } from "@shared/mappings/interfaces";
 import {
     fixSlashes,
@@ -45,7 +45,7 @@ export namespace GameLauncher {
         log: LogFunc
     ): Promise<void> {
         const command = createCommand(appPath, appArgs, mappings);
-        const proc = exec(command);
+        const proc = exec(command.command, { cwd: command.cwd });
         logProcessOutput(proc, log);
         log({
             source: logSource,
@@ -164,7 +164,7 @@ export namespace GameLauncher {
         );
         const gameArgs: string = opts.game.launchCommand;
 
-        let command: string;
+        let command: Command;
         try {
             command = createCommand(gamePath, gameArgs, opts.mappings);
         } catch (e) {
@@ -175,7 +175,7 @@ export namespace GameLauncher {
             return;
         }
 
-        proc = exec(command);
+        proc = exec(command.command, { cwd: command.cwd });
         logProcessOutput(proc, opts.log);
         opts.log({
             source: logSource,
@@ -206,13 +206,13 @@ export namespace GameLauncher {
         );
 
         const gameArgs: string = opts.game.launchCommand;
-        const command: string = createCommand(
+        const command = createCommand(
             gamePath,
             gameArgs,
             opts.mappings
         );
 
-        proc = exec(command);
+        proc = exec(command.command, { cwd: command.cwd });
         logProcessOutput(proc, opts.log);
         opts.log({
             source: logSource,
