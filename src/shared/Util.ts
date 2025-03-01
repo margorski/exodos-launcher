@@ -504,9 +504,9 @@ export function escapeShell(cmd: string) {
 
 export function removeLowestDirectory(filePath: string, popCount = 1): string {
     let normalizedPath = path.normalize(filePath).replace(/\\/g, "/");
-    let pathSegments = normalizedPath.split(path.sep);
+    let pathSegments = normalizedPath.split('/');
     for (let i = 0; i < popCount; i++) pathSegments.pop();
-    let newPath = pathSegments.join(path.sep);
+    let newPath = pathSegments.join('/');
 
     return newPath;
 }
