@@ -36,6 +36,7 @@ export enum BackIn {
     UPDATE_CONFIG,
     /** Update any number of preferences. */
     UPDATE_PREFERENCES,
+    PLAY_AUDIO_FILE,
 }
 
 export enum BackOut {

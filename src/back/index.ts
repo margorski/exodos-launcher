@@ -54,6 +54,7 @@ import { difObjects } from "./util/misc";
 import { FileServer } from "./backend/fileServer";
 import { PlaylistManager } from "./playlist/PlaylistManager";
 import { DefaultCommandMapping } from "@shared/mappings/interfaces";
+import { VlcPlayer } from "./VlcPlayer";
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
 const send: Required<typeof process.send> = process.send
@@ -91,6 +92,7 @@ const state: BackState = {
         defaultMapping: DefaultCommandMapping,
         commandsMapping: [],
     },
+    vlcPlayer: createErrorProxy("vlcPlayer"),
 };
 
 const preferencesFilename = "preferences.json";
@@ -182,6 +184,19 @@ async function initialize(message: any, _: any): Promise<void> {
     if (serverPort < 0) {
         setImmediate(exit);
     }
+
+    // Initialize VLC player
+    switch (process.platform) {
+        case 'win32': {
+            state.vlcPlayer = new VlcPlayer(path.join(state.config.exodosPath, 'ThirdParty\\VLC\\x64\\vlc.exe'), []);
+            break;
+        }
+        default: {
+            console.log('Disabled VLC player (unsupported on this operating system)');
+            break;
+        }
+    }
+
     send(serverPort);
 }
 
@@ -564,6 +579,13 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
                 });
+            }
+            break;
+
+        case BackIn.PLAY_AUDIO_FILE:
+            {
+                console.log(`Playing: ${req.data}`);
+                state.vlcPlayer?.play(req.data);
             }
             break;
 

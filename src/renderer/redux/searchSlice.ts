@@ -13,6 +13,8 @@ import { IGameInfo } from "@shared/game/interfaces";
 import { GameFilter, GamePlaylist } from "@shared/interfaces";
 import { GameOrderBy, GameOrderReverse } from "@shared/order/interfaces";
 import { getOrderFunction } from "@shared/game/GameFilter";
+import { BackIn } from "@shared/back/types";
+import * as path from 'path';
 
 export type ResultsView = {
     selectedGame?: IGameInfo;
@@ -174,6 +176,10 @@ const searchSlice = createSlice({
                 view.selectedGame = payload.game
                     ? deepCopy(payload.game)
                     : undefined;
+                window.External.back.send<string>(
+                    BackIn.PLAY_AUDIO_FILE,
+                    path.join(window.External.config.fullExodosPath, view.selectedGame ? view.selectedGame.musicPath: '')
+                );
             }
         },
         forceSearch(
