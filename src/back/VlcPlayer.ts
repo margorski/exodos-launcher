@@ -9,15 +9,17 @@ export class VlcPlayer {
     private commandQueue: { command: string; resolve: (value: string) => void; reject: (reason?: any) => void }[] = [];
     private isProcessingQueue: boolean = false;
     private isSocketConnected: boolean = false;
+    private firstPlay: boolean = true;
 
     constructor(
         private vlcPath: string,
         private args: string[],
+        private port: number,
+        private initialVol: number,
     ) {
-        const cwd = path.dirname(this.vlcPath);
         this.server = spawn(this.vlcPath, [
-            ...this.args, '-I', 'rc', '--rc-host', '127.0.0.1:9090'
-        ], { cwd, windowsHide: true });
+            ...this.args, '-I', 'rc', '--rc-host', `127.0.0.1:${port}`
+        ], { windowsHide: true });
     }
 
     private async connectSocket(): Promise<void> {
@@ -26,7 +28,7 @@ export class VlcPlayer {
         }
 
         return new Promise((resolve, reject) => {
-            this.socket = net.connect(9090, '127.0.0.1', () => {
+            this.socket = net.connect(this.port, '127.0.0.1', () => {
                 this.isSocketConnected = true;
                 resolve();
             });
@@ -94,18 +96,31 @@ export class VlcPlayer {
         if (this.filepath) {
             await this.sendCommand('clear');
             await this.sendCommand(`add "${this.filepath}"`);
+            if (this.firstPlay) {
+                this.firstPlay = false;
+                setTimeout(() => {
+                    this.setVol(this.initialVol)
+                }, 100);
+            }
         } else {
             await this.stop();
         }
-
-        // Set volume after a delay
-        setTimeout(async () => {
-            await this.setVol(128);
-        }, 5000);
     }
 
     async setVol(vol: number): Promise<void> {
-        await this.sendCommand(`volume ${vol}`);
+        // Convert normalized volume to VLC vol
+        this.initialVol = vol;
+        const vlcVol = Math.floor(Math.max(0, Math.min(1, vol)) * 256);
+        console.log(`Setting volume: ${vlcVol}`);
+        await this.sendCommand(`volume ${vlcVol}`);
+    }
+
+    setFile(filepath: string) {
+        this.filepath = filepath;
+    }
+
+    async resume(): Promise<void> {
+        await this._play();
     }
 
     async play(filepath: string): Promise<void> {
@@ -115,6 +130,7 @@ export class VlcPlayer {
 
     async stop(): Promise<void> {
         await this.sendCommand('stop');
+        this.firstPlay = true;
     }
 
     async close(): Promise<void> {

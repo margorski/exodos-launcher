@@ -36,7 +36,7 @@ export const defaultPreferencesData: Readonly<IAppPreferencesData> =
     Object.freeze<IAppPreferencesData>({
         browsePageGameScale: 0.087,
         enableEditing: false,
-        browsePageLayout: BrowsePageLayout.list,
+        browsePageLayout: BrowsePageLayout.grid,
         browsePageShowLeftSidebar: true,
         browsePageShowRightSidebar: true,
         browsePageLeftSidebarWidth: 320,
@@ -59,6 +59,9 @@ export const defaultPreferencesData: Readonly<IAppPreferencesData> =
         showLogSource: Object.freeze({
             // (Add log sources that should be hidden by default here)
         }),
+        gameMusicPlay: true,
+        gameMusicVolume: 0.5,
+        vlcPort: 39421,
     });
 
 /**
@@ -125,6 +128,9 @@ export function overwritePreferenceData(
                 "ascending"
             ))
     );
+    parser.prop('gameMusicVolume', (v) => (source.gameMusicVolume = num(v)), true);
+    parser.prop('gameMusicPlay', (v) => (source.gameMusicPlay = !!v), true);
+    parser.prop('vlcPort', v => (source.vlcPort = num(v)), true);
     parser.prop("defaultLibrary", (v) => (source.defaultLibrary = str(v)));
     parser.prop(
         "saveImportedCurations",
