@@ -523,6 +523,10 @@ body {
   flex-direction: column;
   justify-content: center;
 }
+.footer__music {
+  display: flex;
+  flex-direction: row;
+}
 .footer__right {
   flex-grow: 1;
 }
@@ -530,7 +534,7 @@ body {
   display: flex;
   float: right;
   width: 100%;
-  max-width: 22.5em;
+  max-width: 50vw;
   flex-wrap: wrap;
 }
 /* Game Count */

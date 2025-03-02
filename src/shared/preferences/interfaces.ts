@@ -42,6 +42,12 @@ export type IAppPreferencesData = {
     showLogSource: {
         [key: string]: boolean;
     };
+    /** Play game music */
+    gameMusicPlay: boolean;
+    /** Game music volume */
+    gameMusicVolume: number;
+    /** VLC port */
+    vlcPort: number;
 };
 
 export type IAppPreferencesDataMainWindow = {
