@@ -7,6 +7,12 @@ import {
 import { WithPreferencesProps } from "../containers/withPreferences";
 import { gameScaleSpan } from "../Util";
 import { englishTranslation } from "@renderer/lang/en";
+import { SimpleButton } from "./SimpleButton";
+import { updatePreferencesData } from "@shared/preferences/util";
+import { BackIn } from "@shared/back/types";
+import { debounce } from "@shared/utils/debounce";
+import { delayedThrottle, throttle } from "@shared/utils/throttle";
+import { Coerce } from "@shared/utils/Coerce";
 
 type OwnProps = {
     /** Total number of games. */
@@ -73,6 +79,44 @@ export class Footer extends React.Component<FooterProps> {
                 <div className="footer__wrap footer__right">
                     <div>
                         <div className="footer__right__inner">
+                            {/* Volume Slider */}
+                            <div className="footer__wrap footer__scale-slider">
+                                <div className="footer__scale-slider__inner">
+                                        <div className="footer__scale-slider__icon footer__scale-slider__icon--left simple-center">
+                                            <div>🔈</div>
+                                        </div>
+                                        <div className="footer__scale-slider__icon footer__scale-slider__icon--center simple-center" />
+                                        <div className="footer__scale-slider__icon footer__scale-slider__icon--right simple-center">
+                                            <div>🔊</div>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            className="footer__scale-slider__input hidden-slider"
+                                            value={window.External.preferences.data.gameMusicVolume * 100}
+                                            min={0}
+                                            max={100}
+                                            onChange={this.onVolumeSliderChange}
+                                        />
+                                </div>
+                            </div>
+                            {/* Volume Slider Percent */}
+                            <div className="footer__wrap footer__scale-percent">
+                                <p>
+                                    {Math.round(window.External.preferences.data.gameMusicVolume * 100)}%
+                                </p>
+                            </div>
+                            {/* Music Toggle */}
+                            <div className="footer__wrap">
+                                <SimpleButton
+                                    onClick={() => {
+                                        const shouldPlay = !window.External.preferences.data.gameMusicPlay;
+                                        updatePreferencesData({
+                                            gameMusicPlay: shouldPlay
+                                        });
+                                        window.External.back.send<boolean>(BackIn.TOGGLE_MUSIC, shouldPlay);
+                                    }}
+                                    value={window.External.preferences.data.gameMusicPlay ? 'Stop': 'Play'} />
+                            </div>
                             {/* Layout Selector */}
                             <div className="footer__wrap">
                                 <div>
@@ -118,7 +162,7 @@ export class Footer extends React.Component<FooterProps> {
                                 <p>
                                     {Math.round(
                                         100 +
-                                            (scale - 0.5) * 200 * gameScaleSpan
+                                        (scale - 0.5) * 200 * gameScaleSpan
                                     )}
                                     %
                                 </p>
@@ -129,6 +173,12 @@ export class Footer extends React.Component<FooterProps> {
             </div>
         );
     }
+
+    onVolumeSliderChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ): void => {
+        setVolThrottle(Coerce.num(event.currentTarget.value));
+    };
 
     onScaleSliderChange = (
         event: React.ChangeEvent<HTMLInputElement>
@@ -175,6 +225,7 @@ export class Footer extends React.Component<FooterProps> {
             );
         }
     }
+    
 
     /**
      * Set the value of the scale slider.
@@ -189,3 +240,12 @@ export class Footer extends React.Component<FooterProps> {
         }
     }
 }
+
+const setVol = (vol: number) => {
+    updatePreferencesData({
+        gameMusicVolume: vol / 100
+    });
+    window.External.back.send<number>(BackIn.SET_VOLUME, vol / 100);
+}
+
+const setVolThrottle = throttle(setVol, 25);

@@ -54,6 +54,7 @@ import { difObjects } from "./util/misc";
 import { FileServer } from "./backend/fileServer";
 import { PlaylistManager } from "./playlist/PlaylistManager";
 import { DefaultCommandMapping } from "@shared/mappings/interfaces";
+import { VlcPlayer } from "./VlcPlayer";
 // Make sure the process.send function is available
 type Required<T> = T extends undefined ? never : T;
 const send: Required<typeof process.send> = process.send
@@ -91,6 +92,7 @@ const state: BackState = {
         defaultMapping: DefaultCommandMapping,
         commandsMapping: [],
     },
+    vlcPlayer: createErrorProxy("vlcPlayer"),
 };
 
 const preferencesFilename = "preferences.json";
@@ -182,6 +184,28 @@ async function initialize(message: any, _: any): Promise<void> {
     if (serverPort < 0) {
         setImmediate(exit);
     }
+
+    // Initialize VLC player
+    try {
+        switch (process.platform) {
+            case 'win32': {
+                state.vlcPlayer = new VlcPlayer(path.join(state.config.exodosPath, 'ThirdParty\\VLC\\x64\\vlc.exe'), [],
+                 state.preferences.vlcPort, state.preferences.gameMusicVolume);
+                break;
+            }
+            default: {
+                console.log('Disabled VLC player (unsupported on this operating system)');
+                break;
+            }
+        }
+    } catch (err) {
+        log({
+            source: 'VLC',
+            content: `${err}`
+        });
+        console.log(`Error starting VLC server: ${err}`);
+    }
+
     send(serverPort);
 }
 
@@ -487,6 +511,9 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
             {
                 const reqData: LaunchGameData = req.data;
 
+                // Turn off running audio if it's currently on
+                state.vlcPlayer?.stop();
+
                 const { game, addApps } = reqData;
                 if (game) {
                     GameLauncher.launchGame({
@@ -564,6 +591,57 @@ async function onMessage(event: WebSocket.MessageEvent): Promise<void> {
                     id: req.id,
                     type: BackOut.GENERIC_RESPONSE,
                 });
+            }
+            break;
+
+        case BackIn.PLAY_AUDIO_FILE:
+            {
+                try {
+                    if (state.preferences.gameMusicPlay) {
+                        console.log(`Playing: ${req.data}`);
+                        await state.vlcPlayer?.play(req.data);
+                    } else {
+                        state.vlcPlayer?.setFile(req.data);
+                    }
+                } catch (err) {
+                    log({
+                        source: 'VLC',
+                        content: `${err}`
+                    });
+                    console.log(err);
+                }
+            }
+            break;
+
+        case BackIn.TOGGLE_MUSIC:
+            {
+                try {
+                    if (req.data) {
+                        await state.vlcPlayer?.resume();
+                    } else {
+                        await state.vlcPlayer?.stop();
+                    }
+                } catch (err) {
+                    log({
+                        source: 'VLC',
+                        content: `${err}`
+                    });
+                    console.log(err);
+                }
+            }
+            break;
+
+        case BackIn.SET_VOLUME:
+            {
+                try {
+                    state.vlcPlayer?.setVol(req.data);
+                } catch (err) {
+                    log({
+                        source: 'VLC',
+                        content: `${err}`
+                    });
+                    console.log(err);
+                }
             }
             break;
 

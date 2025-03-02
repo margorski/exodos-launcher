@@ -5,6 +5,7 @@ import {
     FormattedGameMedia,
     FormattedGameMediaType,
 } from "./GameImageCarousel";
+import { BackIn } from "@shared/back/types";
 
 export type MediaPreviewProps = {
     /** Media to display. */
@@ -22,6 +23,20 @@ export function MediaPreview(props: MediaPreviewProps) {
         event.stopPropagation();
         return false;
     };
+
+    React.useEffect(() => {
+        if (props.media.category === '30 Second Demo') {
+            // Pause any running audio
+            window.External.back.send<boolean>(BackIn.TOGGLE_MUSIC, false);
+        }
+
+        return () => {
+            if (window.External.preferences.data.gameMusicPlay) {
+                // Resume any running audio
+                window.External.back.send<boolean>(BackIn.TOGGLE_MUSIC, true);
+            }
+        }
+    }, []);
 
     const renderedMedia = () => {
         switch (props.media.type) {

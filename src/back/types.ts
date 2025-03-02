@@ -12,6 +12,7 @@ import { Theme } from "@shared/ThemeFile";
 import { FileServer } from "./backend/fileServer";
 import { PlaylistManager } from "./playlist/PlaylistManager";
 import { IAppCommandsMappingData } from "@shared/mappings/interfaces";
+import { VlcPlayer } from "./VlcPlayer";
 
 export type BackState = {
     isInitialized: boolean;
@@ -36,6 +37,7 @@ export type BackState = {
     themeFiles: ThemeListItem[];
     execMappings: ExecMapping[];
     commandMappings: IAppCommandsMappingData;
+    vlcPlayer?: VlcPlayer;
 };
 
 export type BackQueryCache = {
